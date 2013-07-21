@@ -1,0 +1,24 @@
+{
+	"name": "browser-http",
+	"description": "HTTP classes for browser",
+	"version": "1.0.0",
+	"author": {
+		"name": "David Kudera",
+		"email": "sakren@gmail.com"
+	},
+	"keywords": [
+		"http",
+		"client",
+		"browser",
+		"ajax",
+		"url"
+	],
+	"engines": {
+		"node": "*"
+	},
+	"main": "./lib/Http.js",
+	"dependencies": {
+		"url": "0.7.9",
+		"q": "0.9.6"
+	}
+}
