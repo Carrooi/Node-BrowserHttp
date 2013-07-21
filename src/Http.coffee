@@ -20,4 +20,14 @@ class Http
 		return @request(url, options)
 
 
+	@put: (url, options = {}) ->
+		options.type = 'PUT'
+		return @request(url, options)
+
+
+	@delete: (url, options = {}) ->
+		options.type = 'DELETE'
+		return @request(url, options)
+
+
 module.exports = Http

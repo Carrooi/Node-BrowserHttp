@@ -51,7 +51,7 @@ class Request
 				if @response.status == 200
 					if @success != null then @success(@response)
 				else
-					if @error != null then @error(@response)
+					if @error != null then @error(new Error 'Can not load ' + @url + ' address')
 
 
 
@@ -65,12 +65,9 @@ class Request
 
 		@complete = (response) -> deferred.resolve(response)
 		@success = (response) -> deferred.resolve(response)
-		@error = (response) -> deferred.reject(response)
+		@error = (e) => deferred.reject(e)
 
-		try
-			@xhr.send(@data)
-		catch e
-			deferred.reject(e)
+		@xhr.send(@data)
 
 		return deferred.promise
 
