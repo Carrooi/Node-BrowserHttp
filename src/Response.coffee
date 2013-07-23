@@ -7,7 +7,7 @@ class Response
 
 	statusText: null
 
-	text: null
+	data: null
 
 	xml: null
 

@@ -45,5 +45,15 @@ Basically it is just wrapper for some data from XMLHttpRequest.
 * state
 * status
 * statusText
-* text: same like responseText
+* data: same like responseText
 * xml: same like responseXml
+
+## Load JSON
+
+There is also option to load data and automatically parse it from JSON to literal object.
+
+```
+http.getJson('http://www.google.com/some.json').then(function(response) {
+	console.log(response.data);		// output will be object
+});
+```

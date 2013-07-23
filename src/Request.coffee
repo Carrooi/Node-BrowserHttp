@@ -43,7 +43,7 @@ class Request
 			if @response.state == 4
 				@response.status = @xhr.status
 				@response.statusText = @xhr.statusText
-				@response.text = @xhr.responseText
+				@response.data = @xhr.responseText
 				@response.xml = @xhr.responseXml
 
 				if @complete != null then @complete(@response)

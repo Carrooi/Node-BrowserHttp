@@ -1,7 +1,7 @@
 {
 	"name": "browser-http",
 	"description": "Simple HTTP for browser",
-	"version": "1.0.2",
+	"version": "1.1.2",
 	"author": {
 		"name": "David Kudera",
 		"email": "sakren@gmail.com"

@@ -1,4 +1,5 @@
 Request = require './Request'
+Q = require 'q'
 
 class Http
 
@@ -28,6 +29,13 @@ class Http
 	@delete: (url, options = {}) ->
 		options.type = 'DELETE'
 		return @request(url, options)
+
+
+	@getJson: (url, options = {}) ->
+		return @request(url, options).then( (response) ->
+			response.data = JSON.parse(response.data)
+			return Q.resolve(response)
+		)
 
 
 module.exports = Http
