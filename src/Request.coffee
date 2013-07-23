@@ -1,5 +1,6 @@
 Q = require 'q'
 Response = require './Response'
+Http = require './Http'
 
 class Request
 
@@ -46,12 +47,16 @@ class Request
 				@response.data = @xhr.responseText
 				@response.xml = @xhr.responseXml
 
-				if @complete != null then @complete(@response)
-
 				if @response.status == 200
 					if @success != null then @success(@response)
+					Request.callHttpEvent(@response, @, 'success')
 				else
-					if @error != null then @error(new Error 'Can not load ' + @url + ' address')
+					error = new Error 'Can not load ' + @url + ' address'
+					if @error != null then @error(error)
+					Request.callHttpEvent(@response, @, 'error', [error])
+
+				if @complete != null then @complete(@response)
+				Request.callHttpEvent(@response, @, 'complete')
 
 
 
@@ -62,6 +67,8 @@ class Request
 
 	send: ->
 		deferred = Q.defer()
+
+		Request.callHttpEvent(@response, @, 'send')
 
 		@complete = (response) -> deferred.resolve(response)
 		@success = (response) -> deferred.resolve(response)
@@ -107,6 +114,15 @@ class Request
 		for name, value of data
 			result.push(name + '=' + encodeURIComponent(value))
 		return result.join('&')
+
+
+	@callHttpEvent: (response, request, event, args = []) ->
+		args.push(response)
+		args.push(request)
+
+		fn.apply(response, args) for fn in Http.events[event]
+		for ext of Http.extensions
+			if typeof ext[event] != 'undefined' then ext[event].apply(response, args)
 
 
 module.exports = Request

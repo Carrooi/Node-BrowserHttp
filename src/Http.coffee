@@ -4,6 +4,15 @@ Q = require 'q'
 class Http
 
 
+	@events:
+		send: []
+		complete: []
+		error: []
+		success: []
+
+	@extensions: {}
+
+
 	@request: (url, options = {}) ->
 		if !options.type then options.type = 'GET'
 		if !options.data then options.data = {}
@@ -36,6 +45,28 @@ class Http
 			response.data = JSON.parse(response.data)
 			return Q.resolve(response)
 		)
+
+
+	@addExtension: (name, fns) ->
+		@extensions[name] = fns
+		return @
+
+
+	@removeExtension: (name) ->
+		if typeof @extensions[name] == 'undefined'
+			throw new Error 'Extension ' + name + ' does not exists'
+
+		delete @extensions[name]
+		return @
+
+
+	@onSend: (fn) -> @events.send.push(fn)
+
+	@onComplete: (fn) -> @events.complete.push(fn)
+
+	@onError: (fn) -> @events.error.push(fn)
+
+	@onSuccess: (fn) -> @events.success.push(fn)
 
 
 module.exports = Http

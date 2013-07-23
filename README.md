@@ -57,3 +57,44 @@ http.getJson('http://www.google.com/some.json').then(function(response) {
 	console.log(response.data);		// output will be object
 });
 ```
+
+## Events
+
+You can listen for all http events with your own functions.
+
+```
+http.onSend(function(response, request) {
+	console.log('In any moment, new http request will be send to server');
+});
+
+http.onComplete(function(response, request) {
+	console.log('I just finished some request, but there may be some errors');
+});
+
+http.onSuccess(function(response, request) {
+	console.log('I have got response from server without any error :-)');
+});
+
+http.onError(function(err, response, request) {
+	console.log('Sorry, there was some error with this response');
+});
+```
+
+## Extensions
+
+Sometimes it will be better to register whole group of events and this group is called extension.
+
+```
+http.addExtension('nameOfMyExtension', {
+	send: function(response, request) {},
+	complete: function(response, request) {},
+	success: function(response, request) {},
+	error: function(err, response, request) {},
+});
+```
+
+You can also remove other extensions.
+
+```
+http.removeExtension('nameOfMyExtension');
+```
