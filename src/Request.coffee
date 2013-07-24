@@ -1,8 +1,10 @@
 Q = require 'q'
 Response = require './Response'
-Http = require './Http'
 
 class Request
+
+
+	@Http: null
 
 
 	url: null
@@ -117,11 +119,14 @@ class Request
 
 
 	@callHttpEvent: (response, request, event, args = []) ->
+		if Request.Http == null
+			Request.Http = require './Http'
+
 		args.push(response)
 		args.push(request)
 
-		fn.apply(response, args) for fn in Http.events[event]
-		for ext of Http.extensions
+		fn.apply(response, args) for fn in Request.Http.events[event]
+		for ext of Request.Http.extensions
 			if typeof ext[event] != 'undefined' then ext[event].apply(response, args)
 
 
