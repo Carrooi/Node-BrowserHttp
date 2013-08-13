@@ -31,8 +31,8 @@ class Request
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
 		if @data != null
-			@data = Request.parseData(@data)
 			if @type != 'POST'
+				@data = Request.parseData(@data)
 				@url = if @url.indexOf('?') != -1 then @url + '&' + @data else @url + '?' + @data
 				@data = null
 
