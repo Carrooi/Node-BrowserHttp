@@ -56,6 +56,8 @@ There is also option to load data and automatically parse it from JSON to litera
 http.getJson('http://www.google.com/some.json').then(function(response) {
 	console.log(response.data);		// output will be object
 });
+
+http.postJson('http://www.google.com/some.json');
 ```
 
 ## Events

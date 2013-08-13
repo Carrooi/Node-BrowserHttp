@@ -47,6 +47,14 @@ class Http
 		)
 
 
+	@postJson: (url, options = {}) ->
+		options.type = 'POST'
+		return @request(url, options).then( (response) ->
+			response.data = JSON.parse(response.data)
+			return Q.resolve(response)
+		)
+
+
 	@addExtension: (name, fns) ->
 		@extensions[name] = fns
 		return @
