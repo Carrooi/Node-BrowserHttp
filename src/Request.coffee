@@ -41,8 +41,6 @@ class Request
 
 		if @type == 'POST'
 			@setHeader('Content-type', 'application/x-www-form-urlencoded')
-			@setHeader('Content-length', @data.length)
-			@setHeader('Connection', 'close')
 
 		@response = new Response
 		@xhr.onreadystatechange = =>
