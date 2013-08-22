@@ -32,7 +32,7 @@ class Request
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
 		if @data != null
-			data = @Http.buildQuery(@data)
+			data = Request.getHttp.buildQuery(@data)
 			if @type != 'POST'
 				url = if @url.indexOf('?') != -1 then @url + '&' + data else @url + '?' + data
 
@@ -119,15 +119,19 @@ class Request
 			return new ActiveXObject("Microsoft.XMLHTTP")
 
 
+	@getHttp: ->
+		if @Http == null then @Http = require './Http'
+		return @Http
+
+
 	@callHttpEvent: (response, request, event, args = []) ->
-		if Request.Http == null
-			Request.Http = require './Http'
+		@getHttp()
 
 		args.push(response)
 		args.push(request)
 
-		fn.apply(response, args) for fn in Request.Http.events[event]
-		for ext of Request.Http.extensions
+		fn.apply(response, args) for fn in @Http.events[event]
+		for ext of @Http.extensions
 			if typeof ext[event] != 'undefined' then ext[event].apply(response, args)
 
 
