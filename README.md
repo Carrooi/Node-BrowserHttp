@@ -110,6 +110,9 @@ http.removeExtension('nameOfMyExtension');
 
 ## Changelog
 
+* 1.5.0
+	+ Added method isHistoryApiSupported
+
 * 1.4.0
 	+ Sending X-Requested-With header
 
