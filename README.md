@@ -49,8 +49,9 @@ Basically it is just wrapper for some data from XMLHttpRequest.
 * state
 * status
 * statusText
-* data: same like responseText
-* xml: same like responseXml
+* rawData: same like responseText
+* data: same like responseText or literal object (json)
+* xml: same like responseXML
 
 ## Load JSON
 
