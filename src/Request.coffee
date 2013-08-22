@@ -32,7 +32,7 @@ class Request
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
 		if @data != null
-			data = Request.getHttp.buildQuery(@data)
+			data = Request.getHttp().buildQuery(@data)
 			if @type != 'POST'
 				url = if @url.indexOf('?') != -1 then @url + '&' + data else @url + '?' + data
 
