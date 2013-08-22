@@ -1,7 +1,7 @@
 {
 	"name": "browser-http",
 	"description": "Simple HTTP for browser",
-	"version": "1.2.5",
+	"version": "1.3.0",
 	"author": {
 		"name": "David Kudera",
 		"email": "sakren@gmail.com"
@@ -24,5 +24,11 @@
 	"main": "./lib/Http.js",
 	"dependencies": {
 		"q": "0.9.6"
+	},
+	"devDependencies": {
+		"should": "1.2.2"
+	},
+	"scripts": {
+		"test": "cd ./test; mocha ./index.js --reporter spec;"
 	}
 }

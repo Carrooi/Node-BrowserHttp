@@ -6,6 +6,10 @@ Now it is really simple and more functions will be added.
 
 http-browser uses [q](https://npmjs.org/package/q) promise pattern.
 
+## Changelog
+
+Changelog is in the bottom of this readme.
+
 ## Usage
 
 ```
@@ -100,3 +104,10 @@ You can also remove other extensions.
 ```
 http.removeExtension('nameOfMyExtension');
 ```
+
+## Changelog
+
+* 1.3.0
+	+ Added `urlencode` and `buildQuery` methods
+	+ Prepared changelog
+	+ Added some tests
