@@ -110,8 +110,8 @@ http.removeExtension('nameOfMyExtension');
 
 ## Changelog
 
-* 1.3.1 - 1.3.2
-	+ Bug
+* 1.3.1 - 1.3.3
+	+ Bugs
 
 * 1.3.0
 	+ Added `urlencode` and `buildQuery` methods

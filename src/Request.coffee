@@ -131,7 +131,7 @@ class Request
 		args.push(request)
 
 		fn.apply(response, args) for fn in @Http.events[event]
-		for ext of @Http.extensions
+		for name, ext of @Http.extensions
 			if typeof ext[event] != 'undefined' then ext[event].apply(response, args)
 
 
