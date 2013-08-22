@@ -54,7 +54,9 @@ Basically it is just wrapper for some data from XMLHttpRequest.
 
 ## Load JSON
 
-There is also option to load data and automatically parse it from JSON to literal object.
+If content-type in response header is `application/json` then your data will be automatically transformed into js object.
+
+If you can not set this header on your server, than you can use `*Json` methods.
 
 ```
 http.getJson('http://www.google.com/some.json').then(function(response) {
@@ -111,3 +113,5 @@ http.removeExtension('nameOfMyExtension');
 	+ Added `urlencode` and `buildQuery` methods
 	+ Prepared changelog
 	+ Added some tests
+	+ Some bugs and optimizations
+	+ Transforming response data into json if mime type is application/json

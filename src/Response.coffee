@@ -7,6 +7,8 @@ class Response
 
 	statusText: null
 
+	rawData: null
+
 	data: null
 
 	xml: null

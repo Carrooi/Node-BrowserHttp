@@ -49,8 +49,13 @@ class Request
 			if @response.state == 4
 				@response.status = @xhr.status
 				@response.statusText = @xhr.statusText
+
+				@response.rawData = @xhr.responseText
+				@response.xml = @xhr.responseXML
 				@response.data = @xhr.responseText
-				@response.xml = @xhr.responseXml
+
+				if @getHeader('content-type') == 'application/json'
+					@response.data = JSON.stringify(@response.data)
 
 				if @response.status == 200
 					if @success != null then @success(@response)
