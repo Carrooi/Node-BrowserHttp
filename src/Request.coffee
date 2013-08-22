@@ -26,18 +26,18 @@ class Request
 
 
 	constructor: (@url, @type = 'GET', @data = null) ->
+		url = @url
 		@type = @type.toUpperCase()
 		if @type not in ['GET', 'POST', 'PUT', 'DELETE']
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
 		if @data != null
-			@data = Request.parseData(@data)
+			data = @Http.buildQuery(@data)
 			if @type != 'POST'
-				@url = if @url.indexOf('?') != -1 then @url + '&' + @data else @url + '?' + @data
-				@data = null
+				url = if @url.indexOf('?') != -1 then @url + '&' + data else @url + '?' + data
 
 		@xhr = Request.createRequestObject()
-		@xhr.open(@type, @url, true)
+		@xhr.open(@type, url, true)
 
 		if @type == 'POST'
 			@setHeader('Content-type', 'application/x-www-form-urlencoded')
@@ -56,7 +56,7 @@ class Request
 					if @success != null then @success(@response)
 					Request.callHttpEvent(@response, @, 'success')
 				else
-					error = new Error 'Can not load ' + @url + ' address'
+					error = new Error 'Can not load ' + url + ' address'
 					if @error != null then @error(error)
 					Request.callHttpEvent(@response, @, 'error', [error])
 
@@ -112,13 +112,6 @@ class Request
 			return new window.XMLHttpRequest
 		else
 			return new ActiveXObject("Microsoft.XMLHTTP")
-
-
-	@parseData: (data) ->
-		result = []
-		for name, value of data
-			result.push(name + '=' + encodeURIComponent(value))
-		return result.join('&')
 
 
 	@callHttpEvent: (response, request, event, args = []) ->
