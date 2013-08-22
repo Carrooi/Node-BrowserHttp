@@ -54,7 +54,7 @@ class Request
 				@response.xml = @xhr.responseXML
 				@response.data = @xhr.responseText
 
-				if @getHeader('content-type') == 'application/json'
+				if @getHeader('content-type').match(/application\/json/) != null
 					@response.data = JSON.stringify(@response.data)
 
 				if @response.status == 200
