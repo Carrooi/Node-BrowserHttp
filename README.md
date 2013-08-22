@@ -110,7 +110,7 @@ http.removeExtension('nameOfMyExtension');
 
 ## Changelog
 
-* 1.3.1 - 1.3.4
+* 1.3.1 - 1.3.5
 	+ Bugs
 
 * 1.3.0

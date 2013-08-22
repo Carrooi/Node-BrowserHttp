@@ -55,7 +55,7 @@ class Request
 				@response.data = @xhr.responseText
 
 				if @getHeader('content-type').match(/application\/json/) != null
-					@response.data = JSON.stringify(@response.data)
+					@response.data = JSON.parse(@response.data)
 
 				if @response.status == 200
 					if @success != null then @success(@response)
