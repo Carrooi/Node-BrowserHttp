@@ -39,7 +39,9 @@ class Request
 		@xhr = Request.createRequestObject()
 		@xhr.open(@type, url, true)
 
-		@setHeader('X-Requested-With', 'XMLHttpRequest')
+		if url.match(/^(http)s?\:\/\//) == null
+			@setHeader('X-Requested-With', 'XMLHttpRequest')
+
 		if @type == 'POST'
 			@setHeader('Content-type', 'application/x-www-form-urlencoded')
 
