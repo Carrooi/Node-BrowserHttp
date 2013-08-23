@@ -13,6 +13,8 @@ class Request
 
 	data: null
 
+	_data: null
+
 	xhr: null
 
 	response: null
@@ -32,9 +34,9 @@ class Request
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
 		if @data != null
-			data = Request.getHttp().buildQuery(@data)
+			@_data = Request.getHttp().buildQuery(@data)
 			if @type != 'POST'
-				url = if @url.indexOf('?') != -1 then @url + '&' + data else @url + '?' + data
+				url = if @url.indexOf('?') != -1 then @url + '&' + @_data else @url + '?' + @_data
 
 		@xhr = Request.createRequestObject()
 		@xhr.open(@type, url, true)
@@ -87,7 +89,7 @@ class Request
 		@success = (response) -> deferred.resolve(response)
 		@error = (e) => deferred.reject(e)
 
-		@xhr.send(@data)
+		@xhr.send(@_data)
 
 		return deferred.promise
 

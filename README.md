@@ -110,6 +110,9 @@ http.removeExtension('nameOfMyExtension');
 
 ## Changelog
 
+* 1.5.2
+	+ Bug with sending data via POST method
+
 * 1.5.1
 	+ Bug with X-Requested-With header
 
