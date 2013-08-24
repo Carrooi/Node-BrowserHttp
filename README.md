@@ -108,6 +108,56 @@ You can also remove other extensions.
 http.removeExtension('nameOfMyExtension');
 ```
 
+### Build in extensions
+
+browser-http already comes with few extensions. Originally they were created for project build on [Nette](http://nette.org/en/)
+framework, but can be used on any other project.
+
+#### Loading cursor
+
+```
+new (require('browser-http/Extensions/Loading'));
+```
+
+Every time new request is send, your cursor is changed into `progress` cursor. After receiving response from server, cursor
+is changed into `auto`.
+
+#### Redirect
+
+```
+new (require('browser-http/Extensions/Redirect'));
+```
+
+If your server sends json data with `redirect` variable, then you will be redirected to address in this variable.
+
+#### Snippets
+
+```
+new (require('browser-http/Extensions/Snippets'));
+```
+
+If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
+find element in page with given id and change content of this element into the one from given data.
+
+This extension depends on jquery.
+
+#### Ajax links
+
+```
+new (require('browser-http/Extensions/Links'));
+```
+
+This is not true extension for browser-http. It listen for all click events on `a` links with class `ajax` but not with
+class `not-ajax` and after this click, it creates ajax request.
+
+Depends on jquery.
+
+#### Ajax forms
+
+This is the same like the previous one, but apply for all forms with `ajax` class.
+This extension can not handle forms with file uploads.
+Depends on jquery.
+
 ## Changelog
 
 * 1.6.0
