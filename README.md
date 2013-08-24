@@ -160,6 +160,9 @@ Depends on jquery.
 
 ## Changelog
 
+* 1.6.4
+	+ Optimizations + bug with sending data
+
 * 1.6.3
 	+ Bug with `buildQuery` - replaced with the real one from jQuery
 

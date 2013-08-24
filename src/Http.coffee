@@ -15,7 +15,7 @@ class Http
 
 	@request: (url, options = {}) ->
 		if !options.type then options.type = 'GET'
-		if !options.data then options.data = {}
+		if !options.data then options.data = null
 
 		return (new Request(url, options.type, options.data)).send()
 
@@ -102,43 +102,6 @@ class Http
 				buildParams(key, value)
 
 		return result.join('&').replace(/%20/g, '+')
-
-
-
-
-
-
-
-		helper = (key, val) =>
-			tmp = []
-
-			if val == true then val = '1'
-			else if val == false then val = '0'
-
-			if val != null && typeof val == 'object'
-				if Object.prototype.toString.call(val) == '[object Object]'
-					for k, v of val
-						if v != null
-							tmp.push helper("#{key}[#{k}]", v)
-				else
-					for v, k in val
-						if v != null
-							passKey = if typeof v == 'object' then k else ''
-							tmp.push helper("#{key}[#{passKey}]", v)
-
-				return tmp.join('&')
-			else if typeof val != 'function'
-				return @urlencode(key) + '=' + @urlencode(val)
-			else if typeof val == 'function'
-				return ''
-			else
-				throw new Error 'There was an error processing for http_build_query()'
-
-		result = []
-		for key, value of params
-			result.push helper(key, value)
-
-		return result.join('&')
 
 
 	@isHistoryApiSupported: ->
