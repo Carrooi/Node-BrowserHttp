@@ -110,6 +110,10 @@ http.removeExtension('nameOfMyExtension');
 
 ## Changelog
 
+* 1.6.0
+	+ `buildQuery` should got the same output like jQuery.param
+	+ Added some extensions
+
 * 1.5.2
 	+ Bug with sending data via POST method
 

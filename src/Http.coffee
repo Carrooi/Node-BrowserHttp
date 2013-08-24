@@ -57,44 +57,53 @@ class Http
 		)
 
 
-	# From http://www.navioo.com/javascript/tutorials/Javascript_urlencode_1542.html
+	#
+	# Updated methods from https://gist.github.com/lukelove/674274
+	#
+
+
 	@urlencode: (param) ->
-		histogram = {}
-		ret = param.toString()
+		param = (param + '').toString()
 
-		replacer = (search, replace, str) ->
-			tmp_arr = str.split(search)
-			return tmp_arr.join(replace)
-
-		histogram["'"] = '%27'
-		histogram['('] = '%28'
-		histogram[')'] = '%29'
-		histogram['*'] = '%2A'
-		histogram['~'] = '%7E'
-		histogram['!'] = '%21'
-		histogram['%20'] = '+'
-
-		ret = encodeURIComponent(ret)
-
-		for search, replace of histogram
-			ret = replacer(search, replace, ret)
-
-		ret = ret.replace(/(\%([a-z0-9]{2}))/g, (full, m1, m2) ->
-			return '%' + m2.toUpperCase()
-		)
-
-		return ret
+		return encodeURIComponent(param)
+			.replace(/!/g, '%21')
+			.replace(/'/g, '%27')
+			.replace(/\(/g, '%28')
+			.replace(/\)/g, '%29')
+			.replace(/\*/g, '%2A')
+			.replace(/\~/g, '%7E')
+			.replace(/%20/g, '+')
 
 
-	# From http://www.navioo.com/javascript/tutorials/Javascript_http_build_query_1537.html
 	@buildQuery: (params) ->
+		helper = (key, val) =>
+			tmp = []
+
+			if val == true then val = '1'
+			else if val == false then val = '0'
+
+			if val != null && typeof val == 'object'
+				if Object.prototype.toString.call(val) == '[object Object]'
+					for k, v of val
+						if v != null
+							tmp.push helper("#{key}[#{k}]", v)
+				else
+					for v, k in val
+						if v != null
+							passKey = if typeof v == 'object' then k else ''
+							tmp.push helper("#{key}[#{passKey}]", v)
+
+				return tmp.join('&')
+			else if typeof val != 'function'
+				return @urlencode(key) + '=' + @urlencode(val)
+			else if typeof val == 'function'
+				return ''
+			else
+				throw new Error 'There was an error processing for http_build_query()'
+
 		result = []
-
 		for key, value of params
-			key = @urlencode(key)
-			value = @urlencode(value.toString())
-
-			result.push("#{key}=#{value}")
+			result.push helper(key, value)
 
 		return result.join('&')
 
