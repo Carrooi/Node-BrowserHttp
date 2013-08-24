@@ -160,6 +160,9 @@ Depends on jquery.
 
 ## Changelog
 
+* 1.6.2
+	+ Just removed some useless code
+
 * 1.6.1
 	+ Forgot to add Extensions/Links shortcut
 
