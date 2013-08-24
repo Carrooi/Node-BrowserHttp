@@ -160,6 +160,9 @@ Depends on jquery.
 
 ## Changelog
 
+* 1.6.1
+	+ Forgot to add Extensions/Links shortcut
+
 * 1.6.0
 	+ `buildQuery` should got the same output like jQuery.param
 	+ Added some extensions
