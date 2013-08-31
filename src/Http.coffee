@@ -1,46 +1,57 @@
 Request = require './Request'
 Q = require 'q'
+EventEmitter = require('events').EventEmitter
 
-class Http
-
-
-	@events:
-		send: []
-		complete: []
-		error: []
-		success: []
-
-	@extensions: {}
+class Http extends EventEmitter
 
 
-	@request: (url, options = {}) ->
+	extensions: {}
+
+
+	constructor: ->
+		super
+
+		@on 'send', (args...) => @callExtensions('send', args)
+		@on 'complete', (args...) => @callExtensions('complete', args)
+		@on 'error', (args...) => @callExtensions('error', args)
+		@on 'success', (args...) => @callExtensions('success', args)
+
+
+	request: (url, options = {}) ->
 		if !options.type then options.type = 'GET'
 		if !options.data then options.data = null
 
-		return (new Request(url, options.type, options.data)).send()
+		request = new Request(url, options.type, options.data)
+
+		request.on 'send', (response, request) => @emit 'send', response, request
+		request.on 'success', (response, request) => @emit 'success', response, request
+		request.on 'error', (error, response, request) => @emit 'error', response, request
+		request.on 'complete', (response, request) => @emit 'complete', response, request
+
+		return request.send()
 
 
-	@get: (url, options = {}) ->
+	get: (url, options = {}) ->
 		options.type = 'GET'
 		return @request(url, options)
 
 
-	@post: (url, options = {}) ->
+	post: (url, options = {}) ->
 		options.type = 'POST'
 		return @request(url, options)
 
 
-	@put: (url, options = {}) ->
+	put: (url, options = {}) ->
 		options.type = 'PUT'
 		return @request(url, options)
 
 
-	@delete: (url, options = {}) ->
+	delete: (url, options = {}) ->
 		options.type = 'DELETE'
 		return @request(url, options)
 
 
-	@getJson: (url, options = {}) ->
+	getJson: (url, options = {}) ->
 		return @request(url, options).then( (response) ->
 			if typeof response.data == 'string'
 				response.data = JSON.parse(response.data)
@@ -48,7 +59,7 @@ class Http
 		)
 
 
-	@postJson: (url, options = {}) ->
+	postJson: (url, options = {}) ->
 		options.type = 'POST'
 		return @request(url, options).then( (response) ->
 			if typeof response.data == 'string'
@@ -57,63 +68,16 @@ class Http
 		)
 
 
-	@urlencode: (param) ->
-		param = (param + '').toString()
-
-		return encodeURIComponent(param)
-			.replace(/!/g, '%21')
-			.replace(/'/g, '%27')
-			.replace(/\(/g, '%28')
-			.replace(/\)/g, '%29')
-			.replace(/\*/g, '%2A')
-			.replace(/\~/g, '%7E')
-			.replace(/%20/g, '+')
-
-
-	# From jQuery
-	@buildQuery: (params) ->
-		result = []
-
-		add = (key, value) ->
-			value = if typeof value == 'function' then value() else (if value == null then '' else value)
-			result.push encodeURIComponent(key) + '=' + encodeURIComponent(value)
-
-		buildParams = (key, value) ->
-			if Object.prototype.toString.call(value) == '[object Array]'
-				for v, i in value
-					if /\[\]$/.test(key) == true
-						add(key, v)
-					else
-						buildParams(key + '[' + (if typeof v == 'object' then i else '') + ']', v)
-
-			else if Object.prototype.toString.call(value) == '[object Object]'
-				for k, v of value
-					buildParams(key + '[' + k + ']', v)
-
-			else
-				add(key, value)
-
-		if Object.prototype.toString.call(params) == '[object Array]'
-			for value, key in params
-				add(key, value)
-
-		else
-			for key, value of params
-				buildParams(key, value)
-
-		return result.join('&').replace(/%20/g, '+')
-
-
-	@isHistoryApiSupported: ->
+	isHistoryApiSupported: ->
 		return window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
 
 
-	@addExtension: (name, fns) ->
+	addExtension: (name, fns) ->
 		@extensions[name] = fns
 		return @
 
 
-	@removeExtension: (name) ->
+	removeExtension: (name) ->
 		if typeof @extensions[name] == 'undefined'
 			throw new Error 'Extension ' + name + ' does not exists'
 
@@ -121,13 +85,9 @@ class Http
 		return @
 
 
-	@onSend: (fn) -> @events.send.push(fn)
-
-	@onComplete: (fn) -> @events.complete.push(fn)
-
-	@onError: (fn) -> @events.error.push(fn)
-
-	@onSuccess: (fn) -> @events.success.push(fn)
+	callExtensions: (event, args) ->
+		for name, ext of @extensions
+			if typeof ext[event] != 'undefined' then ext[event].apply(ext[event], args)
 
 
-module.exports = Http
+module.exports = new Http

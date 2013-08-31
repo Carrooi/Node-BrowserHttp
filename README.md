@@ -1,10 +1,10 @@
 # http-browser
 
-Some simple classes for working with http in browser.
+Some simple classes for working with http in browser (for example with [simq](https://npmjs.org/package/simq)).
 
 Now it is really simple and more functions will be added.
 
-http-browser uses [q](https://npmjs.org/package/q) promise pattern.
+http-browser uses [q](https://npmjs.org/package/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
 
 ## Changelog
 
@@ -18,7 +18,7 @@ var http = require('browser-http');
 http.request('http://www.google.com', {type: 'GET'}).then(function(response) {
 	console.log(response.text);
 }, function(e) {
-	throw e;		// some error ocured
+	throw e;		// some error occurred
 });
 ```
 
@@ -72,19 +72,19 @@ http.postJson('http://www.google.com/some.json');
 You can listen for all http events with your own functions.
 
 ```
-http.onSend(function(response, request) {
+http.on('send', function(response, request) {
 	console.log('In any moment, new http request will be send to server');
 });
 
-http.onComplete(function(response, request) {
+http.on('complete', function(response, request) {
 	console.log('I just finished some request, but there may be some errors');
 });
 
-http.onSuccess(function(response, request) {
+http.on('success', function(response, request) {
 	console.log('I have got response from server without any error :-)');
 });
 
-http.onError(function(err, response, request) {
+http.on('error', function(err, response, request) {
 	console.log('Sorry, there was some error with this response');
 });
 ```
@@ -159,6 +159,11 @@ This extension can not handle forms with file uploads.
 Depends on jquery.
 
 ## Changelog
+
+* 1.7.0
+	+ Refactoring
+	+ `buildQuery` and `urlencode` moved to `browser-http/Helpers`
+	+ Instance of EventEmitter
 
 * 1.6.4
 	+ Optimizations + bug with sending data

@@ -1,10 +1,9 @@
 Q = require 'q'
 Response = require './Response'
+Helpers = require './Helpers'
+EventEmitter = require('events').EventEmitter
 
-class Request
-
-
-	@Http: null
+class Request extends EventEmitter
 
 
 	url: null
@@ -20,21 +19,16 @@ class Request
 	response: null
 
 
-	complete: null
-
-	success: null
-
-	error: null
-
-
 	constructor: (@url, @type = 'GET', @data = null) ->
+		super
+
 		url = @url
 		@type = @type.toUpperCase()
 		if @type not in ['GET', 'POST', 'PUT', 'DELETE']
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
 		if @data != null
-			@_data = Request.getHttp().buildQuery(@data)
+			@_data = Helpers.buildQuery(@data)
 			if @type != 'POST'
 				url = if @url.indexOf('?') != -1 then @url + '&' + @_data else @url + '?' + @_data
 
@@ -63,15 +57,12 @@ class Request
 					@response.data = JSON.parse(@response.data)
 
 				if @response.status == 200
-					if @success != null then @success(@response)
-					Request.callHttpEvent(@response, @, 'success')
+					@emit 'success', @response, @
 				else
 					error = new Error 'Can not load ' + url + ' address'
-					if @error != null then @error(error)
-					Request.callHttpEvent(@response, @, 'error', [error])
+					@emit 'error', error, @response, @
 
-				if @complete != null then @complete(@response)
-				Request.callHttpEvent(@response, @, 'complete')
+				@emit 'complete', @response, @
 
 
 
@@ -83,11 +74,10 @@ class Request
 	send: ->
 		deferred = Q.defer()
 
-		Request.callHttpEvent(@response, @, 'send')
+		@emit 'send', @response, @
 
-		@complete = (response) -> deferred.resolve(response)
-		@success = (response) -> deferred.resolve(response)
-		@error = (e) => deferred.reject(e)
+		@on 'success', (response) -> deferred.resolve(response)
+		@on 'error', (error) -> deferred.reject(error)
 
 		@xhr.send(@_data)
 
@@ -122,22 +112,6 @@ class Request
 			return new window.XMLHttpRequest
 		else
 			return new ActiveXObject("Microsoft.XMLHTTP")
-
-
-	@getHttp: ->
-		if @Http == null then @Http = require './Http'
-		return @Http
-
-
-	@callHttpEvent: (response, request, event, args = []) ->
-		@getHttp()
-
-		args.push(response)
-		args.push(request)
-
-		fn.apply(response, args) for fn in @Http.events[event]
-		for name, ext of @Http.extensions
-			if typeof ext[event] != 'undefined' then ext[event].apply(response, args)
 
 
 module.exports = Request

@@ -2,4 +2,6 @@
 (function() {
   require('./Http');
 
+  require('./Helpers');
+
 }).call(this);
