@@ -1,6 +1,6 @@
 {
 	"packages": {
-		"modal": {
+		"tests": {
 			"base": "../",
 			"application": "./test/tests.js",
 			"modules": [
