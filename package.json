@@ -23,12 +23,13 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "0.9.6"
+		"q": "latest"
 	},
 	"devDependencies": {
-		"should": "1.2.2"
+		"mocha": "latest",
+		"chai": "latest"
 	},
 	"scripts": {
-		"test": "cd ./test; mocha ./index.js --reporter spec;"
+		"test": "cd ./test; mocha-phantomjs index.html;"
 	}
 }
