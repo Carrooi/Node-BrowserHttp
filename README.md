@@ -6,9 +6,11 @@ Now it is really simple and more functions will be added.
 
 http-browser uses [q](https://npmjs.org/package/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
 
-## Changelog
+## Installation
 
-Changelog is in the bottom of this readme.
+```
+$ npm install browser-http
+```
 
 ## Usage
 
