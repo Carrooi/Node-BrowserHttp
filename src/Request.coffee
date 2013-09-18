@@ -6,6 +6,11 @@ EventEmitter = require('events').EventEmitter
 class Request extends EventEmitter
 
 
+	@JSONP_METHOD_PREFIX = '__browser_http_jsonp_callback_'
+
+
+	id: null
+
 	url: null
 
 	type: 'GET'
@@ -21,21 +26,29 @@ class Request extends EventEmitter
 	response: null
 
 
-	constructor: (@url, @type = 'GET', @data = null, @jsonp = null) ->
+	constructor: (@url, @type = 'GET', @data = null, @jsonp = false, @id) ->
 		super
 
 		url = @url
+
 		@type = @type.toUpperCase()
 		if @type not in ['GET', 'POST', 'PUT', 'DELETE']
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
 
-		#if @jsonp != null
-		#	if @data == null then @data = {}
+		if @jsonp != false
+			if @jsonp == true then @jsonp = 'callback'
+			method = Request.JSONP_METHOD_PREFIX + @id
+
+			url += if url.indexOf('?') != -1 then '&' else '?'
+			url += @jsonp + '=' + method
+
+			window[method] = (data) => @response.data = data
 
 		if @data != null
 			@_data = Helpers.buildQuery(@data)
 			if @type != 'POST'
-				url = if @url.indexOf('?') != -1 then @url + '&' + @_data else @url + '?' + @_data
+				url += if url.indexOf('?') != -1 then '&' else '?'
+				url += @_data
 
 		@xhr = Request.createRequestObject()
 		@xhr.open(@type, url, true)
@@ -61,6 +74,9 @@ class Request extends EventEmitter
 				contentType = @getHeader 'content-type'
 				if contentType != null && contentType.match(/application\/json/) != null
 					@response.data = JSON.parse(@response.data)
+
+				if contentType != null && contentType.match(/text\/javascript/) != null && @jsonp
+					eval(@response.data)
 
 				if @response.status == 200
 					@emit 'success', @response, @

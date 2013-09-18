@@ -79,6 +79,16 @@ You can of course disable this behavior:
 http.useQueue = false;
 ```
 
+## JSONP
+
+It is very easy to work with jsonp requests.
+
+```
+http.jsonp('http://some.url.com').then(function(response) {
+	console.log(response.data);
+});
+```
+
 ## Events
 
 You can listen for all http events with your own functions.
@@ -186,6 +196,7 @@ $ npm test
 
 * 1.8.0
 	+ Requests are added into queue
+	+ Added support for jsonp
 
 * 1.7.1
 	+ Added some tests

@@ -479,6 +479,8 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
 
     __extends(Http, _super);
 
+    Http.requests = [];
+
     Http.prototype.extensions = null;
 
     Http.prototype.queue = null;
@@ -525,9 +527,9 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
         options.data = null;
       }
       if (typeof options.jsonp === 'undefined') {
-        options.jsonp = null;
+        options.jsonp = false;
       }
-      request = new Request(url, options.type, options.data, options.jsonp);
+      request = new Request(url, options.type, options.data, options.jsonp, Http.requests.length);
       request.on('send', function(response, request) {
         return _this.emit('send', response, request);
       });
@@ -540,6 +542,7 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
       request.on('complete', function(response, request) {
         return _this.emit('complete', response, request);
       });
+      Http.requests.push(request);
       if (this.useQueue) {
         deferred = Q.defer();
         this.queue.add(request, function() {
@@ -613,6 +616,16 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
         }
         return Q.resolve(response);
       });
+    };
+
+    Http.prototype.jsonp = function(url, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (typeof options.jsonp === 'undefined') {
+        options.jsonp = true;
+      }
+      return this.get(url, options);
     };
 
     Http.prototype.isHistoryApiSupported = function() {
@@ -726,6 +739,10 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
 
     __extends(Request, _super);
 
+    Request.JSONP_METHOD_PREFIX = '__browser_http_jsonp_callback_';
+
+    Request.prototype.id = null;
+
     Request.prototype.url = null;
 
     Request.prototype.type = 'GET';
@@ -740,23 +757,36 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
 
     Request.prototype.response = null;
 
-    function Request(url, type, data, jsonp) {
-      var _ref,
+    function Request(url, type, data, jsonp, id) {
+      var method, _ref,
         _this = this;
       this.url = url;
       this.type = type != null ? type : 'GET';
       this.data = data != null ? data : null;
-      this.jsonp = jsonp != null ? jsonp : null;
+      this.jsonp = jsonp != null ? jsonp : false;
+      this.id = id;
       Request.__super__.constructor.apply(this, arguments);
       url = this.url;
       this.type = this.type.toUpperCase();
       if ((_ref = this.type) !== 'GET' && _ref !== 'POST' && _ref !== 'PUT' && _ref !== 'DELETE') {
         throw new Error('Http request: type must be GET, POST, PUT or DELETE, ' + this.type + ' given');
       }
+      if (this.jsonp !== false) {
+        if (this.jsonp === true) {
+          this.jsonp = 'callback';
+        }
+        method = Request.JSONP_METHOD_PREFIX + this.id;
+        url += url.indexOf('?') !== -1 ? '&' : '?';
+        url += this.jsonp + '=' + method;
+        window[method] = function(data) {
+          return _this.response.data = data;
+        };
+      }
       if (this.data !== null) {
         this._data = Helpers.buildQuery(this.data);
         if (this.type !== 'POST') {
-          url = this.url.indexOf('?') !== -1 ? this.url + '&' + this._data : this.url + '?' + this._data;
+          url += url.indexOf('?') !== -1 ? '&' : '?';
+          url += this._data;
         }
       }
       this.xhr = Request.createRequestObject();
@@ -780,6 +810,9 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
           contentType = _this.getHeader('content-type');
           if (contentType !== null && contentType.match(/application\/json/) !== null) {
             _this.response.data = JSON.parse(_this.response.data);
+          }
+          if (contentType !== null && contentType.match(/text\/javascript/) !== null && _this.jsonp) {
+            eval(_this.response.data);
           }
           if (_this.response.status === 200) {
             _this.emit('success', _this.response, _this);
@@ -1024,10 +1057,20 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'test/Http.coffee']
         }).done();
       });
     });
-    return describe('#post()', function() {
+    describe('#post()', function() {
       return it('should return an error - cross domain request', function(done) {
         return Http.post(link()).fail(function(err) {
           expect(err).to.be["instanceof"](Error);
+          return done();
+        }).done();
+      });
+    });
+    return describe('#jsonp()', function() {
+      return it('should send jsonp request', function(done) {
+        return Http.jsonp(link('jsonp')).then(function(response) {
+          expect(response.data).to.be.eql({
+            message: 'jsonp text'
+          });
           return done();
         }).done();
       });

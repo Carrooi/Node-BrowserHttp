@@ -32,3 +32,10 @@ describe 'Http', ->
 				expect(err).to.be.instanceof(Error)
 				done()
 			).done()
+
+	describe '#jsonp()', ->
+		it 'should send jsonp request', (done) ->
+			Http.jsonp(link('jsonp')).then( (response) ->
+				expect(response.data).to.be.eql({message: 'jsonp text'})
+				done()
+			).done()

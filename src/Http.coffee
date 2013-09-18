@@ -6,6 +6,9 @@ EventEmitter = require('events').EventEmitter
 class Http extends EventEmitter
 
 
+	@requests: []
+
+
 	extensions: null
 
 	queue: null
@@ -28,14 +31,16 @@ class Http extends EventEmitter
 	request: (url, options = {}) ->
 		if typeof options.type == 'undefined' then options.type = 'GET'
 		if typeof options.data == 'undefined' then options.data = null
-		if typeof options.jsonp == 'undefined' then options.jsonp = null
+		if typeof options.jsonp == 'undefined' then options.jsonp = false
 
-		request = new Request(url, options.type, options.data, options.jsonp)
+		request = new Request(url, options.type, options.data, options.jsonp, Http.requests.length)
 
 		request.on 'send', (response, request) => @emit 'send', response, request
 		request.on 'success', (response, request) => @emit 'success', response, request
 		request.on 'error', (error, response, request) => @emit 'error', response, request
 		request.on 'complete', (response, request) => @emit 'complete', response, request
+
+		Http.requests.push(request)
 
 		if @useQueue
 			deferred = Q.defer()
@@ -91,6 +96,11 @@ class Http extends EventEmitter
 				response.data = JSON.parse(response.data)
 			return Q.resolve(response)
 		)
+
+
+	jsonp: (url, options = {}) ->
+		if typeof options.jsonp == 'undefined' then options.jsonp = true
+		return @get(url, options)
 
 
 	isHistoryApiSupported: ->
