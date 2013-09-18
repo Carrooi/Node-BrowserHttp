@@ -23,7 +23,8 @@
 			"run": [
 				"test/Helpers",
 				"test/Http",
-				"test/Extensions"
+				"test/Extensions",
+				"test/Queue"
 			]
 		}
 	},

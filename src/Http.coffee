@@ -1,4 +1,5 @@
 Request = require './Request'
+Queue = require './Queue'
 Q = require 'q'
 EventEmitter = require('events').EventEmitter
 
@@ -7,11 +8,16 @@ class Http extends EventEmitter
 
 	extensions: null
 
+	queue: null
+
+	useQueue: true
+
 
 	constructor: ->
 		super
 
 		@extensions = {}
+		@queue = new Queue
 
 		@on 'send', (args...) => @callExtensions('send', args)
 		@on 'complete', (args...) => @callExtensions('complete', args)
@@ -31,7 +37,23 @@ class Http extends EventEmitter
 		request.on 'error', (error, response, request) => @emit 'error', response, request
 		request.on 'complete', (response, request) => @emit 'complete', response, request
 
-		return request.send()
+		if @useQueue
+			deferred = Q.defer()
+
+			@queue.add request, =>
+				request.send().then( (response) =>
+					@queue.next()
+					deferred.resolve(response)
+				).fail( (err) =>
+					@queue.next()
+					deferred.reject(err)
+				)
+
+			@queue.run()
+
+			return deferred.promise
+		else
+			return request.send()
 
 
 	get: (url, options = {}) ->

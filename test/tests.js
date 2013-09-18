@@ -462,12 +462,14 @@ var __filename = 'src/Http.coffee';
 var __dirname = 'src';
 var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'], env: {}};
 (function() {
-  var EventEmitter, Http, Q, Request,
+  var EventEmitter, Http, Q, Queue, Request,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice;
 
   Request = require('./Request');
+
+  Queue = require('./Queue');
 
   Q = require('q');
 
@@ -479,10 +481,15 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
 
     Http.prototype.extensions = null;
 
+    Http.prototype.queue = null;
+
+    Http.prototype.useQueue = true;
+
     function Http() {
       var _this = this;
       Http.__super__.constructor.apply(this, arguments);
       this.extensions = {};
+      this.queue = new Queue;
       this.on('send', function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -506,18 +513,21 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
     }
 
     Http.prototype.request = function(url, options) {
-      var request,
+      var deferred, request,
         _this = this;
       if (options == null) {
         options = {};
       }
-      if (!options.type) {
+      if (typeof options.type === 'undefined') {
         options.type = 'GET';
       }
-      if (!options.data) {
+      if (typeof options.data === 'undefined') {
         options.data = null;
       }
-      request = new Request(url, options.type, options.data);
+      if (typeof options.jsonp === 'undefined') {
+        options.jsonp = null;
+      }
+      request = new Request(url, options.type, options.data, options.jsonp);
       request.on('send', function(response, request) {
         return _this.emit('send', response, request);
       });
@@ -530,7 +540,22 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
       request.on('complete', function(response, request) {
         return _this.emit('complete', response, request);
       });
-      return request.send();
+      if (this.useQueue) {
+        deferred = Q.defer();
+        this.queue.add(request, function() {
+          return request.send().then(function(response) {
+            _this.queue.next();
+            return deferred.resolve(response);
+          }).fail(function(err) {
+            _this.queue.next();
+            return deferred.reject(err);
+          });
+        });
+        this.queue.run();
+        return deferred.promise;
+      } else {
+        return request.send();
+      }
     };
 
     Http.prototype.get = function(url, options) {
@@ -631,6 +656,54 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
 }).call(this);
 
 },
+'src/Queue.coffee': function(exports, __require, module) {
+var require = function(name) {return __require(name, 'src/Queue.coffee');};
+var __filename = 'src/Queue.coffee';
+var __dirname = 'src';
+var process = {cwd: function() {return '/';}, argv: ['node', 'src/Queue.coffee'], env: {}};
+(function() {
+  var Queue;
+
+  Queue = (function() {
+
+    Queue.prototype.requests = null;
+
+    Queue.prototype.running = false;
+
+    function Queue() {
+      this.requests = [];
+    }
+
+    Queue.prototype.add = function(request, fn) {
+      return this.requests.push({
+        request: request,
+        fn: fn
+      });
+    };
+
+    Queue.prototype.run = function() {
+      var data;
+      if (this.running === false && this.requests.length > 0) {
+        this.running = true;
+        data = this.requests.shift();
+        return data.fn();
+      }
+    };
+
+    Queue.prototype.next = function() {
+      this.running = false;
+      return this.run();
+    };
+
+    return Queue;
+
+  })();
+
+  module.exports = Queue;
+
+}).call(this);
+
+},
 'src/Request.coffee': function(exports, __require, module) {
 var require = function(name) {return __require(name, 'src/Request.coffee');};
 var __filename = 'src/Request.coffee';
@@ -657,6 +730,8 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
 
     Request.prototype.type = 'GET';
 
+    Request.prototype.jsonp = null;
+
     Request.prototype.data = null;
 
     Request.prototype._data = null;
@@ -665,12 +740,13 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
 
     Request.prototype.response = null;
 
-    function Request(url, type, data) {
+    function Request(url, type, data, jsonp) {
       var _ref,
         _this = this;
       this.url = url;
       this.type = type != null ? type : 'GET';
       this.data = data != null ? data : null;
+      this.jsonp = jsonp != null ? jsonp : null;
       Request.__super__.constructor.apply(this, arguments);
       url = this.url;
       this.type = this.type.toUpperCase();
@@ -955,6 +1031,134 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'test/Http.coffee']
           return done();
         }).done();
       });
+    });
+  });
+
+}).call(this);
+
+},
+'test/Queue.coffee': function(exports, __require, module) {
+var require = function(name) {return __require(name, 'test/Queue.coffee');};
+var __filename = 'test/Queue.coffee';
+var __dirname = 'test';
+var process = {cwd: function() {return '/';}, argv: ['node', 'test/Queue.coffee'], env: {}};
+(function() {
+  var Http, Q, link;
+
+  Http = require('browser-http');
+
+  Q = require('q');
+
+  Q.stopUnhandledRejectionTracking();
+
+  link = function(path) {
+    if (path == null) {
+      path = '';
+    }
+    return 'http://localhost:3000/' + path;
+  };
+
+  describe('Queue', function() {
+    it('should send one request', function(done) {
+      return Http.get(link()).then(function(response) {
+        expect(response.data).to.be.equal('test');
+        return done();
+      }).done();
+    });
+    return it('should send many requests', function(done) {
+      var buf;
+      buf = {
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false
+      };
+      Http.on('send', function(response, request) {
+        return buf[request.data.param] = true;
+      });
+      Http.get(link('give-back'), {
+        data: {
+          param: 1
+        }
+      }).then(function(response) {
+        expect({
+          1: true,
+          2: true,
+          3: false,
+          4: false,
+          5: false
+        }).to.be.eql(buf);
+        return expect(response.data).to.be.eql({
+          param: '1'
+        });
+      }).done();
+      Http.get(link('give-back'), {
+        data: {
+          param: 2
+        }
+      }).then(function(response) {
+        expect({
+          1: true,
+          2: true,
+          3: true,
+          4: false,
+          5: false
+        }).to.be.eql(buf);
+        return expect(response.data).to.be.eql({
+          param: '2'
+        });
+      }).done();
+      Http.get(link('give-back'), {
+        data: {
+          param: 3
+        }
+      }).then(function(response) {
+        expect({
+          1: true,
+          2: true,
+          3: true,
+          4: true,
+          5: false
+        }).to.be.eql(buf);
+        return expect(response.data).to.be.eql({
+          param: '3'
+        });
+      }).done();
+      Http.get(link('give-back'), {
+        data: {
+          param: 4
+        }
+      }).then(function(response) {
+        expect({
+          1: true,
+          2: true,
+          3: true,
+          4: true,
+          5: true
+        }).to.be.eql(buf);
+        return expect(response.data).to.be.eql({
+          param: '4'
+        });
+      }).done();
+      Http.get(link('give-back'), {
+        data: {
+          param: 5
+        }
+      }).then(function(response) {
+        expect({
+          1: true,
+          2: true,
+          3: true,
+          4: true,
+          5: true
+        }).to.be.eql(buf);
+        expect(response.data).to.be.eql({
+          param: '5'
+        });
+        return done();
+      }).done();
+      return expect(Http.queue.requests.length).to.be.equal(4);
     });
   });
 
@@ -3807,3 +4011,5 @@ require('test/Helpers');
 require('test/Http');
 
 require('test/Extensions');
+
+require('test/Queue');

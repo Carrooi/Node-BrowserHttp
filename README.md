@@ -69,6 +69,16 @@ http.getJson('http://www.google.com/some.json').then(function(response) {
 http.postJson('http://www.google.com/some.json');
 ```
 
+## Requests queue
+
+By default all your requests are called from queue one by one, so there is always just one request running (or zero).
+Inspiration from this article [http://blog.alexmaccaw.com/queuing-ajax-requests](http://blog.alexmaccaw.com/queuing-ajax-requests).
+
+You can of course disable this behavior:
+```
+http.useQueue = false;
+```
+
 ## Events
 
 You can listen for all http events with your own functions.
@@ -173,6 +183,9 @@ $ npm test
 ```
 
 ## Changelog
+
+* 1.8.0
+	+ Requests are added into queue
 
 * 1.7.1
 	+ Added some tests
