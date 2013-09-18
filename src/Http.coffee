@@ -20,10 +20,11 @@ class Http extends EventEmitter
 
 
 	request: (url, options = {}) ->
-		if !options.type then options.type = 'GET'
-		if !options.data then options.data = null
+		if typeof options.type == 'undefined' then options.type = 'GET'
+		if typeof options.data == 'undefined' then options.data = null
+		if typeof options.jsonp == 'undefined' then options.jsonp = null
 
-		request = new Request(url, options.type, options.data)
+		request = new Request(url, options.type, options.data, options.jsonp)
 
 		request.on 'send', (response, request) => @emit 'send', response, request
 		request.on 'success', (response, request) => @emit 'success', response, request

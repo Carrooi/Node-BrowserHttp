@@ -10,6 +10,8 @@ class Request extends EventEmitter
 
 	type: 'GET'
 
+	jsonp: null
+
 	data: null
 
 	_data: null
@@ -19,13 +21,16 @@ class Request extends EventEmitter
 	response: null
 
 
-	constructor: (@url, @type = 'GET', @data = null) ->
+	constructor: (@url, @type = 'GET', @data = null, @jsonp = null) ->
 		super
 
 		url = @url
 		@type = @type.toUpperCase()
 		if @type not in ['GET', 'POST', 'PUT', 'DELETE']
 			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
+
+		#if @jsonp != null
+		#	if @data == null then @data = {}
 
 		if @data != null
 			@_data = Helpers.buildQuery(@data)

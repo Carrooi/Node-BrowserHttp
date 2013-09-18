@@ -904,9 +904,13 @@ var __filename = 'test/Http.coffee';
 var __dirname = 'test';
 var process = {cwd: function() {return '/';}, argv: ['node', 'test/Http.coffee'], env: {}};
 (function() {
-  var Http, link;
+  var Http, Q, link;
 
   Http = require('browser-http');
+
+  Q = require('q');
+
+  Q.stopUnhandledRejectionTracking();
 
   link = function(path) {
     if (path == null) {
@@ -916,7 +920,7 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'test/Http.coffee']
   };
 
   describe('Http', function() {
-    return describe('#get()', function() {
+    describe('#get()', function() {
       it('should send request and load its text', function(done) {
         return Http.get(link()).then(function(response) {
           expect(response.data).to.be.equal('test');
@@ -940,6 +944,14 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'test/Http.coffee']
           expect(response.data).to.be.eql({
             first: 'first message'
           });
+          return done();
+        }).done();
+      });
+    });
+    return describe('#post()', function() {
+      return it('should return an error - cross domain request', function(done) {
+        return Http.post(link()).fail(function(err) {
+          expect(err).to.be["instanceof"](Error);
           return done();
         }).done();
       });

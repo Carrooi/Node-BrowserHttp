@@ -1,6 +1,8 @@
 
 Http = require 'browser-http'
+Q = require 'q'
 
+Q.stopUnhandledRejectionTracking()
 link = (path = '') -> return 'http://localhost:3000/' + path
 
 describe 'Http', ->
@@ -21,5 +23,12 @@ describe 'Http', ->
 		it 'should send request with data and load them from response', (done) ->
 			Http.get(link('give-back'), data: {first: 'first message'}).then( (response) ->
 				expect(response.data).to.be.eql({first: 'first message'})
+				done()
+			).done()
+
+	describe '#post()', ->
+		it 'should return an error - cross domain request', (done) ->
+			Http.post(link()).fail( (err) ->
+				expect(err).to.be.instanceof(Error)
 				done()
 			).done()
