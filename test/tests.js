@@ -477,11 +477,12 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Http.coffee'],
 
     __extends(Http, _super);
 
-    Http.prototype.extensions = {};
+    Http.prototype.extensions = null;
 
     function Http() {
       var _this = this;
       Http.__super__.constructor.apply(this, arguments);
+      this.extensions = {};
       this.on('send', function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -692,7 +693,7 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
       }
       this.response = new Response;
       this.xhr.onreadystatechange = function() {
-        var error;
+        var contentType, error;
         _this.response.state = _this.xhr.readyState;
         if (_this.response.state === 4) {
           _this.response.status = _this.xhr.status;
@@ -700,7 +701,8 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Request.coffee
           _this.response.rawData = _this.xhr.responseText;
           _this.response.xml = _this.xhr.responseXML;
           _this.response.data = _this.xhr.responseText;
-          if (_this.getHeader('content-type').match(/application\/json/) !== null) {
+          contentType = _this.getHeader('content-type');
+          if (contentType !== null && contentType.match(/application\/json/) !== null) {
             _this.response.data = JSON.parse(_this.response.data);
           }
           if (_this.response.status === 200) {
@@ -806,6 +808,61 @@ var process = {cwd: function() {return '/';}, argv: ['node', 'src/Response.coffe
 }).call(this);
 
 },
+'test/Extensions.coffee': function(exports, __require, module) {
+var require = function(name) {return __require(name, 'test/Extensions.coffee');};
+var __filename = 'test/Extensions.coffee';
+var __dirname = 'test';
+var process = {cwd: function() {return '/';}, argv: ['node', 'test/Extensions.coffee'], env: {}};
+(function() {
+  var Http, link;
+
+  Http = require('browser-http');
+
+  link = function(path) {
+    if (path == null) {
+      path = '';
+    }
+    return 'http://localhost:3000/' + path;
+  };
+
+  describe('Extensions', function() {
+    afterEach(function() {
+      return Http.extensions = {};
+    });
+    describe('#addExtension()', function() {
+      return it('should add new extension', function() {
+        Http.addExtension('snippet', {});
+        return expect(Http.extensions).to.include.keys('snippet');
+      });
+    });
+    describe('#removeExtension()', function() {
+      it('should remove added extension', function() {
+        Http.addExtension('snippet', {});
+        Http.removeExtension('snippet');
+        return expect(Http.extensions).to.be.eql({});
+      });
+      return it('should throw an error if extension does not exists', function() {
+        return expect(function() {
+          return Http.removeExtension('snippet');
+        }).to["throw"](Error);
+      });
+    });
+    return describe('#callExtensions()', function() {
+      return it('should call success event after response is recieved', function(done) {
+        Http.addExtension('test', {
+          success: function(response) {
+            expect(response.data).to.be.equal('test');
+            return done();
+          }
+        });
+        return Http.get(link());
+      });
+    });
+  });
+
+}).call(this);
+
+},
 'test/Helpers.coffee': function(exports, __require, module) {
 var require = function(name) {return __require(name, 'test/Helpers.coffee');};
 var __filename = 'test/Helpers.coffee';
@@ -847,8 +904,47 @@ var __filename = 'test/Http.coffee';
 var __dirname = 'test';
 var process = {cwd: function() {return '/';}, argv: ['node', 'test/Http.coffee'], env: {}};
 (function() {
+  var Http, link;
 
+  Http = require('browser-http');
 
+  link = function(path) {
+    if (path == null) {
+      path = '';
+    }
+    return 'http://localhost:3000/' + path;
+  };
+
+  describe('Http', function() {
+    return describe('#get()', function() {
+      it('should send request and load its text', function(done) {
+        return Http.get(link()).then(function(response) {
+          expect(response.data).to.be.equal('test');
+          return done();
+        }).done();
+      });
+      it('should send request and load response as JSON', function(done) {
+        return Http.get(link('json')).then(function(response) {
+          expect(response.data).to.be.eql({
+            message: 'text'
+          });
+          return done();
+        }).done();
+      });
+      return it('should send request with data and load them from response', function(done) {
+        return Http.get(link('give-back'), {
+          data: {
+            first: 'first message'
+          }
+        }).then(function(response) {
+          expect(response.data).to.be.eql({
+            first: 'first message'
+          });
+          return done();
+        }).done();
+      });
+    });
+  });
 
 }).call(this);
 
@@ -3102,6 +3198,592 @@ EventEmitter.listenerCount = function(emitter, type) {
   return ret;
 };
 
+},
+'util': function(exports, __require, module) {
+var require = function(name) {return __require(name, 'util');};
+var __filename = 'util';
+var __dirname = '.';
+var process = {cwd: function() {return '/';}, argv: ['node', 'util'], env: {}};
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var formatRegExp = /%[sdj%]/g;
+exports.format = function(f) {
+  if (typeof f !== 'string') {
+    var objects = [];
+    for (var i = 0; i < arguments.length; i++) {
+      objects.push(inspect(arguments[i]));
+    }
+    return objects.join(' ');
+  }
+
+  var i = 1;
+  var args = arguments;
+  var len = args.length;
+  var str = String(f).replace(formatRegExp, function(x) {
+    if (x === '%%') return '%';
+    if (i >= len) return x;
+    switch (x) {
+      case '%s': return String(args[i++]);
+      case '%d': return Number(args[i++]);
+      case '%j': return JSON.stringify(args[i++]);
+      default:
+        return x;
+    }
+  });
+  for (var x = args[i]; i < len; x = args[++i]) {
+    if (x === null || typeof x !== 'object') {
+      str += ' ' + x;
+    } else {
+      str += ' ' + inspect(x);
+    }
+  }
+  return str;
+};
+
+
+// Mark that a method should not be used.
+// Returns a modified function which warns once by default.
+// If --no-deprecation is set, then it is a no-op.
+exports.deprecate = function(fn, msg) {
+  if (process.noDeprecation === true) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (process.throwDeprecation) {
+        throw new Error(msg);
+      } else if (process.traceDeprecation) {
+        console.trace(msg);
+      } else {
+        console.error(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+};
+
+
+exports.print = function() {
+  for (var i = 0, len = arguments.length; i < len; ++i) {
+    process.stdout.write(String(arguments[i]));
+  }
+};
+
+
+exports.puts = function() {
+  for (var i = 0, len = arguments.length; i < len; ++i) {
+    process.stdout.write(arguments[i] + '\n');
+  }
+};
+
+
+exports.debug = function(x) {
+  process.stderr.write('DEBUG: ' + x + '\n');
+};
+
+
+var error = exports.error = function(x) {
+  for (var i = 0, len = arguments.length; i < len; ++i) {
+    process.stderr.write(arguments[i] + '\n');
+  }
+};
+
+
+/**
+ * Echos the value of a value. Trys to print the value out
+ * in the best way possible given the different types.
+ *
+ * @param {Object} obj The object to print out.
+ * @param {Object} opts Optional options object that alters the output.
+ */
+/* legacy: obj, showHidden, depth, colors*/
+function inspect(obj, opts) {
+  // default options
+  var ctx = {
+    seen: [],
+    stylize: stylizeNoColor
+  };
+  // legacy...
+  if (arguments.length >= 3) ctx.depth = arguments[2];
+  if (arguments.length >= 4) ctx.colors = arguments[3];
+  if (typeof opts === 'boolean') {
+    // legacy...
+    ctx.showHidden = opts;
+  } else if (opts) {
+    // got an "options" object
+    exports._extend(ctx, opts);
+  }
+  // set default options
+  if (typeof ctx.showHidden === 'undefined') ctx.showHidden = false;
+  if (typeof ctx.depth === 'undefined') ctx.depth = 2;
+  if (typeof ctx.colors === 'undefined') ctx.colors = false;
+  if (typeof ctx.customInspect === 'undefined') ctx.customInspect = true;
+  if (ctx.colors) ctx.stylize = stylizeWithColor;
+  return formatValue(ctx, obj, ctx.depth);
+}
+exports.inspect = inspect;
+
+
+// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+inspect.colors = {
+  'bold' : [1, 22],
+  'italic' : [3, 23],
+  'underline' : [4, 24],
+  'inverse' : [7, 27],
+  'white' : [37, 39],
+  'grey' : [90, 39],
+  'black' : [30, 39],
+  'blue' : [34, 39],
+  'cyan' : [36, 39],
+  'green' : [32, 39],
+  'magenta' : [35, 39],
+  'red' : [31, 39],
+  'yellow' : [33, 39]
+};
+
+// Don't use 'blue' not visible on cmd.exe
+inspect.styles = {
+  'special': 'cyan',
+  'number': 'yellow',
+  'boolean': 'yellow',
+  'undefined': 'grey',
+  'null': 'bold',
+  'string': 'green',
+  'date': 'magenta',
+  // "name": intentionally not styling
+  'regexp': 'red'
+};
+
+
+function stylizeWithColor(str, styleType) {
+  var style = inspect.styles[styleType];
+
+  if (style) {
+    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+           '\u001b[' + inspect.colors[style][1] + 'm';
+  } else {
+    return str;
+  }
+}
+
+
+function stylizeNoColor(str, styleType) {
+  return str;
+}
+
+
+function arrayToHash(array) {
+  var hash = {};
+
+  array.forEach(function(val, idx) {
+    hash[val] = true;
+  });
+
+  return hash;
+}
+
+
+function formatValue(ctx, value, recurseTimes) {
+  // Provide a hook for user-specified inspect functions.
+  // Check that value is an object with an inspect function on it
+  if (ctx.customInspect && value && typeof value.inspect === 'function' &&
+      // Filter out the util module, it's inspect function is special
+      value.inspect !== exports.inspect &&
+      // Also filter out any prototype objects using the circular check.
+      !(value.constructor && value.constructor.prototype === value)) {
+    return String(value.inspect(recurseTimes));
+  }
+
+  // Primitive types cannot have properties
+  var primitive = formatPrimitive(ctx, value);
+  if (primitive) {
+    return primitive;
+  }
+
+  // Look up the keys of the object.
+  var keys = Object.keys(value);
+  var visibleKeys = arrayToHash(keys);
+
+  if (ctx.showHidden) {
+    keys = Object.getOwnPropertyNames(value);
+  }
+
+  // Some type of object without properties can be shortcutted.
+  if (keys.length === 0) {
+    if (typeof value === 'function') {
+      var name = value.name ? ': ' + value.name : '';
+      return ctx.stylize('[Function' + name + ']', 'special');
+    }
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    }
+    if (isDate(value)) {
+      return ctx.stylize(Date.prototype.toString.call(value), 'date');
+    }
+    if (isError(value)) {
+      return formatError(value);
+    }
+  }
+
+  var base = '', array = false, braces = ['{', '}'];
+
+  // Make Array say that they are Array
+  if (isArray(value)) {
+    array = true;
+    braces = ['[', ']'];
+  }
+
+  // Make functions say that they are functions
+  if (typeof value === 'function') {
+    var n = value.name ? ': ' + value.name : '';
+    base = ' [Function' + n + ']';
+  }
+
+  // Make RegExps say that they are RegExps
+  if (isRegExp(value)) {
+    base = ' ' + RegExp.prototype.toString.call(value);
+  }
+
+  // Make dates with properties first say the date
+  if (isDate(value)) {
+    base = ' ' + Date.prototype.toUTCString.call(value);
+  }
+
+  // Make error with message first say the error
+  if (isError(value)) {
+    base = ' ' + formatError(value);
+  }
+
+  if (keys.length === 0 && (!array || value.length == 0)) {
+    return braces[0] + base + braces[1];
+  }
+
+  if (recurseTimes < 0) {
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    } else {
+      return ctx.stylize('[Object]', 'special');
+    }
+  }
+
+  ctx.seen.push(value);
+
+  var output;
+  if (array) {
+    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+  } else {
+    output = keys.map(function(key) {
+      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+    });
+  }
+
+  ctx.seen.pop();
+
+  return reduceToSingleString(output, base, braces);
+}
+
+
+function formatPrimitive(ctx, value) {
+  switch (typeof value) {
+    case 'undefined':
+      return ctx.stylize('undefined', 'undefined');
+
+    case 'string':
+      var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+                                               .replace(/'/g, "\\'")
+                                               .replace(/\\"/g, '"') + '\'';
+      return ctx.stylize(simple, 'string');
+
+    case 'number':
+      return ctx.stylize('' + value, 'number');
+
+    case 'boolean':
+      return ctx.stylize('' + value, 'boolean');
+  }
+  // For some reason typeof null is "object", so special case here.
+  if (value === null) {
+    return ctx.stylize('null', 'null');
+  }
+}
+
+
+function formatError(value) {
+  return '[' + Error.prototype.toString.call(value) + ']';
+}
+
+
+function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+  var output = [];
+  for (var i = 0, l = value.length; i < l; ++i) {
+    if (hasOwnProperty(value, String(i))) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          String(i), true));
+    } else {
+      output.push('');
+    }
+  }
+  keys.forEach(function(key) {
+    if (!key.match(/^\d+$/)) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          key, true));
+    }
+  });
+  return output;
+}
+
+
+function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+  var name, str, desc;
+  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+  if (desc.get) {
+    if (desc.set) {
+      str = ctx.stylize('[Getter/Setter]', 'special');
+    } else {
+      str = ctx.stylize('[Getter]', 'special');
+    }
+  } else {
+    if (desc.set) {
+      str = ctx.stylize('[Setter]', 'special');
+    }
+  }
+  if (!hasOwnProperty(visibleKeys, key)) {
+    name = '[' + key + ']';
+  }
+  if (!str) {
+    if (ctx.seen.indexOf(desc.value) < 0) {
+      if (recurseTimes === null) {
+        str = formatValue(ctx, desc.value, null);
+      } else {
+        str = formatValue(ctx, desc.value, recurseTimes - 1);
+      }
+      if (str.indexOf('\n') > -1) {
+        if (array) {
+          str = str.split('\n').map(function(line) {
+            return '  ' + line;
+          }).join('\n').substr(2);
+        } else {
+          str = '\n' + str.split('\n').map(function(line) {
+            return '   ' + line;
+          }).join('\n');
+        }
+      }
+    } else {
+      str = ctx.stylize('[Circular]', 'special');
+    }
+  }
+  if (typeof name === 'undefined') {
+    if (array && key.match(/^\d+$/)) {
+      return str;
+    }
+    name = JSON.stringify('' + key);
+    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+      name = name.substr(1, name.length - 2);
+      name = ctx.stylize(name, 'name');
+    } else {
+      name = name.replace(/'/g, "\\'")
+                 .replace(/\\"/g, '"')
+                 .replace(/(^"|"$)/g, "'");
+      name = ctx.stylize(name, 'string');
+    }
+  }
+
+  return name + ': ' + str;
+}
+
+
+function reduceToSingleString(output, base, braces) {
+  var numLinesEst = 0;
+  var length = output.reduce(function(prev, cur) {
+    numLinesEst++;
+    if (cur.indexOf('\n') >= 0) numLinesEst++;
+    return prev + cur.length + 1;
+  }, 0);
+
+  if (length > 60) {
+    return braces[0] +
+           (base === '' ? '' : base + '\n ') +
+           ' ' +
+           output.join(',\n  ') +
+           ' ' +
+           braces[1];
+  }
+
+  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+}
+
+
+// NOTE: These type checking functions intentionally don't use `instanceof`
+// because it is fragile and can be easily faked with `Object.create()`.
+function isArray(ar) {
+  return Array.isArray(ar) ||
+         (typeof ar === 'object' && objectToString(ar) === '[object Array]');
+}
+exports.isArray = isArray;
+
+
+function isRegExp(re) {
+  return typeof re === 'object' && objectToString(re) === '[object RegExp]';
+}
+exports.isRegExp = isRegExp;
+
+
+function isDate(d) {
+  return typeof d === 'object' && objectToString(d) === '[object Date]';
+}
+exports.isDate = isDate;
+
+
+function isError(e) {
+  return typeof e === 'object' && objectToString(e) === '[object Error]';
+}
+exports.isError = isError;
+
+
+function objectToString(o) {
+  return Object.prototype.toString.call(o);
+}
+
+
+exports.p = exports.deprecate(function() {
+  for (var i = 0, len = arguments.length; i < len; ++i) {
+    error(exports.inspect(arguments[i]));
+  }
+}, 'util.p: Use console.error() instead.');
+
+
+function pad(n) {
+  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+}
+
+
+var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+              'Oct', 'Nov', 'Dec'];
+
+// 26 Feb 16:19:34
+function timestamp() {
+  var d = new Date();
+  var time = [pad(d.getHours()),
+              pad(d.getMinutes()),
+              pad(d.getSeconds())].join(':');
+  return [d.getDate(), months[d.getMonth()], time].join(' ');
+}
+
+
+exports.log = function(msg) {
+  exports.puts(timestamp() + ' - ' + msg.toString());
+};
+
+
+exports.exec = exports.deprecate(function() {
+  return require('child_process').exec.apply(this, arguments);
+}, 'util.exec is now called `child_process.exec`.');
+
+
+function pump(readStream, writeStream, callback) {
+  var callbackCalled = false;
+
+  function call(a, b, c) {
+    if (callback && !callbackCalled) {
+      callback(a, b, c);
+      callbackCalled = true;
+    }
+  }
+
+  readStream.addListener('data', function(chunk) {
+    if (writeStream.write(chunk) === false) readStream.pause();
+  });
+
+  writeStream.addListener('drain', function() {
+    readStream.resume();
+  });
+
+  readStream.addListener('end', function() {
+    writeStream.end();
+  });
+
+  readStream.addListener('close', function() {
+    call();
+  });
+
+  readStream.addListener('error', function(err) {
+    writeStream.end();
+    call(err);
+  });
+
+  writeStream.addListener('error', function(err) {
+    readStream.destroy();
+    call(err);
+  });
+}
+exports.pump = exports.deprecate(pump,
+    'util.pump() is deprecated. Use readableStream.pipe() instead.');
+
+
+/**
+ * Inherit the prototype methods from one constructor into another.
+ *
+ * The Function.prototype.inherits from lang.js rewritten as a standalone
+ * function (not on Function.prototype). NOTE: If this file is to be loaded
+ * during bootstrapping this function needs to be rewritten using some native
+ * functions as prototype setup using normal JavaScript does not work as
+ * expected during bootstrapping (see mirror.js in r114903).
+ *
+ * @param {function} ctor Constructor function which needs to inherit the
+ *     prototype.
+ * @param {function} superCtor Constructor function to inherit prototype from.
+ */
+exports.inherits = function(ctor, superCtor) {
+  ctor.super_ = superCtor;
+  ctor.prototype = Object.create(superCtor.prototype, {
+    constructor: {
+      value: ctor,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+};
+
+exports._extend = function(origin, add) {
+  // Don't do anything if add isn't an object
+  if (!add || typeof add !== 'object') return origin;
+
+  var keys = Object.keys(add);
+  var i = keys.length;
+  while (i--) {
+    origin[keys[i]] = add[keys[i]];
+  }
+  return origin;
+};
+
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
 }
 });
 
@@ -3111,3 +3793,5 @@ require._setMeta({"browser-http":{"base":"","path":"lib/Http.js"},"q":{"base":"n
 require('test/Helpers');
 
 require('test/Http');
+
+require('test/Extensions');

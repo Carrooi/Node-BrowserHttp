@@ -8,7 +8,7 @@
 				"./test/*.coffee",
 				"./node_modules/q/q.js"
 			],
-			"coreModules": ["events"],
+			"coreModules": ["events", "util"],
 			"aliases": {
 				"browser-http": "src/Http",
 				"browser-http/Helpers": "src/Helpers",
@@ -22,7 +22,8 @@
 			},
 			"run": [
 				"test/Helpers",
-				"test/Http"
+				"test/Http",
+				"test/Extensions"
 			]
 		}
 	},

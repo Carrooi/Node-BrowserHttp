@@ -53,7 +53,8 @@ class Request extends EventEmitter
 				@response.xml = @xhr.responseXML
 				@response.data = @xhr.responseText
 
-				if @getHeader('content-type').match(/application\/json/) != null
+				contentType = @getHeader 'content-type'
+				if contentType != null && contentType.match(/application\/json/) != null
 					@response.data = JSON.parse(@response.data)
 
 				if @response.status == 200
@@ -63,7 +64,6 @@ class Request extends EventEmitter
 					@emit 'error', error, @response, @
 
 				@emit 'complete', @response, @
-
 
 
 	setHeader: (name, value) ->

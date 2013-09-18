@@ -5,11 +5,13 @@ EventEmitter = require('events').EventEmitter
 class Http extends EventEmitter
 
 
-	extensions: {}
+	extensions: null
 
 
 	constructor: ->
 		super
+
+		@extensions = {}
 
 		@on 'send', (args...) => @callExtensions('send', args)
 		@on 'complete', (args...) => @callExtensions('complete', args)

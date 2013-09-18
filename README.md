@@ -160,7 +160,23 @@ This is the same like the previous one, but apply for all forms with `ajax` clas
 This extension can not handle forms with file uploads.
 Depends on jquery.
 
+## Tests
+
+```
+$ cd test
+$ node data.js
+```
+
+in another terminal:
+```
+$ npm test
+```
+
 ## Changelog
+
+* 1.7.1
+	+ Added some tests
+	+ Bug with responses without content-type header
 
 * 1.7.0
 	+ Refactoring
