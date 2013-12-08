@@ -23,14 +23,18 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "latest"
+		"q": "0.9.7"
 	},
 	"devDependencies": {
-		"mocha": "latest",
-		"chai": "latest",
-		"express": "latest"
+		"mocha": "1.15.1",
+		"mocha-phantomjs": "3.1.6",
+		"phantomjs": "1.9.2-5",
+		"chai": "1.8.1",
+		"express": "3.4.6"
 	},
 	"scripts": {
-		"test": "cd ./test; mocha-phantomjs index.html;"
+		"test": "mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/index.html",
+		"server": "node ./test/data.js",
+		"prepare-browser": "cd test; simq build;"
 	}
 }

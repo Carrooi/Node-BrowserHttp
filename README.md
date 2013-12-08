@@ -190,8 +190,7 @@ new Forms(window.jQuery);
 ## Tests
 
 ```
-$ cd test
-$ node data.js
+$ npm run server
 ```
 
 in another terminal:
@@ -203,6 +202,8 @@ $ npm test
 
 * 2.0.0
 	+ jQuery must be passed in constructor into extensions which depends on it
+	+ Updated dependencies
+	+ Test frameworks are in devDependencies (not globally installed)
 
 * 1.8.0
 	+ Requests are added into queue
