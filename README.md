@@ -1,5 +1,6 @@
 [![NPM version](https://badge.fury.io/js/browser-http.png)](http://badge.fury.io/js/browser-http)
 [![Dependency Status](https://gemnasium.com/sakren/node-browser-http.png)](https://gemnasium.com/sakren/node-browser-http)
+[![Build Status](https://travis-ci.org/sakren/node-browser-http.png?branch=master)](https://travis-ci.org/sakren/node-browser-http)
 
 # http-browser
 
