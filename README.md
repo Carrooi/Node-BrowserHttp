@@ -193,6 +193,42 @@ new Forms(window.jQuery);
 $ npm test
 ```
 
+### Own tests
+
+```
+var http = require('browser-http/Mocks/Http');
+
+afterEach(function() {
+	http.restore();
+});
+
+it('should load some data', function(done) {
+	http.receive('some data', {'content-type': 'text/plain'}, 200);
+
+	http.get('localhost').then(function(response) {
+		expect(response.data).to.be.equal('some data');
+		done();
+	});
+});
+
+// text/plain in headers list is default content-type, so you don't have to set it. Also status 200 is default.
+
+it('should load some data and check received data', function(done) {
+	http.receive('some data', {'content-type': 'application/json'});
+
+	var promise = http.get('localhost', {data: {greeting: 'hello'}});		// we will send some greeting to our 'server'
+
+	promise.request.on('send', function(response, request) {
+		expect(request.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
+	});
+
+	promise.then(function(response) {
+		expect(response.data).to.be.eql({greeting: 'hello'});
+		done()
+	});
+});
+```
+
 ## Changelog
 
 * 2.0.0

@@ -34,7 +34,7 @@ describe 'Http', ->
 
 			promise = Http.get(link, data: {first: 'first message'})
 			promise.request.on 'send', (response, request) ->
-				expect(request.xhr.url).to.be.equal('http://localhost:3000/?first=first+message')
+				expect(request.url).to.be.equal('http://localhost:3000/?first=first+message')
 
 			promise.then( (response) ->
 				expect(response.data).to.be.eql({first: 'first message'})
