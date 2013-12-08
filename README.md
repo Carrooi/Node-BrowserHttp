@@ -190,11 +190,6 @@ new Forms(window.jQuery);
 ## Tests
 
 ```
-$ npm run create-server
-```
-
-in another terminal:
-```
 $ npm test
 ```
 
@@ -205,6 +200,8 @@ $ npm test
 	+ Updated dependencies
 	+ Test frameworks are in devDependencies (not globally installed)
 	+ Large refactoring (better for testing)
+	+ Tests does not need real server (using mock)
+	+ Many optimizations
 
 * 1.8.0
 	+ Requests are added into queue

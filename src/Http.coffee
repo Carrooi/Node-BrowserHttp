@@ -20,9 +20,14 @@ class Http extends EventEmitter
 		@queue = new Queue
 
 		@on 'send', (args...) => @callExtensions('send', args)
+		@on 'afterSend', (args...) => @callExtensions('afterSend', args)
 		@on 'complete', (args...) => @callExtensions('complete', args)
 		@on 'error', (args...) => @callExtensions('error', args)
 		@on 'success', (args...) => @callExtensions('success', args)
+
+
+	createRequest: (url, type, data, jsonp) ->
+		return new Request(url, type, data, jsonp)
 
 
 	request: (url, options = {}) ->
@@ -30,7 +35,7 @@ class Http extends EventEmitter
 		if typeof options.data == 'undefined' then options.data = null
 		if typeof options.jsonp == 'undefined' then options.jsonp = false
 
-		request = new Request(url, options.type, options.data, options.jsonp)
+		request = @createRequest(url, options.type, options.data, options.jsonp)
 
 		request.on 'send', (response, request) => @emit 'send', response, request
 		request.on 'success', (response, request) => @emit 'success', response, request
@@ -51,9 +56,13 @@ class Http extends EventEmitter
 
 			@queue.run()
 
+			deferred.promise.request = request
 			return deferred.promise
 		else
-			return request.send()
+			result = request.send()
+			result.request = request
+
+			return result
 
 
 	get: (url, options = {}) ->

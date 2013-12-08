@@ -76,7 +76,8 @@ class Xhr extends EventEmitter
 				if contentType != null && contentType.match(/application\/json/) != null
 					@response.data = JSON.parse(@response.data)
 
-				if contentType != null && contentType.match(/text\/javascript/) != null && @jsonp
+
+				if contentType != null && (contentType.match(/text\/javascript/) != null || contentType.match(/application\/javascript/) != null) && @jsonp
 					eval(@response.data)
 
 				if @response.status == 200
@@ -119,6 +120,8 @@ class Xhr extends EventEmitter
 		@on 'error', (err) -> deferred.reject(err)
 
 		@xhr.send(@data)
+
+		@emit 'afterSend', @response
 
 		return deferred.promise
 

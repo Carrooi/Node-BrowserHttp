@@ -1,12 +1,13 @@
 
-Http = require 'browser-http'
+Http = require 'browser-http/Mocks/Http'
 
-link = (path = '') -> return 'http://localhost:3000/' + path
+link = 'http://localhost:3000/'
 
 describe 'Extensions', ->
 
 	afterEach( ->
 		Http.extensions = {}
+		Http.restore()
 	)
 
 	describe '#addExtension()', ->
@@ -30,4 +31,6 @@ describe 'Extensions', ->
 					expect(response.data).to.be.equal('test')
 					done()
 
-			Http.get(link())
+			Http.receive('test')
+
+			Http.get(link)

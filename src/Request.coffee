@@ -20,11 +20,12 @@ class Request extends EventEmitter
 	constructor: (@url, @type = 'GET', @data = null, @jsonp = false) ->
 		super
 
-		@xhr = new Xhr(@url, @type, @data, @jsonp)
+		@xhr = @createXhr(@url, @type, @data, @jsonp)
 
 		@response = @xhr.response
 
 		@xhr.on 'send', => @emit 'send', @response, @
+		@xhr.on 'afterSend', => @emit 'afterSend', @response, @
 
 		@xhr.on 'success', =>
 			@emit 'success', @response, @
@@ -33,6 +34,10 @@ class Request extends EventEmitter
 		@xhr.on 'error', (err) =>
 			@emit 'error', err, @response, @
 			@emit 'complete', @response, @
+
+
+	createXhr: (url, type, data, jsonp) ->
+		return new Xhr(url, type, data, jsonp)
 
 
 	setHeader: (name, value) ->
