@@ -217,7 +217,7 @@ it('should load some data and check received data', function(done) {
 	http.receive('some data', {'content-type': 'application/json'});
 
 	http.once('send', function(response, request) {
-		expect(request.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
+		expect(request.xhr.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
 	});
 
 	http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
