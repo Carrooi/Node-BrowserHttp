@@ -216,13 +216,11 @@ it('should load some data', function(done) {
 it('should load some data and check received data', function(done) {
 	http.receive('some data', {'content-type': 'application/json'});
 
-	var promise = http.get('localhost', {data: {greeting: 'hello'}});		// we will send some greeting to our 'server'
-
-	promise.request.on('send', function(response, request) {
+	http.once('send', function(response, request) {
 		expect(request.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
 	});
 
-	promise.then(function(response) {
+	http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
 		expect(response.data).to.be.eql({greeting: 'hello'});
 		done()
 	});

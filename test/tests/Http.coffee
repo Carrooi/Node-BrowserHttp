@@ -32,11 +32,10 @@ describe 'Http', ->
 		it 'should send request with data and load them from response', (done) ->
 			Http.receive('{"first": "first message"}', 'content-type': 'application/json')
 
-			promise = Http.get(link, data: {first: 'first message'})
-			promise.request.on 'send', (response, request) ->
-				expect(request.url).to.be.equal('http://localhost:3000/?first=first+message')
+			Http.once 'send', (response, request) ->
+				expect(request.xhr.url).to.be.equal('http://localhost:3000/?first=first+message')
 
-			promise.then( (response) ->
+			Http.get(link, data: {first: 'first message'}).then( (response) ->
 				expect(response.data).to.be.eql({first: 'first message'})
 				done()
 			).done()

@@ -3887,19 +3887,17 @@
 	        }).done();
 	      });
 	      return it('should send request with data and load them from response', function(done) {
-	        var promise;
 	        Http.receive('{"first": "first message"}', {
 	          'content-type': 'application/json'
 	        });
-	        promise = Http.get(link, {
+	        Http.once('send', function(response, request) {
+	          return expect(request.xhr.url).to.be.equal('http://localhost:3000/?first=first+message');
+	        });
+	        return Http.get(link, {
 	          data: {
 	            first: 'first message'
 	          }
-	        });
-	        promise.request.on('send', function(response, request) {
-	          return expect(request.url).to.be.equal('http://localhost:3000/?first=first+message');
-	        });
-	        return promise.then(function(response) {
+	        }).then(function(response) {
 	          expect(response.data).to.be.eql({
 	            first: 'first message'
 	          });
@@ -4755,7 +4753,7 @@
 , 'q': function(exports, module) { module.exports = window.require('q/q.js'); }
 
 });
-require.__setStats({"/lib/Http.js":{"atime":1386514676000,"mtime":1386514667000,"ctime":1386514667000},"/lib/Request.js":{"atime":1386512171000,"mtime":1386512150000,"ctime":1386512150000},"/lib/Xhr.js":{"atime":1386517179000,"mtime":1386517176000,"ctime":1386517176000},"/lib/Helpers.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Response.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"q/q.js":{"atime":1386498299000,"mtime":1378314231000,"ctime":1386498259000},"/lib/Queue.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Mocks/Request.js":{"atime":1386509586000,"mtime":1386509567000,"ctime":1386509567000},"/lib/Mocks/Xhr.js":{"atime":1386517304000,"mtime":1386517288000,"ctime":1386517288000},"/Mocks/XmlHttpRequest.js":{"atime":1386517270000,"mtime":1386517269000,"ctime":1386517269000},"/lib/Mocks/Http.js":{"atime":1386515134000,"mtime":1386515114000,"ctime":1386515114000},"/lib/Extensions/Forms.js":{"atime":1386499005000,"mtime":1386498894000,"ctime":1386498894000},"/lib/Extensions/Links.js":{"atime":1386499033000,"mtime":1386498867000,"ctime":1386498867000},"/lib/Extensions/Loading.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Extensions/Redirect.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Extensions/Snippets.js":{"atime":1386499033000,"mtime":1386498898000,"ctime":1386498898000},"/Mocks/Http.js":{"atime":1386508351000,"mtime":1386508351000,"ctime":1386508351000},"/Mocks/Request.js":{"atime":1386508369000,"mtime":1386508363000,"ctime":1386508363000},"/Mocks/Xhr.js":{"atime":1386508454000,"mtime":1386508374000,"ctime":1386508374000},"/test/tests/Extensions.coffee":{"atime":1386516875000,"mtime":1386516871000,"ctime":1386516871000},"/test/tests/Helpers.coffee":{"atime":1386503780000,"mtime":1386498223000,"ctime":1386503779000},"/test/tests/Http.coffee":{"atime":1386518134000,"mtime":1386517986000,"ctime":1386517986000},"/test/tests/Queue.coffee":{"atime":1386517128000,"mtime":1386517121000,"ctime":1386517121000},"q/benchmark/compare-with-callbacks.js":{"atime":1386498299000,"mtime":1377038829000,"ctime":1386498259000},"q/benchmark/scenarios.js":{"atime":1386498299000,"mtime":1377038829000,"ctime":1386498259000},"q/package.json":{"atime":1386498299000,"mtime":1386498259000,"ctime":1386498259000},"q/queue.js":{"atime":1386498299000,"mtime":1377499944000,"ctime":1386498259000},"events":{"atime":1386503870000,"mtime":1384294623000,"ctime":1385364984000},"/package.json":{"atime":1386517300000,"mtime":1386517291000,"ctime":1386517291000}});
+require.__setStats({"/lib/Http.js":{"atime":1386514676000,"mtime":1386514667000,"ctime":1386514667000},"/lib/Request.js":{"atime":1386518497000,"mtime":1386518451000,"ctime":1386518451000},"/lib/Xhr.js":{"atime":1386518437000,"mtime":1386518401000,"ctime":1386518401000},"/lib/Helpers.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Response.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"q/q.js":{"atime":1386498299000,"mtime":1378314231000,"ctime":1386498259000},"/lib/Queue.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Mocks/Request.js":{"atime":1386509586000,"mtime":1386509567000,"ctime":1386509567000},"/lib/Mocks/Xhr.js":{"atime":1386517304000,"mtime":1386517288000,"ctime":1386517288000},"/Mocks/XmlHttpRequest.js":{"atime":1386517270000,"mtime":1386517269000,"ctime":1386517269000},"/lib/Mocks/Http.js":{"atime":1386515134000,"mtime":1386515114000,"ctime":1386515114000},"/lib/Extensions/Forms.js":{"atime":1386499005000,"mtime":1386498894000,"ctime":1386498894000},"/lib/Extensions/Links.js":{"atime":1386499033000,"mtime":1386498867000,"ctime":1386498867000},"/lib/Extensions/Loading.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Extensions/Redirect.js":{"atime":1386498378000,"mtime":1386498372000,"ctime":1386498372000},"/lib/Extensions/Snippets.js":{"atime":1386499033000,"mtime":1386498898000,"ctime":1386498898000},"/Mocks/Http.js":{"atime":1386508351000,"mtime":1386508351000,"ctime":1386508351000},"/Mocks/Request.js":{"atime":1386508369000,"mtime":1386508363000,"ctime":1386508363000},"/Mocks/Xhr.js":{"atime":1386508454000,"mtime":1386508374000,"ctime":1386508374000},"/test/tests/Extensions.coffee":{"atime":1386516875000,"mtime":1386516871000,"ctime":1386516871000},"/test/tests/Helpers.coffee":{"atime":1386503780000,"mtime":1386498223000,"ctime":1386503779000},"/test/tests/Http.coffee":{"atime":1386518640000,"mtime":1386518636000,"ctime":1386518636000},"/test/tests/Queue.coffee":{"atime":1386517128000,"mtime":1386517121000,"ctime":1386517121000},"q/benchmark/compare-with-callbacks.js":{"atime":1386498299000,"mtime":1377038829000,"ctime":1386498259000},"q/benchmark/scenarios.js":{"atime":1386498299000,"mtime":1377038829000,"ctime":1386498259000},"q/package.json":{"atime":1386498299000,"mtime":1386498259000,"ctime":1386498259000},"q/queue.js":{"atime":1386498299000,"mtime":1377499944000,"ctime":1386498259000},"events":{"atime":1386503870000,"mtime":1384294623000,"ctime":1385364984000},"/package.json":{"atime":1386517300000,"mtime":1386517291000,"ctime":1386517291000}});
 require.version = '5.5.0';
 
 /** run section **/
