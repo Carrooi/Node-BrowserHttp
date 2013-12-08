@@ -1,10 +1,13 @@
 Http = require '../Http'
-try jquery = require 'jquery' catch e then jquery = window.jQuery
+
+$ = null
 
 class Snippets
 
 
-	constructor: ->
+	constructor: (jQuery) ->
+		$ = jQuery
+
 		Http.addExtension 'snippets',
 			success: @onSuccess
 
@@ -16,7 +19,7 @@ class Snippets
 
 
 	updateSnippet: (id, html) ->
-		el = jquery("##{id}")
+		el = $("##{id}")
 		el.html(html)
 
 

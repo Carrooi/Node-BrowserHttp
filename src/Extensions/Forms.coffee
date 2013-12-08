@@ -1,18 +1,21 @@
 Http = require '../Http'
-try jquery = require 'jquery' catch e then jquery = window.jQuery
+
+$ = null
 
 class Forms
 
 
-	constructor: ->
-		jquery(document).on('submit', 'form.ajax:not(.not-ajax)', @onFormSubmitted)
-		jquery(document).on('click', 'form.ajax:not(.not-ajax) :submit', @onFormSubmitted)
+	constructor: (jQuery) ->
+		$ = jQuery
+
+		$(document).on('submit', 'form.ajax:not(.not-ajax)', @onFormSubmitted)
+		$(document).on('click', 'form.ajax:not(.not-ajax) :submit', @onFormSubmitted)
 
 
 	onFormSubmitted: (e) =>
 		e.preventDefault()
 
-		el = jquery(e.target)
+		el = $(e.target)
 		sendValues = {}
 
 		if el.is(':submit')

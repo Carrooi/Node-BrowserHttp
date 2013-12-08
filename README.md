@@ -132,7 +132,7 @@ http.removeExtension('nameOfMyExtension');
 
 ### Build in extensions
 
-browser-http already comes with few extensions. Originally they were created for project build on [Nette](http://nette.org/en/)
+browser-http already comes with few extensions. Originally they were created for projects build on [Nette](http://nette.org/en/)
 framework, but can be used on any other project.
 
 #### Loading cursor
@@ -155,7 +155,8 @@ If your server sends json data with `redirect` variable, then you will be redire
 #### Snippets
 
 ```
-new (require('browser-http/Extensions/Snippets'));
+var Snippets = require('browser-http/Extensions/Snippets');
+new Snippets(window.jQuery);
 ```
 
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
@@ -166,7 +167,8 @@ This extension depends on jquery.
 #### Ajax links
 
 ```
-new (require('browser-http/Extensions/Links'));
+var Links = require('browser-http/Extensions/Links');
+new Links(window.jQuery);
 ```
 
 This is not true extension for browser-http. It listen for all click events on `a` links with class `ajax` but not with
@@ -179,6 +181,11 @@ Depends on jquery.
 This is the same like the previous one, but apply for all forms with `ajax` class.
 This extension can not handle forms with file uploads.
 Depends on jquery.
+
+```
+var Forms = require('browser-http/Extensions/Forms');
+new Forms(window.jQuery);
+```
 
 ## Tests
 
@@ -193,6 +200,9 @@ $ npm test
 ```
 
 ## Changelog
+
+* 2.0.0
+	+ jQuery must be passed in constructor into extensions which depends on it
 
 * 1.8.0
 	+ Requests are added into queue
