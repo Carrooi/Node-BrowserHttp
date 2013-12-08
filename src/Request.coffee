@@ -1,138 +1,64 @@
-Q = require 'q'
-Response = require './Response'
-Helpers = require './Helpers'
+Xhr = require './Xhr'
 EventEmitter = require('events').EventEmitter
 
 class Request extends EventEmitter
 
 
-	@JSONP_METHOD_PREFIX = '__browser_http_jsonp_callback_'
-
-
-	id: null
-
 	url: null
 
 	type: 'GET'
 
-	jsonp: null
-
 	data: null
 
-	_data: null
+	jsonp: null
 
 	xhr: null
 
 	response: null
 
 
-	constructor: (@url, @type = 'GET', @data = null, @jsonp = false, @id) ->
+	constructor: (@url, @type = 'GET', @data = null, @jsonp = false) ->
 		super
 
-		url = @url
+		@xhr = new Xhr(@url, @type, @data, @jsonp)
 
-		@type = @type.toUpperCase()
-		if @type not in ['GET', 'POST', 'PUT', 'DELETE']
-			throw new Error 'Http request: type must be GET, POST, PUT or DELETE, ' + @type + ' given'
+		@response = @xhr.response
 
-		if @jsonp != false
-			if @jsonp == true then @jsonp = 'callback'
-			method = Request.JSONP_METHOD_PREFIX + @id
+		@xhr.on 'success', =>
+			@emit 'success', @response, @
+			@emit 'complete', @response, @
 
-			url += if url.indexOf('?') != -1 then '&' else '?'
-			url += @jsonp + '=' + method
-
-			window[method] = (data) => @response.data = data
-
-		if @data != null
-			@_data = Helpers.buildQuery(@data)
-			if @type != 'POST'
-				url += if url.indexOf('?') != -1 then '&' else '?'
-				url += @_data
-
-		@xhr = Request.createRequestObject()
-		@xhr.open(@type, url, true)
-
-		if url.match(/^(http)s?\:\/\//) == null
-			@setHeader('X-Requested-With', 'XMLHttpRequest')
-
-		if @type == 'POST'
-			@setHeader('Content-type', 'application/x-www-form-urlencoded')
-
-		@response = new Response
-		@xhr.onreadystatechange = =>
-			@response.state = @xhr.readyState
-
-			if @response.state == 4
-				@response.status = @xhr.status
-				@response.statusText = @xhr.statusText
-
-				@response.rawData = @xhr.responseText
-				@response.xml = @xhr.responseXML
-				@response.data = @xhr.responseText
-
-				contentType = @getHeader 'content-type'
-				if contentType != null && contentType.match(/application\/json/) != null
-					@response.data = JSON.parse(@response.data)
-
-				if contentType != null && contentType.match(/text\/javascript/) != null && @jsonp
-					eval(@response.data)
-
-				if @response.status == 200
-					@emit 'success', @response, @
-				else
-					error = new Error 'Can not load ' + url + ' address'
-					@emit 'error', error, @response, @
-
-				@emit 'complete', @response, @
+		@xhr.on 'error', (err) =>
+			@emit 'error', err, @response, @
+			@emit 'complete', @response, @
 
 
 	setHeader: (name, value) ->
-		@xhr.setRequestHeader(name, value)
-		return @
+		return @xhr.setHeader(name, value)
 
 
 	send: ->
-		deferred = Q.defer()
-
-		@emit 'send', @response, @
-
-		@on 'success', (response) -> deferred.resolve(response)
-		@on 'error', (error) -> deferred.reject(error)
-
-		@xhr.send(@_data)
-
-		return deferred.promise
+		return @xhr.send()
 
 
 	abort: ->
-		@xhr.abort()
-		return @
+		return @xhr.abort()
 
 
 	getHeaders: ->
-		return @xhr.getAllResponseHeaders()
+		return @xhr.getHeaders()
 
 
 	getHeader: (name) ->
-		return @xhr.getResponseHeader(name)
+		return @xhr.getHeader(name)
 
 
 	setHeader: (name, value) ->
-		@xhr.setRequestHeader(name, value)
-		return @
+		return @xhr.setHeader(name, value)
 
 
 	setMimeType: (mime) ->
-		@xhr.overrideMimeType(mime)
-		return @
-
-
-	@createRequestObject: ->
-		if window.XMLHttpRequest
-			return new window.XMLHttpRequest
-		else
-			return new ActiveXObject("Microsoft.XMLHTTP")
+		return @xhr.setMimeType(mime)
 
 
 module.exports = Request

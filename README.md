@@ -204,6 +204,7 @@ $ npm test
 	+ jQuery must be passed in constructor into extensions which depends on it
 	+ Updated dependencies
 	+ Test frameworks are in devDependencies (not globally installed)
+	+ Large refactoring (better for testing)
 
 * 1.8.0
 	+ Requests are added into queue
