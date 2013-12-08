@@ -234,7 +234,7 @@ it('should load some data and check received data', function(done) {
 	+ Updated dependencies
 	+ Test frameworks are in devDependencies (not globally installed)
 	+ Large refactoring (better for testing)
-	+ Tests does not need real server (using mock)
+	+ Tests does not need real server (using mock from [philikon/MockHttpRequest](https://github.com/philikon/MockHttpRequest))
 	+ Many optimizations
 
 * 1.8.0

@@ -1,3 +1,10 @@
+/**
+ * from https://github.com/philikon/MockHttpRequest
+ * thanks
+ */
+
+
+
 /*
  * Mock XMLHttpRequest (see http://www.w3.org/TR/XMLHttpRequest)
  *
