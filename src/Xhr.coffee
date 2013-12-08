@@ -49,8 +49,8 @@ class Xhr extends EventEmitter
 		if @data != null
 			@data = Helpers.buildQuery(@data)
 			if type != 'POST'
-				url += if url.indexOf('?') != -1 then '&' else '?'
-				url += @data
+				@url += if @url.indexOf('?') != -1 then '&' else '?'
+				@url += @data
 
 		@xhr = @createXhr()
 		@xhr.open(@type, @url, true)
@@ -72,7 +72,7 @@ class Xhr extends EventEmitter
 				@response.xml = @xhr.responseXML
 				@response.data = @xhr.responseText
 
-				contentType = @xhr.get@responseHeader('content-type')
+				contentType = @xhr.getResponseHeader('content-type')
 				if contentType != null && contentType.match(/application\/json/) != null
 					@response.data = JSON.parse(@response.data)
 
@@ -113,7 +113,7 @@ class Xhr extends EventEmitter
 	send: ->
 		deferred = Q.defer()
 
-		@emit 'send', @response, @
+		@emit 'send', @response
 
 		@on 'success', => deferred.resolve(@response)
 		@on 'error', (err) -> deferred.reject(err)

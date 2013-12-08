@@ -2,33 +2,30 @@
 	"packages": {
 		"tests": {
 			"base": "../",
-			"application": "./test/tests.js",
+			"target": "./test/application.js",
 			"modules": [
-				"./src/*.coffee",
-				"./test/*.coffee",
-				"./node_modules/q/q.js"
+				"./lib/*.js",
+				"./test/tests/*.coffee",
+				"q",
+				"events"
 			],
-			"coreModules": ["events", "util"],
 			"aliases": {
-				"browser-http": "src/Http",
-				"browser-http/Helpers": "src/Helpers",
-				"browser-http/Request": "src/Request",
-				"browser-http/Response": "src/Response",
-				"browser-http/Extensions/Forms": "src/Extensions/Forms",
-				"browser-http/Extensions/Links": "src/Extensions/Links",
-				"browser-http/Extensions/Loading": "src/Extensions/Loading",
-				"browser-http/Extensions/Redirect": "src/Extensions/Redirect",
-				"browser-http/Extensions/Snippets": "src/Extensions/Snippets"
+				"browser-http": "/lib/Http",
+				"browser-http/Helpers": "/lib/Helpers",
+				"browser-http/Request": "/lib/Request",
+				"browser-http/Response": "/lib/Response",
+				"browser-http/Extensions/Forms": "/lib/Extensions/Forms",
+				"browser-http/Extensions/Links": "/lib/Extensions/Links",
+				"browser-http/Extensions/Loading": "/lib/Extensions/Loading",
+				"browser-http/Extensions/Redirect": "/lib/Extensions/Redirect",
+				"browser-http/Extensions/Snippets": "/lib/Extensions/Snippets"
 			},
 			"run": [
-				"test/Helpers",
-				"test/Http",
-				"test/Extensions",
-				"test/Queue"
+				"/test/tests/Helpers",
+				"/test/tests/Http",
+				"/test/tests/Extensions",
+				"/test/tests/Queue"
 			]
 		}
-	},
-	"debugger": {
-		"scripts": true
 	}
 }

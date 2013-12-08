@@ -24,6 +24,8 @@ class Request extends EventEmitter
 
 		@response = @xhr.response
 
+		@xhr.on 'send', => @emit 'send', @response, @
+
 		@xhr.on 'success', =>
 			@emit 'success', @response, @
 			@emit 'complete', @response, @
