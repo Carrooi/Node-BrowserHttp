@@ -190,7 +190,7 @@ new Forms(window.jQuery);
 ## Tests
 
 ```
-$ npm run server
+$ npm run create-server
 ```
 
 in another terminal:
