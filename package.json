@@ -19,7 +19,7 @@
 		"url"
 	],
 	"engines": {
-		"node": "*"
+		"node": ">=0.9"
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {

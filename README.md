@@ -1,3 +1,6 @@
+[![NPM version](https://badge.fury.io/js/browser-http.png)](http://badge.fury.io/js/browser-http)
+[![Dependency Status](https://gemnasium.com/sakren/node-browser-http.png)](https://gemnasium.com/sakren/node-browser-http)
+
 # http-browser
 
 Some simple classes for working with http in browser (for example with [simq](https://npmjs.org/package/simq)).
@@ -236,6 +239,7 @@ it('should load some data and check received data', function(done) {
 	+ Large refactoring (better for testing)
 	+ Tests does not need real server (using mock from [philikon/MockHttpRequest](https://github.com/philikon/MockHttpRequest))
 	+ Many optimizations
+	+ Added some badges + travis
 
 * 1.8.0
 	+ Requests are added into queue
