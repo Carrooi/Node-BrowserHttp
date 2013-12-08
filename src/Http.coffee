@@ -56,13 +56,9 @@ class Http extends EventEmitter
 
 			@queue.run()
 
-			deferred.promise.request = request
 			return deferred.promise
 		else
-			result = request.send()
-			result.request = request
-
-			return result
+			return request.send()
 
 
 	get: (url, options = {}) ->
