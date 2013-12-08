@@ -29,8 +29,7 @@
 		"mocha": "1.15.1",
 		"mocha-phantomjs": "3.1.6",
 		"phantomjs": "1.9.2-5",
-		"chai": "1.8.1",
-		"express": "3.4.6"
+		"chai": "1.8.1"
 	},
 	"scripts": {
 		"test": "npm run prepare-browser; mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/index.html;",
