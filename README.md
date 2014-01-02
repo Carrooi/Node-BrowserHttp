@@ -249,6 +249,9 @@ it('should load some data and check received data', function(done) {
 
 ## Changelog
 
+* 2.1.1
+	+ Removed forgotten tests building
+
 * 2.1.0
 	+ Added support for json prefixes ([discussion on stackoverflow](http://stackoverflow.com/questions/2669690/why-does-google-prepend-while1-to-their-json-responses))
 
