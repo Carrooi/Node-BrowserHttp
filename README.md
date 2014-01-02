@@ -233,6 +233,9 @@ it('should load some data and check received data', function(done) {
 
 ## Changelog
 
+* 2.1.0
+	+ Added support for json prefixes ([discussion on stackoverflow](http://stackoverflow.com/questions/2669690/why-does-google-prepend-while1-to-their-json-responses))
+
 * 2.0.0
 	+ jQuery must be passed in constructor into extensions which depends on it
 	+ Updated dependencies

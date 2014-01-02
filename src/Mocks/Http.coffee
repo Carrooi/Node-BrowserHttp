@@ -6,8 +6,8 @@ original = Http.createRequest
 
 
 Http.receive = (sendData = '', headers = {}, status = 200) ->
-	Http.createRequest = (url, type, data, jsonp) ->
-		request = new Request(url, type, data, jsonp)
+	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
+		request = new Request(url, type, data, jsonp, jsonPrefix)
 		request.on 'afterSend', ->
 			if typeof headers['content-type'] == 'undefined'
 				headers['content-type'] = 'text/plain'
@@ -21,8 +21,8 @@ Http.receive = (sendData = '', headers = {}, status = 200) ->
 
 
 Http.receiveError = (err) ->
-	Http.createRequest = (url, type, data, jsonp) ->
-		request = new Request(url, type, data, jsonp)
+	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
+		request = new Request(url, type, data, jsonp, jsonPrefix)
 		request.on 'afterSend', ->
 			request.xhr.receiveError(err)
 

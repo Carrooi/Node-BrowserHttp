@@ -26,16 +26,17 @@ class Http extends EventEmitter
 		@on 'success', (args...) => @callExtensions('success', args)
 
 
-	createRequest: (url, type, data, jsonp) ->
-		return new Request(url, type, data, jsonp)
+	createRequest: (url, type, data, jsonp, jsonPrefix) ->
+		return new Request(url, type, data, jsonp, jsonPrefix)
 
 
 	request: (url, options = {}) ->
 		if typeof options.type == 'undefined' then options.type = 'GET'
 		if typeof options.data == 'undefined' then options.data = null
 		if typeof options.jsonp == 'undefined' then options.jsonp = false
+		if typeof options.jsonPrefix == 'undefined' then options.jsonPrefix = null
 
-		request = @createRequest(url, options.type, options.data, options.jsonp)
+		request = @createRequest(url, options.type, options.data, options.jsonp, options.jsonPrefix)
 
 		request.on 'send', (response, request) => @emit 'send', response, request
 		request.on 'success', (response, request) => @emit 'success', response, request

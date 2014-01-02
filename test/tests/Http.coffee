@@ -40,6 +40,17 @@ describe 'Http', ->
 				done()
 			).done()
 
+		it 'should load json data with prefix', (done) ->
+			Http.receive('while(1); {"message": "prefix"}', 'content-type': 'application/json')
+
+			Http.get(link, jsonPrefix: 'while(1); ').then( (response) ->
+				expect(response.data).to.be.eql(
+					message: 'prefix'
+				)
+				done()
+			).done()
+
+
 	describe '#post()', ->
 		it 'should return an error - cross domain request', (done) ->
 			Http.receiveError(new Error 'XMLHttpRequest cannot load http://localhost:3000/. Origin file:// is not allowed by Access-Control-Allow-Origin.')

@@ -2,6 +2,7 @@ Helpers = require './Helpers'
 Response = require './Response'
 EventEmitter = require('events').EventEmitter
 Q = require 'q'
+escape = require 'escape-regexp'
 
 class Xhr extends EventEmitter
 
@@ -24,8 +25,10 @@ class Xhr extends EventEmitter
 
 	jsonp: false
 
+	jsonPrefix: null
 
-	constructor: (@url, @type = 'GET', @data = null, @jsonp = false) ->
+
+	constructor: (@url, @type = 'GET', @data = null, @jsonp = false, @jsonPrefix = null) ->
 		@response = new Response
 
 		Xhr.COUNTER++
@@ -73,9 +76,13 @@ class Xhr extends EventEmitter
 				@response.data = @xhr.responseText
 
 				contentType = @xhr.getResponseHeader('content-type')
-				if contentType != null && contentType.match(/application\/json/) != null
-					@response.data = JSON.parse(@response.data)
+				if contentType != null && (contentType.match(/application\/json/) != null || @jsonPrefix != null)
+					data = @response.data
+					if @jsonPrefix != null
+						prefix = escape(@jsonPrefix)
+						data = data.replace(new RegExp('^' + prefix), '')
 
+					@response.data = JSON.parse(data)
 
 				if contentType != null && (contentType.match(/text\/javascript/) != null || contentType.match(/application\/javascript/) != null) && @jsonp
 					eval(@response.data)

@@ -16,11 +16,13 @@ class Request extends EventEmitter
 
 	response: null
 
+	jsonPrefix: null
 
-	constructor: (@url, @type = 'GET', @data = null, @jsonp = false) ->
+
+	constructor: (@url, @type = 'GET', @data = null, @jsonp = false, @jsonPrefix = null) ->
 		super
 
-		@xhr = @createXhr(@url, @type, @data, @jsonp)
+		@xhr = @createXhr(@url, @type, @data, @jsonp, @jsonPrefix)
 
 		@response = @xhr.response
 
@@ -36,8 +38,8 @@ class Request extends EventEmitter
 			@emit 'complete', @response, @
 
 
-	createXhr: (url, type, data, jsonp) ->
-		return new Xhr(url, type, data, jsonp)
+	createXhr: (url, type, data, jsonp, jsonPrefix) ->
+		return new Xhr(url, type, data, jsonp, jsonPrefix)
 
 
 	setHeader: (name, value) ->
