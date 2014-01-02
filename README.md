@@ -93,6 +93,23 @@ http.jsonp('http://some.url.com').then(function(response) {
 });
 ```
 
+## Json hijacking
+
+First, please read [this](http://stackoverflow.com/questions/2669690/why-does-google-prepend-while1-to-their-json-responses)
+discussion on stackoverflow.
+
+Now if you want to use same technique just like Google or eg. Facebook do, you only need to set your own prefix in requests.
+
+```
+http.get('http://some.url.com', {
+	jsonPrefix: 'while(1);'
+}).then(function(response) {
+	console.log(response.data);
+});
+```
+
+String `while(1);` will be removed from the beginning of received data before parsing into json object.
+
 ## Events
 
 You can listen for all http events with your own functions.
