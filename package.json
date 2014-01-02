@@ -1,6 +1,6 @@
 {
 	"name": "browser-http",
-	"description": "Simple HTTP for browser",
+	"description": "Simple (but advanced) HTTP for browser",
 	"version": "2.1.0",
 	"author": {
 		"name": "David Kudera",

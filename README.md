@@ -4,11 +4,10 @@
 
 # http-browser
 
-Some simple classes for working with http in browser (for example with [simq](https://npmjs.org/package/simq)).
-
-Now it is really simple and more functions will be added.
+Simple (but advanced) library for working with http in browser (like for example jQuery.ajax).
 
 http-browser uses [q](https://npmjs.org/package/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
+Can be used for example with [simq](https://npmjs.org/package/simq).
 
 ## Installation
 
