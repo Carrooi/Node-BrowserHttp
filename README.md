@@ -8,9 +8,9 @@
 
 Simple (but advanced) library for working with http in browser (like for example jQuery.ajax).
 
-http-browser uses [q](https://npmjs.org/package/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
+http-browser uses [q](https://github.com/kriskowal/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
 
-You can use it for example with [simq](https://npmjs.org/package/simq) as you are used to from node environment or use
+You can use it for example with [simq](https://github.com/sakren/node-simq) as you are used to from node environment or use
 standalone build with expanded package into window:
 
 ## Installation
@@ -289,6 +289,10 @@ it('should load some data and check received data', function(done) {
 ```
 
 ## Changelog
+
+* 2.2.0
+	+ Added support for environments without `require` (like with [simq](https://github.com/sakren/node-simq))
+	+ Tests uses minified standalone version of browser-http
 
 * 2.1.1
 	+ Removed forgotten tests building
