@@ -1,5 +1,5 @@
 
-Helpers = require 'browser-http/Helpers'
+Helpers = window.http.Helpers
 
 describe 'Helpers', ->
 

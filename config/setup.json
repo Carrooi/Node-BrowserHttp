@@ -1,0 +1,21 @@
+{
+	"packages": {
+		"browser-http": {
+			"modules": [
+				"events",
+				"./lib/*.js"
+			],
+			"ignore": {
+				"packageFiles": true
+			},
+			"run": [
+				"/lib/Expand.js"
+			]
+		}
+	},
+	"debugger": {
+		"minify": false,
+		"expose": false,
+		"filesStats": false
+	}
+}
