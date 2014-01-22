@@ -23,13 +23,13 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "0.9.7",
+		"q": "1.0.0",
 		"escape-regexp": "0.0.1"
 	},
 	"devDependencies": {
-		"mocha": "1.15.1",
-		"mocha-phantomjs": "3.1.6",
-		"phantomjs": "1.9.2-5",
+		"mocha": "1.17.0",
+		"mocha-phantomjs": "3.3.1",
+		"phantomjs": "1.9.2-6",
 		"chai": "1.8.1"
 	},
 	"scripts": {
