@@ -2,6 +2,8 @@
 [![Dependency Status](https://gemnasium.com/sakren/node-browser-http.png)](https://gemnasium.com/sakren/node-browser-http)
 [![Build Status](https://travis-ci.org/sakren/node-browser-http.png?branch=master)](https://travis-ci.org/sakren/node-browser-http)
 
+[![Donate](http://b.repl.ca/v1/donate-PayPal-brightgreen.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YJCJ4FWVRDT4A)
+
 # http-browser
 
 Simple (but advanced) library for working with http in browser (like for example jQuery.ajax).
