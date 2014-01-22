@@ -1,7 +1,8 @@
 
-Http = require 'browser-http/Mocks/Http'
-Xhr = require 'browser-http/Xhr'
-Q = require 'q'
+
+Http = window.http.Mocks.Http
+Xhr = window.http.Xhr
+Q = window.http._Q
 
 Q.stopUnhandledRejectionTracking()
 link = 'http://localhost:3000/'

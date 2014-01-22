@@ -1,5 +1,5 @@
 
-Http = require 'browser-http/Mocks/Http'
+Http = window.http.Mocks.Http
 
 link = 'http://localhost:3000/'
 

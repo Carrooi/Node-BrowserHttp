@@ -1,34 +1,23 @@
 {
 	"packages": {
 		"tests": {
-			"base": "../",
-			"target": "./test/application.js",
+			"target": "./application.js",
 			"modules": [
-				"./lib/*.js",
-				"./Mocks/*.js",
-				"./test/tests/*.coffee",
-				"q",
-				"events"
+				"./tests/*.coffee"
 			],
-			"aliases": {
-				"browser-http": "/lib/Http",
-				"browser-http/Helpers": "/lib/Helpers",
-				"browser-http/Xhr": "/lib/Xhr",
-				"browser-http/Request": "/lib/Request",
-				"browser-http/Response": "/lib/Response",
-				"browser-http/Extensions/Forms": "/lib/Extensions/Forms",
-				"browser-http/Extensions/Links": "/lib/Extensions/Links",
-				"browser-http/Extensions/Loading": "/lib/Extensions/Loading",
-				"browser-http/Extensions/Redirect": "/lib/Extensions/Redirect",
-				"browser-http/Extensions/Snippets": "/lib/Extensions/Snippets",
-				"browser-http/Mocks/Http": "/Mocks/Http"
-			},
 			"run": [
-				"/test/tests/Helpers",
-				"/test/tests/Http",
-				"/test/tests/Extensions",
-				"/test/tests/Queue"
-			]
+				"/tests/Helpers",
+				"/tests/Http",
+				"/tests/Extensions",
+				"/tests/Queue"
+			],
+			"ignore": {
+				"packageFiles": false
+			}
 		}
+	},
+	"debugger": {
+		"minify": false,
+		"filesStats": false
 	}
 }

@@ -9,18 +9,29 @@
 Simple (but advanced) library for working with http in browser (like for example jQuery.ajax).
 
 http-browser uses [q](https://npmjs.org/package/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
-Can be used for example with [simq](https://npmjs.org/package/simq).
+
+You can use it for example with [simq](https://npmjs.org/package/simq) as you are used to from node environment or use
+standalone build with expanded package into window:
 
 ## Installation
+
 
 ```
 $ npm install browser-http
 ```
 
+or for standalone version just choose desired version and include it.
+* [Development version](https://github.com/sakren/node-browser-http/blob/master/http.js)
+* [Minified version](https://github.com/sakren/node-browser-http/blob/master/http.min.js)
+
+
 ## Usage
 
 ```
 var http = require('browser-http');
+
+// or standalone version:
+var http = window.http;		// you can of course just call http directly without window at the beginning
 
 http.request('http://www.google.com', {type: 'GET'}).then(function(response) {
 	console.log(response.text);
@@ -163,6 +174,11 @@ framework, but can be used on any other project.
 new (require('browser-http/Extensions/Loading'));
 ```
 
+standalone version:
+```
+new http.Extensions.Loading;
+```
+
 Every time new request is send, your cursor is changed into `progress` cursor. After receiving response from server, cursor
 is changed into `auto`.
 
@@ -172,6 +188,11 @@ is changed into `auto`.
 new (require('browser-http/Extensions/Redirect'));
 ```
 
+standalone version:
+```
+new http.Extensions.Redirect;
+```
+
 If your server sends json data with `redirect` variable, then you will be redirected to address in this variable.
 
 #### Snippets
@@ -179,6 +200,11 @@ If your server sends json data with `redirect` variable, then you will be redire
 ```
 var Snippets = require('browser-http/Extensions/Snippets');
 new Snippets(window.jQuery);
+```
+
+standalone version:
+```
+new http.Extensions.Snippets(window.jQuery);
 ```
 
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
@@ -191,6 +217,11 @@ This extension depends on jquery.
 ```
 var Links = require('browser-http/Extensions/Links');
 new Links(window.jQuery);
+```
+
+standalone version:
+```
+new http.Extensions.Links(window.jQuery);
 ```
 
 This is not true extension for browser-http. It listen for all click events on `a` links with class `ajax` but not with
@@ -209,6 +240,11 @@ var Forms = require('browser-http/Extensions/Forms');
 new Forms(window.jQuery);
 ```
 
+standalone version:
+```
+new http.Extensions.Forms(window.jQuery);
+```
+
 ## Tests
 
 ```
@@ -219,6 +255,9 @@ $ npm test
 
 ```
 var http = require('browser-http/Mocks/Http');
+
+// standalone version:
+var http = http.Mocks.Http;
 
 afterEach(function() {
 	http.restore();
