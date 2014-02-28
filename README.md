@@ -51,14 +51,19 @@ http.get('http://www.google.com');
 http.post('http://www.google.com');
 http.put('http://www.google.com');
 http.delete('http://www.google.com');
+http.getJson('http://www.google.com');
+http.postJson('http://www.google.com');
+http.jsonp('http://www.google.com');
 ```
 
 ## Options
 
 In every http function, you can set other options. Now it is just type and data.
 
-* type: GET, POST, PUT or DELETE
-* data: literal object of data which needs to be send to server
+* `type`: GET, POST, PUT or DELETE. This is always replaced in shorthand methods
+* `data`: literal object of data which needs to be send to server
+* `jsonp`: name of callback for jsonp requests, when true is given `callback` name is used. Default is false
+* `jsonPrefix`: prefix for json requests. See section `json hijacking` below
 
 ## Response object
 
