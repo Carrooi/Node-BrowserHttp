@@ -63,7 +63,14 @@ In every http function, you can set other options. Now it is just type and data.
 * `type`: GET, POST, PUT or DELETE. This is always replaced in shorthand methods
 * `data`: literal object of data which needs to be send to server
 * `jsonp`: name of callback for jsonp requests, when true is given `callback` name is used. Default is false
-* `jsonPrefix`: prefix for json requests. See section `json hijacking` below
+* `jsonPrefix`: prefix for json requests
+
+### Rewriting default options
+
+Some options can be rewritten globally for all requests.
+
+* `http.options.type`: default is `GET`
+* `http.options.jsonPrefix`: default is `null`, see section `json hijacking` below
 
 ## Response object
 

@@ -12,6 +12,10 @@ class Http extends EventEmitter
 
 	useQueue: true
 
+	options:
+		type: 'GET'
+		jsonPrefix: null
+
 
 	constructor: ->
 		super
@@ -31,10 +35,10 @@ class Http extends EventEmitter
 
 
 	request: (url, options = {}) ->
-		if typeof options.type == 'undefined' then options.type = 'GET'
+		if typeof options.type == 'undefined' then options.type = @options.type
 		if typeof options.data == 'undefined' then options.data = null
 		if typeof options.jsonp == 'undefined' then options.jsonp = false
-		if typeof options.jsonPrefix == 'undefined' then options.jsonPrefix = null
+		if typeof options.jsonPrefix == 'undefined' then options.jsonPrefix = @options.jsonPrefix
 
 		request = @createRequest(url, options.type, options.data, options.jsonp, options.jsonPrefix)
 
