@@ -237,6 +237,11 @@
 		
 		    Http.prototype.useQueue = true;
 		
+		    Http.prototype.options = {
+		      type: 'GET',
+		      jsonPrefix: null
+		    };
+		
 		    function Http() {
 		      Http.__super__.constructor.apply(this, arguments);
 		      this.extensions = {};
@@ -288,7 +293,7 @@
 		        options = {};
 		      }
 		      if (typeof options.type === 'undefined') {
-		        options.type = 'GET';
+		        options.type = this.options.type;
 		      }
 		      if (typeof options.data === 'undefined') {
 		        options.data = null;
@@ -297,7 +302,7 @@
 		        options.jsonp = false;
 		      }
 		      if (typeof options.jsonPrefix === 'undefined') {
-		        options.jsonPrefix = null;
+		        options.jsonPrefix = this.options.jsonPrefix;
 		      }
 		      request = this.createRequest(url, options.type, options.data, options.jsonp, options.jsonPrefix);
 		      request.on('send', (function(_this) {
