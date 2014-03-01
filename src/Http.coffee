@@ -15,6 +15,7 @@ class Http extends EventEmitter
 	options:
 		type: 'GET'
 		jsonPrefix: null
+		parallel: true
 
 
 	constructor: ->
@@ -39,6 +40,7 @@ class Http extends EventEmitter
 		if typeof options.data == 'undefined' then options.data = null
 		if typeof options.jsonp == 'undefined' then options.jsonp = false
 		if typeof options.jsonPrefix == 'undefined' then options.jsonPrefix = @options.jsonPrefix
+		if typeof options.parallel == 'undefined' then options.parallel = @options.parallel
 
 		request = @createRequest(url, options.type, options.data, options.jsonp, options.jsonPrefix)
 
@@ -47,21 +49,8 @@ class Http extends EventEmitter
 		request.on 'error', (error, response, request) => @emit 'error', response, request
 		request.on 'complete', (response, request) => @emit 'complete', response, request
 
-		if @useQueue
-			deferred = Q.defer()
-
-			@queue.add request, =>
-				request.send().then( (response) =>
-					@queue.next()
-					deferred.resolve(response)
-				).fail( (err) =>
-					@queue.next()
-					deferred.reject(err)
-				)
-
-			@queue.run()
-
-			return deferred.promise
+		if @useQueue && (options.type in ['PUT', 'POST', 'DELETE'] || options.parallel == false || @queue.hasWritableRequests())
+			return @queue.addAndSend(request)
 		else
 			return request.send()
 

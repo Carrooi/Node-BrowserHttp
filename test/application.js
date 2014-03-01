@@ -433,130 +433,114 @@
 		
 		  Q.stopUnhandledRejectionTracking();
 		
-		  link = function() {
-		    return 'http://localhost:3000/';
-		  };
+		  link = 'http://localhost:3000/';
 		
 		  describe('Queue', function() {
 		    afterEach(function() {
-		      return Http.restore();
+		      Http.restore();
+		      Http.removeAllListeners();
+		      return Http.queue.removeAllListeners();
 		    });
 		    it('should send one request', function(done) {
 		      Http.receive('test');
-		      return Http.get(link()).then(function(response) {
+		      return Http.get(link).then(function(response) {
 		        expect(response.data).to.be.equal('test');
 		        return done();
 		      }).done();
 		    });
-		    return it('should send many requests', function(done) {
-		      var buf;
-		      buf = {
-		        1: false,
-		        2: false,
-		        3: false,
-		        4: false,
-		        5: false
-		      };
+		    it.skip('should send all GET requests synchronously', function(done) {
+		      var sent;
+		      sent = '-----';
 		      Http.on('send', function(response, request) {
-		        return buf[request.data.param] = true;
+		        var index;
+		        index = request.data.index;
+		        return sent = sent.substr(0, index) + '>' + sent.substr(index + 1);
 		      });
-		      Http.receive('{"param": "1"}', {
+		      Http.receive('{"index": 0}', {
 		        'content-type': 'application/json'
 		      });
-		      Http.get(link(), {
+		      Http.get(link, {
 		        data: {
-		          param: 1
-		        }
+		          index: 0
+		        },
+		        parallel: false
 		      }).then(function(response) {
-		        expect({
-		          1: true,
-		          2: true,
-		          3: false,
-		          4: false,
-		          5: false
-		        }).to.be.eql(buf);
+		        expect(sent).to.be.equal('>----');
 		        return expect(response.data).to.be.eql({
-		          param: '1'
+		          index: 0
 		        });
 		      }).done();
-		      Http.receive('{"param": "2"}', {
+		      Http.receive('{"index": 1}', {
 		        'content-type': 'application/json'
 		      });
-		      Http.get(link('give-back'), {
+		      Http.get(link, {
 		        data: {
-		          param: 2
-		        }
+		          index: 1
+		        },
+		        parallel: false
 		      }).then(function(response) {
-		        expect({
-		          1: true,
-		          2: true,
-		          3: true,
-		          4: false,
-		          5: false
-		        }).to.be.eql(buf);
+		        expect(sent).to.be.equal('>>---');
 		        return expect(response.data).to.be.eql({
-		          param: '2'
+		          index: 1
 		        });
 		      }).done();
-		      Http.receive('{"param": "3"}', {
+		      Http.receive('{"index": 2}', {
 		        'content-type': 'application/json'
 		      });
-		      Http.get(link('give-back'), {
+		      Http.get(link, {
 		        data: {
-		          param: 3
-		        }
+		          index: 2
+		        },
+		        parallel: false
 		      }).then(function(response) {
-		        expect({
-		          1: true,
-		          2: true,
-		          3: true,
-		          4: true,
-		          5: false
-		        }).to.be.eql(buf);
+		        expect(sent).to.be.equal('>>>--');
 		        return expect(response.data).to.be.eql({
-		          param: '3'
+		          index: 2
 		        });
 		      }).done();
-		      Http.receive('{"param": "4"}', {
+		      Http.receive('{"index": 3}', {
 		        'content-type': 'application/json'
 		      });
-		      Http.get(link('give-back'), {
+		      Http.get(link, {
 		        data: {
-		          param: 4
-		        }
+		          index: 3
+		        },
+		        parallel: false
 		      }).then(function(response) {
-		        expect({
-		          1: true,
-		          2: true,
-		          3: true,
-		          4: true,
-		          5: true
-		        }).to.be.eql(buf);
+		        expect(sent).to.be.equal('>>>>-');
 		        return expect(response.data).to.be.eql({
-		          param: '4'
+		          index: 3
 		        });
 		      }).done();
-		      Http.receive('{"param": "5"}', {
+		      Http.receive('{"index": 4}', {
 		        'content-type': 'application/json'
 		      });
-		      Http.get(link('give-back'), {
+		      Http.get(link, {
 		        data: {
-		          param: 5
-		        }
+		          index: 4
+		        },
+		        parallel: false
 		      }).then(function(response) {
-		        expect({
-		          1: true,
-		          2: true,
-		          3: true,
-		          4: true,
-		          5: true
-		        }).to.be.eql(buf);
+		        expect(sent).to.be.equal('>>>>>');
 		        expect(response.data).to.be.eql({
-		          param: '5'
+		          index: 4
 		        });
 		        return done();
 		      }).done();
 		      return expect(Http.queue.requests.length).to.be.equal(4);
+		    });
+		    return it.skip('should send all GET requests assynchronously', function(done) {
+		      var promises;
+		      Http.receive('test');
+		      promises = [];
+		      promises.push(Http.get(link));
+		      promises.push(Http.get(link));
+		      promises.push(Http.get(link));
+		      promises.push(Http.get(link));
+		      expect(Http.queue.requests.length).to.be.equal(0);
+		      return Q.all(promises).then(function() {
+		        return done();
+		      }).done();
 		    });
 		  });
 		

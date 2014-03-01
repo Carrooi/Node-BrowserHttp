@@ -64,6 +64,7 @@ In every http function, you can set other options. Now it is just type and data.
 * `data`: literal object of data which needs to be send to server
 * `jsonp`: name of callback for jsonp requests, when true is given `callback` name is used. Default is false
 * `jsonPrefix`: prefix for json requests
+* `parallel`: can disable parallel sending of GET requests, see issue [#4](https://github.com/sakren/node-browser-http/issues/4)
 
 ### Rewriting default options
 
@@ -71,6 +72,7 @@ Some options can be rewritten globally for all requests.
 
 * `http.options.type`: default is `GET`
 * `http.options.jsonPrefix`: default is `null`, see section `json hijacking` below
+* `http.options.parallel`: default is `true`, see issue [#4](https://github.com/sakren/node-browser-http/issues/4)
 
 ## Response object
 
