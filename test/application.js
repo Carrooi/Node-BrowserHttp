@@ -456,7 +456,7 @@
 		        index = request.data.index;
 		        return sent = sent.substr(0, index) + '>' + sent.substr(index + 1);
 		      });
-		      Http.receive('{"index": 0}', {
+		      Http.receiveDataFromRequestAndSendBack({
 		        'content-type': 'application/json'
 		      });
 		      Http.get(link, {
@@ -470,9 +470,6 @@
 		          index: 0
 		        });
 		      }).done();
-		      Http.receive('{"index": 1}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 1
@@ -484,9 +481,6 @@
 		          index: 1
 		        });
 		      }).done();
-		      Http.receive('{"index": 2}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 2
@@ -498,9 +492,6 @@
 		          index: 2
 		        });
 		      }).done();
-		      Http.receive('{"index": 3}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 3
@@ -512,9 +503,6 @@
 		          index: 3
 		        });
 		      }).done();
-		      Http.receive('{"index": 4}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 4
