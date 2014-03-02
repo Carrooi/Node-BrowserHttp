@@ -45,9 +45,10 @@ class Http extends EventEmitter
 		request = @createRequest(url, options.type, options.data, options.jsonp, options.jsonPrefix)
 
 		request.on 'send', (response, request) => @emit 'send', response, request
+		request.on 'afterSend', (response, request) => @emit 'afterSend', response, request
 		request.on 'success', (response, request) => @emit 'success', response, request
-		request.on 'error', (error, response, request) => @emit 'error', response, request
-		request.on 'complete', (response, request) => @emit 'complete', response, request
+		request.on 'error', (error, response, request) => @emit 'error', error, response, request
+		request.on 'complete', (err, response, request) => @emit 'complete', err, response, request
 
 		if @useQueue && (options.type in ['PUT', 'POST', 'DELETE'] || options.parallel == false || @queue.hasWritableRequests())
 			return @queue.addAndSend(request)

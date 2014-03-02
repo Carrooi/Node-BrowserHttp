@@ -340,9 +340,7 @@
 		        }).done();
 		      });
 		      it('should send request and load response as JSON', function(done) {
-		        Http.receive({
-		          message: 'text'
-		        }, {
+		        Http.receive('{"message": "text"}', {
 		          'content-type': 'application/json'
 		        });
 		        return Http.get(link).then(function(response) {
@@ -466,9 +464,7 @@
 		
 		  describe('Queue', function() {
 		    afterEach(function() {
-		      Http.restore();
-		      Http.removeAllListeners();
-		      return Http.queue.removeAllListeners();
+		      return Http.restore();
 		    });
 		    it('should send one request', function(done) {
 		      Http.receive('test');
@@ -477,81 +473,62 @@
 		        return done();
 		      }).done();
 		    });
-		    it.skip('should send all GET requests synchronously', function(done) {
-		      var sent;
-		      sent = '-----';
-		      Http.on('send', function(response, request) {
-		        var index;
-		        index = request.data.index;
-		        return sent = sent.substr(0, index) + '>' + sent.substr(index + 1);
+		    it('should send all GET requests synchronously', function(done) {
+		      var data, onComplete, start, timeout;
+		      data = '';
+		      start = (new Date).getTime();
+		      timeout = {
+		        min: 50,
+		        max: 150
+		      };
+		      onComplete = function(error, response) {
+		        return data += response.data + '';
+		      };
+		      Http.on('complete', onComplete);
+		      Http.queue.once('finish', function() {
+		        var elapsed;
+		        Http.removeListener('complete', onComplete);
+		        elapsed = (new Date).getTime() - start;
+		        expect(data).to.be.equal('12345');
+		        expect(elapsed).to.be.above(timeout.min * 5 - 1).and.to.be.below(timeout.max * 5 + 5);
+		        return done();
 		      });
 		      Http.receiveDataFromRequestAndSendBack({
 		        'content-type': 'application/json'
+		      }, null, timeout);
+		      Http.get(link, {
+		        data: 1,
+		        parallel: false
 		      });
 		      Http.get(link, {
-		        data: {
-		          index: 0
-		        },
+		        data: 2,
 		        parallel: false
-		      }).then(function(response) {
-		        expect(sent).to.be.equal('>----');
-		        return expect(response.data).to.be.eql({
-		          index: 0
-		        });
-		      }).done();
+		      });
 		      Http.get(link, {
-		        data: {
-		          index: 1
-		        },
+		        data: 3,
 		        parallel: false
-		      }).then(function(response) {
-		        expect(sent).to.be.equal('>>---');
-		        return expect(response.data).to.be.eql({
-		          index: 1
-		        });
-		      }).done();
+		      });
 		      Http.get(link, {
-		        data: {
-		          index: 2
-		        },
+		        data: 4,
 		        parallel: false
-		      }).then(function(response) {
-		        expect(sent).to.be.equal('>>>--');
-		        return expect(response.data).to.be.eql({
-		          index: 2
-		        });
-		      }).done();
+		      });
 		      Http.get(link, {
-		        data: {
-		          index: 3
-		        },
+		        data: 5,
 		        parallel: false
-		      }).then(function(response) {
-		        expect(sent).to.be.equal('>>>>-');
-		        return expect(response.data).to.be.eql({
-		          index: 3
-		        });
-		      }).done();
-		      Http.get(link, {
-		        data: {
-		          index: 4
-		        },
-		        parallel: false
-		      }).then(function(response) {
-		        expect(sent).to.be.equal('>>>>>');
-		        expect(response.data).to.be.eql({
-		          index: 4
-		        });
-		        return done();
-		      }).done();
-		      return expect(Http.queue.requests.length).to.be.equal(4);
+		      });
+		      return expect(Http.queue.requests.length).to.be.equal(5);
 		    });
 		    return it('should send all GET requests assynchronously', function(done) {
-		      var promises;
+		      var promises, start, timeout;
+		      promises = [];
+		      start = (new Date).getTime();
+		      timeout = {
+		        min: 50,
+		        max: 150
+		      };
 		      Http.receiveDataFromRequestAndSendBack({
 		        'content-type': 'application/json'
-		      });
-		      promises = [];
+		      }, null, timeout);
 		      promises.push(Http.get(link, {
 		        data: 1
 		      }));
@@ -566,13 +543,15 @@
 		      }));
 		      expect(Http.queue.requests.length).to.be.equal(0);
 		      return Q.all(promises).then(function(responses) {
-		        var data, response, _i, _len;
+		        var data, elapsed, response, _i, _len;
+		        elapsed = (new Date).getTime() - start;
 		        data = [];
 		        for (_i = 0, _len = responses.length; _i < _len; _i++) {
 		          response = responses[_i];
 		          data.push(response.data);
 		        }
 		        expect(data).to.have.members([1, 2, 3, 4]);
+		        expect(elapsed).to.be.above(timeout.min - 1).and.to.be.below(timeout.max + 5);
 		        return done();
 		      }).done();
 		    });

@@ -145,8 +145,12 @@ http.on('send', function(response, request) {
 	console.log('In any moment, new http request will be send to server');
 });
 
-http.on('complete', function(response, request) {
-	console.log('I just finished some request, but there may be some errors');
+http.on('afterSend', function(response, request) {
+	console.log('I just sent some request to server, but there is still no response');
+});
+
+http.on('complete', function(error, response, request) {
+	console.log('I just finished some request, but there may be some error');
 });
 
 http.on('success', function(response, request) {

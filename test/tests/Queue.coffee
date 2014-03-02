@@ -10,8 +10,6 @@ describe 'Queue', ->
 
 	afterEach( ->
 		Http.restore()
-		Http.removeAllListeners()
-		Http.queue.removeAllListeners()
 	)
 
 	it 'should send one request', (done) ->
@@ -22,48 +20,46 @@ describe 'Queue', ->
 			done()
 		).done()
 
-	it.skip 'should send all GET requests synchronously', (done) ->
-		sent = '-----'
+	it 'should send all GET requests synchronously', (done) ->
+		data = ''
+		start = (new Date).getTime()
+		timeout =
+			min: 50
+			max: 150
 
-		Http.on('send', (response, request) ->
-			index = request.data.index
-			sent = sent.substr(0, index) + '>' + sent.substr(index + 1)
+		onComplete = (error, response) ->
+			data += response.data + ''
+
+		Http.on('complete', onComplete)
+
+		Http.queue.once('finish', ->
+			Http.removeListener('complete', onComplete)
+			elapsed = (new Date).getTime() - start
+
+			expect(data).to.be.equal('12345')
+			expect(elapsed).to.be.above(timeout.min * 5 - 1).and.to.be.below(timeout.max * 5 + 5)
+
+			done()
 		)
 
-		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json')
+		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
 
-		Http.get(link, data: {index: 0}, parallel: false).then( (response) ->
-			expect(sent).to.be.equal('>----')
-			expect(response.data).to.be.eql({index: 0})
-		).done()
+		Http.get(link, data: 1, parallel: false)
+		Http.get(link, data: 2, parallel: false)
+		Http.get(link, data: 3, parallel: false)
+		Http.get(link, data: 4, parallel: false)
+		Http.get(link, data: 5, parallel: false)
 
-		Http.get(link, data: {index: 1}, parallel: false).then( (response) ->
-			expect(sent).to.be.equal('>>---')
-			expect(response.data).to.be.eql({index: 1})
-		).done()
-
-		Http.get(link, data: {index: 2}, parallel: false).then( (response) ->
-			expect(sent).to.be.equal('>>>--')
-			expect(response.data).to.be.eql({index: 2})
-		).done()
-
-		Http.get(link, data: {index: 3}, parallel: false).then( (response) ->
-			expect(sent).to.be.equal('>>>>-')
-			expect(response.data).to.be.eql({index: 3})
-		).done()
-
-		Http.get(link, data: {index: 4}, parallel: false).then( (response) ->
-			expect(sent).to.be.equal('>>>>>')
-			expect(response.data).to.be.eql({index: 4})
-			done()
-		).done()
-
-		expect(Http.queue.requests.length).to.be.equal(4)
+		expect(Http.queue.requests.length).to.be.equal(5)
 
 	it 'should send all GET requests assynchronously', (done) ->
-		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json')
-
 		promises = []
+		start = (new Date).getTime()
+		timeout =
+			min: 50
+			max: 150
+
+		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
 
 		promises.push Http.get(link, data: 1)
 		promises.push Http.get(link, data: 2)
@@ -73,10 +69,12 @@ describe 'Queue', ->
 		expect(Http.queue.requests.length).to.be.equal(0)
 
 		Q.all(promises).then( (responses) ->
+			elapsed = (new Date).getTime() - start
 			data = []
 			data.push(response.data) for response in responses
 
 			expect(data).to.have.members([1, 2, 3, 4])
+			expect(elapsed).to.be.above(timeout.min - 1).and.to.be.below(timeout.max + 5)
 
 			done()
 		).done()
