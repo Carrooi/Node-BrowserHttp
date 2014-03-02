@@ -317,6 +317,22 @@ http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
 });
 ```
 
+### Timeout
+
+Response will be send after 400 ms:
+```
+http.receive('some data', {'content-type': 'text/plain'}, 200, 400);
+
+// or simple
+
+http.receive('some data', null, null, 400);
+```
+
+Response will be send between 100 and 300 ms:
+```
+http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 300});
+```
+
 ## Changelog
 
 * 2.2.0

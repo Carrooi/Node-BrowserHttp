@@ -51,6 +51,33 @@ describe 'Http', ->
 				done()
 			).done()
 
+		it 'should receive data with exact timeout', (done) ->
+			start = (new Date).getTime()
+
+			Http.receive('test', null, null, 200)
+
+			Http.get(link).then( (response) ->
+				elapsed = (new Date).getTime() - start
+
+				expect(response.data).to.be.equal('test')
+				expect(elapsed).to.be.above(199).and.to.be.below(205)
+
+				done()
+			).done()
+
+		it 'should receive data with random timeout', (done) ->
+			start = (new Date).getTime()
+
+			Http.receive('test', null, null, {min: 100, max: 200})
+
+			Http.get(link).then( (response) ->
+				elapsed = (new Date).getTime() - start
+
+				expect(response.data).to.be.equal('test')
+				expect(elapsed).to.be.above(99).and.to.be.below(205)
+
+				done()
+			).done()
 
 	describe '#post()', ->
 		it 'should return an error - cross domain request', (done) ->

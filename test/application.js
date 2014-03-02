@@ -368,7 +368,7 @@
 		          return done();
 		        }).done();
 		      });
-		      return it('should load json data with prefix', function(done) {
+		      it('should load json data with prefix', function(done) {
 		        Http.receive('while(1); {"message": "prefix"}', {
 		          'content-type': 'application/json'
 		        });
@@ -378,6 +378,34 @@
 		          expect(response.data).to.be.eql({
 		            message: 'prefix'
 		          });
+		          return done();
+		        }).done();
+		      });
+		      it('should receive data with exact timeout', function(done) {
+		        var start;
+		        start = (new Date).getTime();
+		        Http.receive('test', null, null, 200);
+		        return Http.get(link).then(function(response) {
+		          var elapsed;
+		          elapsed = (new Date).getTime() - start;
+		          expect(response.data).to.be.equal('test');
+		          expect(elapsed).to.be.above(199).and.to.be.below(205);
+		          return done();
+		        }).done();
+		      });
+		      return it('should receive data with random timeout', function(done) {
+		        var start;
+		        start = (new Date).getTime();
+		        Http.receive('test', null, null, {
+		          min: 100,
+		          max: 200
+		        });
+		        debugger;
+		        return Http.get(link).then(function(response) {
+		          var elapsed;
+		          elapsed = (new Date).getTime() - start;
+		          expect(response.data).to.be.equal('test');
+		          expect(elapsed).to.be.above(99).and.to.be.below(205);
 		          return done();
 		        }).done();
 		      });

@@ -3218,13 +3218,16 @@
 		
 		  original = Http.createRequest;
 		
-		  createRequest = function(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders, responseStatus) {
+		  createRequest = function(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders, responseStatus, responseTimeout) {
 		    var request;
 		    if (responseHeaders == null) {
 		      responseHeaders = {};
 		    }
 		    if (responseStatus == null) {
 		      responseStatus = 200;
+		    }
+		    if (responseTimeout == null) {
+		      responseTimeout = null;
 		    }
 		    if (typeof responseHeaders['content-type'] === 'undefined') {
 		      responseHeaders['content-type'] = 'text/plain';
@@ -3236,12 +3239,12 @@
 		        value = responseHeaders[name];
 		        request.xhr.setResponseHeader(name, value);
 		      }
-		      return request.xhr.receive(responseStatus, responseData);
+		      return request.xhr.receive(responseStatus, responseData, responseTimeout);
 		    });
 		    return request;
 		  };
 		
-		  Http.receive = function(sendData, headers, status) {
+		  Http.receive = function(sendData, headers, status, timeout) {
 		    if (sendData == null) {
 		      sendData = '';
 		    }
@@ -3251,20 +3254,26 @@
 		    if (status == null) {
 		      status = 200;
 		    }
+		    if (timeout == null) {
+		      timeout = null;
+		    }
 		    return Http.createRequest = function(url, type, data, jsonp, jsonPrefix) {
-		      return createRequest(url, type, data, jsonp, jsonPrefix, sendData, headers, status);
+		      return createRequest(url, type, data, jsonp, jsonPrefix, sendData, headers, status, timeout);
 		    };
 		  };
 		
-		  Http.receiveDataFromRequestAndSendBack = function(headers, status) {
+		  Http.receiveDataFromRequestAndSendBack = function(headers, status, timeout) {
 		    if (headers == null) {
 		      headers = {};
 		    }
 		    if (status == null) {
 		      status = 200;
 		    }
+		    if (timeout == null) {
+		      timeout = null;
+		    }
 		    return Http.createRequest = function(url, type, data, jsonp, jsonPrefix) {
-		      return createRequest(url, type, data, jsonp, jsonPrefix, data, headers, status);
+		      return createRequest(url, type, data, jsonp, jsonPrefix, data, headers, status, timeout);
 		    };
 		  };
 		
@@ -3363,8 +3372,11 @@
 		      return new XmlHttpMocks;
 		    };
 		
-		    Xhr.prototype.receive = function(status, data) {
-		      return this.xhr.receive(status, data);
+		    Xhr.prototype.receive = function(status, data, timeout) {
+		      if (timeout == null) {
+		        timeout = null;
+		      }
+		      return this.xhr.receive(status, data, timeout);
 		    };
 		
 		    Xhr.prototype.receiveError = function(err) {
@@ -3718,7 +3730,7 @@
 			},
 		
 			// Call this to simulate a server response
-			receive: function (status, data) {
+			receive: function (status, data, timeout) {
 				if ((this.readyState !== this.OPENED) || (!this.sent)) {
 					// Can't respond to unopened request.
 					throw "INVALID_STATE_ERR";
@@ -3737,10 +3749,27 @@
 				this.onprogress();
 				this.onreadystatechange();
 		
-				this.readyState = this.DONE;
-				this.onreadystatechange();
-				this.onprogress();
-				this.onload();
+				var _this = this;
+				var done = function() {
+					_this.readyState = _this.DONE;
+					_this.onreadystatechange();
+					_this.onprogress();
+					_this.onload();
+				};
+		
+				if (timeout === null) {
+					done();
+				} else if (typeof timeout === 'number' || (typeof timeout === 'object' && typeof timeout.min === 'number' && typeof timeout.max === 'number')) {
+					if (typeof timeout === 'object') {
+						timeout = Math.floor(Math.random() * (timeout.max - timeout.min + 1)) + timeout.min;
+					}
+		
+					setTimeout(function() {
+						done();
+					}, timeout);
+				} else {
+					throw new Error('Invalid type of timeout.');
+				}
 			},
 		
 			// Call this to simulate a request error (e.g. NETWORK_ERR)
