@@ -544,16 +544,31 @@
 		      }).done();
 		      return expect(Http.queue.requests.length).to.be.equal(4);
 		    });
-		    return it.skip('should send all GET requests assynchronously', function(done) {
+		    return it('should send all GET requests assynchronously', function(done) {
 		      var promises;
-		      Http.receive('test');
+		      Http.receiveDataFromRequestAndSendBack();
 		      promises = [];
-		      promises.push(Http.get(link));
-		      promises.push(Http.get(link));
-		      promises.push(Http.get(link));
-		      promises.push(Http.get(link));
+		      promises.push(Http.get(link, {
+		        data: 1
+		      }));
+		      promises.push(Http.get(link, {
+		        data: 2
+		      }));
+		      promises.push(Http.get(link, {
+		        data: 3
+		      }));
+		      promises.push(Http.get(link, {
+		        data: 4
+		      }));
 		      expect(Http.queue.requests.length).to.be.equal(0);
-		      return Q.all(promises).then(function() {
+		      return Q.all(promises).then(function(responses) {
+		        var data, response, _i, _len;
+		        data = [];
+		        for (_i = 0, _len = responses.length; _i < _len; _i++) {
+		          response = responses[_i];
+		          data.push(response.data);
+		        }
+		        expect(data).to.have.members([1, 2, 3, 4]);
 		        return done();
 		      }).done();
 		    });
