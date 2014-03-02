@@ -314,6 +314,11 @@
 		          return _this.emit('send', response, request);
 		        };
 		      })(this));
+		      request.on('afterSend', (function(_this) {
+		        return function(response, request) {
+		          return _this.emit('afterSend', response, request);
+		        };
+		      })(this));
 		      request.on('success', (function(_this) {
 		        return function(response, request) {
 		          return _this.emit('success', response, request);
@@ -321,12 +326,12 @@
 		      })(this));
 		      request.on('error', (function(_this) {
 		        return function(error, response, request) {
-		          return _this.emit('error', response, request);
+		          return _this.emit('error', error, response, request);
 		        };
 		      })(this));
 		      request.on('complete', (function(_this) {
-		        return function(response, request) {
-		          return _this.emit('complete', response, request);
+		        return function(err, response, request) {
+		          return _this.emit('complete', err, response, request);
 		        };
 		      })(this));
 		      if (this.useQueue && (((_ref = options.type) === 'PUT' || _ref === 'POST' || _ref === 'DELETE') || options.parallel === false || this.queue.hasWritableRequests())) {
@@ -493,25 +498,28 @@
 		      this.xhr = this.createXhr(this.url, this.type, this.data, this.jsonp, this.jsonPrefix);
 		      this.response = this.xhr.response;
 		      this.xhr.on('send', (function(_this) {
-		        return function() {
-		          return _this.emit('send', _this.response, _this);
+		        return function(response) {
+		          return _this.emit('send', response, _this);
 		        };
 		      })(this));
 		      this.xhr.on('afterSend', (function(_this) {
-		        return function() {
-		          return _this.emit('afterSend', _this.response, _this);
+		        return function(response) {
+		          return _this.emit('afterSend', response, _this);
 		        };
 		      })(this));
 		      this.xhr.on('success', (function(_this) {
-		        return function() {
-		          _this.emit('success', _this.response, _this);
-		          return _this.emit('complete', _this.response, _this);
+		        return function(response) {
+		          return _this.emit('success', response, _this);
 		        };
 		      })(this));
 		      this.xhr.on('error', (function(_this) {
-		        return function(err) {
-		          _this.emit('error', err, _this.response, _this);
-		          return _this.emit('complete', _this.response, _this);
+		        return function(err, response) {
+		          return _this.emit('error', err, response, _this);
+		        };
+		      })(this));
+		      this.xhr.on('complete', (function(_this) {
+		        return function(err, response) {
+		          return _this.emit('complete', err, response, _this);
 		        };
 		      })(this));
 		    }
@@ -670,9 +678,9 @@
 		              eval(_this.response.data);
 		            }
 		            if (_this.response.status === 200) {
-		              return _this.emit('success', _this);
+		              return _this.emit('success', _this.response);
 		            } else {
-		              return _this.emit('error', new Error("Can not load " + url + " address", _this));
+		              return _this.emit('error', new Error("Can not load " + url + " address", _this.response));
 		            }
 		          }
 		        };
@@ -710,13 +718,17 @@
 		      deferred = Q.defer();
 		      this.emit('send', this.response);
 		      this.on('success', (function(_this) {
-		        return function() {
-		          return deferred.resolve(_this.response);
+		        return function(response) {
+		          _this.emit('complete', null, response);
+		          return deferred.resolve(response);
 		        };
 		      })(this));
-		      this.on('error', function(err) {
-		        return deferred.reject(err);
-		      });
+		      this.on('error', (function(_this) {
+		        return function(err, response) {
+		          _this.emit('complete', err, response);
+		          return deferred.reject(err);
+		        };
+		      })(this));
 		      this.xhr.send(this.data);
 		      this.emit('afterSend', this.response);
 		      return deferred.promise;
@@ -2889,34 +2901,44 @@
 		          }
 		        }
 		      });
-		      this.run();
+		      if (!this.running) {
+		        this.run();
+		      }
 		      return deferred.promise;
 		    };
 		
+		    Queue.prototype.next = function() {
+		      this.requests.shift();
+		      if (this.requests.length > 0) {
+		        this.emit('next', this.requests[0]);
+		        return this.run();
+		      } else {
+		        this.running = false;
+		        return this.emit('finish');
+		      }
+		    };
+		
 		    Queue.prototype.run = function() {
-		      var data, fn, next, request;
+		      var data, fn, request;
 		      if (this.requests.length === 0) {
 		        throw new Error('No pending requests');
 		      }
-		      data = this.requests.shift();
+		      this.running = true;
+		      data = this.requests[0];
 		      request = data.request;
 		      fn = data.fn;
 		      this.emit('send', request);
-		      next = (function(_this) {
-		        return function() {
-		          if (_this.requests.length > 0) {
-		            _this.emit('next');
-		            return _this.run();
-		          }
+		      return request.send().then((function(_this) {
+		        return function(response) {
+		          fn(null, response);
+		          return _this.next();
 		        };
-		      })(this);
-		      return request.send().then(function(response) {
-		        fn(null, response);
-		        return next();
-		      }).fail(function(err) {
-		        fn(err, null);
-		        return next();
-		      });
+		      })(this)).fail((function(_this) {
+		        return function(err) {
+		          fn(err, null);
+		          return _this.next();
+		        };
+		      })(this));
 		    };
 		
 		    return Queue;
@@ -3208,18 +3230,16 @@
 		/** code **/
 		// Generated by CoffeeScript 1.7.1
 		(function() {
-		  var Helpers, Http, Request, createRequest, original;
+		  var Http, Request, createRequest, original;
 		
 		  Http = require('../Http');
 		
 		  Request = require('./Request');
 		
-		  Helpers = require('../Helpers');
-		
 		  original = Http.createRequest;
 		
 		  createRequest = function(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders, responseStatus, responseTimeout) {
-		    var request;
+		    var request, _ref;
 		    if (responseHeaders == null) {
 		      responseHeaders = {};
 		    }
@@ -3231,6 +3251,9 @@
 		    }
 		    if (typeof responseHeaders['content-type'] === 'undefined') {
 		      responseHeaders['content-type'] = 'text/plain';
+		    }
+		    if ((responseHeaders['content-type'].match(/application\/json/) !== null || this.jsonPrefix !== null) && ((_ref = Object.prototype.toString.call(responseData)) === '[object Array]' || _ref === '[object Object]')) {
+		      responseData = JSON.stringify(responseData);
 		    }
 		    request = new Request(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix);
 		    request.on('afterSend', function() {

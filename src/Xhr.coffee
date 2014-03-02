@@ -88,9 +88,9 @@ class Xhr extends EventEmitter
 					eval(@response.data)
 
 				if @response.status == 200
-					@emit 'success', @
+					@emit 'success', @response
 				else
-					@emit 'error', new Error "Can not load #{url} address", @
+					@emit 'error', new Error "Can not load #{url} address", @response
 
 
 	createXhr: ->
@@ -123,8 +123,13 @@ class Xhr extends EventEmitter
 
 		@emit 'send', @response
 
-		@on 'success', => deferred.resolve(@response)
-		@on 'error', (err) -> deferred.reject(err)
+		@on 'success', (response) =>
+			@emit 'complete', null, response
+			deferred.resolve(response)
+
+		@on 'error', (err, response) =>
+			@emit 'complete', err, response
+			deferred.reject(err)
 
 		@xhr.send(@data)
 

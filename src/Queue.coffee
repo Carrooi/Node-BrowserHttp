@@ -32,32 +32,41 @@ class Queue extends EventEmitter
 				if err then deferred.reject(err) else deferred.resolve(response)
 		)
 
-		@run()
+		if !@running
+			@run()
 
 		return deferred.promise
+
+
+	next: ->
+		@requests.shift()
+
+		if @requests.length > 0
+			@emit 'next', @requests[0]
+			@run()
+		else
+			@running = false
+			@emit 'finish'
 
 
 	run: ->
 		if @requests.length == 0
 			throw new Error 'No pending requests'
 
-		data = @requests.shift()
+		@running = true
+
+		data = @requests[0]
 		request = data.request
 		fn = data.fn
 
 		@emit 'send', request
 
-		next = =>
-			if @requests.length > 0
-				@emit 'next'
-				@run()
-
-		request.send().then( (response) ->
+		request.send().then( (response) =>
 			fn(null, response)
-			next()
-		).fail( (err) ->
+			@next()
+		).fail( (err) =>
 			fn(err, null)
-			next()
+			@next()
 		)
 
 

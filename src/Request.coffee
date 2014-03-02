@@ -26,16 +26,11 @@ class Request extends EventEmitter
 
 		@response = @xhr.response
 
-		@xhr.on 'send', => @emit 'send', @response, @
-		@xhr.on 'afterSend', => @emit 'afterSend', @response, @
-
-		@xhr.on 'success', =>
-			@emit 'success', @response, @
-			@emit 'complete', @response, @
-
-		@xhr.on 'error', (err) =>
-			@emit 'error', err, @response, @
-			@emit 'complete', @response, @
+		@xhr.on 'send', (response) => @emit 'send', response, @
+		@xhr.on 'afterSend', (response) => @emit 'afterSend', response, @
+		@xhr.on 'success', (response) => @emit 'success', response, @
+		@xhr.on 'error', (err, response) => @emit 'error', err, response, @
+		@xhr.on 'complete', (err, response) => @emit 'complete', err, response, @
 
 
 	createXhr: (url, type, data, jsonp, jsonPrefix) ->
