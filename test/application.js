@@ -400,7 +400,6 @@
 		          min: 100,
 		          max: 200
 		        });
-		        debugger;
 		        return Http.get(link).then(function(response) {
 		          var elapsed;
 		          elapsed = (new Date).getTime() - start;
