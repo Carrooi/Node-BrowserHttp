@@ -1,6 +1,6 @@
 OriginalXhr = require '../Xhr'
 
-XmlHttpMocks = require '../../Mocks/XmlHttpRequest'
+XmlHttpMocks = require './XmlHttpRequest'
 
 class Xhr extends OriginalXhr
 

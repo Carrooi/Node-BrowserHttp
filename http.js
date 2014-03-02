@@ -3350,7 +3350,7 @@
 		
 		  OriginalXhr = require('../Xhr');
 		
-		  XmlHttpMocks = require('../../Mocks/XmlHttpRequest');
+		  XmlHttpMocks = require('./XmlHttpRequest');
 		
 		  Xhr = (function(_super) {
 		    __extends(Xhr, _super);
@@ -3384,16 +3384,16 @@
 		}).call(this);
 		
 	
-	}, '/Mocks/XmlHttpRequest.js': function(exports, module) {
+	}, '/lib/Mocks/XmlHttpRequest.js': function(exports, module) {
 	
 		/** node globals **/
-		var require = function(name) {return __r__c__.require(name, '/Mocks/XmlHttpRequest.js');};
-		require.resolve = function(name, parent) {if (parent === null) {parent = '/Mocks/XmlHttpRequest.js';} return __r__c__.require.resolve(name, parent);};
+		var require = function(name) {return __r__c__.require(name, '/lib/Mocks/XmlHttpRequest.js');};
+		require.resolve = function(name, parent) {if (parent === null) {parent = '/lib/Mocks/XmlHttpRequest.js';} return __r__c__.require.resolve(name, parent);};
 		require.define = function(bundle) {__r__c__.require.define(bundle);};
 		require.cache = __r__c__.require.cache;
-		var __filename = '/Mocks/XmlHttpRequest.js';
-		var __dirname = '/Mocks';
-		var process = {cwd: function() {return '/';}, argv: ['node', '/Mocks/XmlHttpRequest.js'], env: {}};
+		var __filename = '/lib/Mocks/XmlHttpRequest.js';
+		var __dirname = '/lib/Mocks';
+		var process = {cwd: function() {return '/';}, argv: ['node', '/lib/Mocks/XmlHttpRequest.js'], env: {}};
 	
 		/** code **/
 		/**
