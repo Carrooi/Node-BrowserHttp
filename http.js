@@ -3228,14 +3228,14 @@
 		    if (status == null) {
 		      status = 200;
 		    }
+		    if (typeof headers['content-type'] === 'undefined') {
+		      headers['content-type'] = 'text/plain';
+		    }
 		    return Http.createRequest = function(url, type, data, jsonp, jsonPrefix) {
 		      var request;
 		      request = new Request(url, type, data, jsonp, jsonPrefix);
 		      request.on('afterSend', function() {
 		        var name, value;
-		        if (typeof headers['content-type'] === 'undefined') {
-		          headers['content-type'] = 'text/plain';
-		        }
 		        for (name in headers) {
 		          value = headers[name];
 		          request.xhr.setResponseHeader(name, value);
@@ -3253,14 +3253,14 @@
 		    if (status == null) {
 		      status = 200;
 		    }
+		    if (typeof headers['content-type'] === 'undefined') {
+		      headers['content-type'] = 'text/plain';
+		    }
 		    return Http.createRequest = function(url, type, data, jsonp, jsonPrefix) {
 		      var request;
 		      request = new Request(url, type, data, jsonp, jsonPrefix);
 		      request.on('afterSend', function() {
 		        var name, value;
-		        if (typeof headers['content-type'] === 'undefined') {
-		          headers['content-type'] = 'text/plain';
-		        }
 		        for (name in headers) {
 		          value = headers[name];
 		          request.xhr.setResponseHeader(name, value);

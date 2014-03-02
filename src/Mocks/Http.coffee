@@ -7,12 +7,12 @@ original = Http.createRequest
 
 
 Http.receive = (sendData = '', headers = {}, status = 200) ->
+	if typeof headers['content-type'] == 'undefined' then headers['content-type'] = 'text/plain'
+
 	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
 		request = new Request(url, type, data, jsonp, jsonPrefix)
-		request.on 'afterSend', ->
-			if typeof headers['content-type'] == 'undefined'
-				headers['content-type'] = 'text/plain'
 
+		request.on 'afterSend', ->
 			for name, value of headers
 				request.xhr.setResponseHeader(name, value)
 
@@ -22,12 +22,12 @@ Http.receive = (sendData = '', headers = {}, status = 200) ->
 
 
 Http.receiveDataFromRequestAndSendBack = (headers = {}, status = 200) ->
+	if typeof headers['content-type'] == 'undefined' then headers['content-type'] = 'text/plain'
+
 	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
 		request = new Request(url, type, data, jsonp, jsonPrefix)
-		request.on 'afterSend', ->
-			if typeof headers['content-type'] == 'undefined'
-				headers['content-type'] = 'text/plain'
 
+		request.on 'afterSend', ->
 			for name, value of headers
 				request.xhr.setResponseHeader(name, value)
 
@@ -39,6 +39,7 @@ Http.receiveDataFromRequestAndSendBack = (headers = {}, status = 200) ->
 Http.receiveError = (err) ->
 	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
 		request = new Request(url, type, data, jsonp, jsonPrefix)
+
 		request.on 'afterSend', ->
 			request.xhr.receiveError(err)
 
