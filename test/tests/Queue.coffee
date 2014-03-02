@@ -30,31 +30,28 @@ describe 'Queue', ->
 			sent = sent.substr(0, index) + '>' + sent.substr(index + 1)
 		)
 
-		Http.receive('{"index": 0}', 'content-type': 'application/json')
+		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json')
+
 		Http.get(link, data: {index: 0}, parallel: false).then( (response) ->
 			expect(sent).to.be.equal('>----')
 			expect(response.data).to.be.eql({index: 0})
 		).done()
 
-		Http.receive('{"index": 1}', 'content-type': 'application/json')
 		Http.get(link, data: {index: 1}, parallel: false).then( (response) ->
 			expect(sent).to.be.equal('>>---')
 			expect(response.data).to.be.eql({index: 1})
 		).done()
 
-		Http.receive('{"index": 2}', 'content-type': 'application/json')
 		Http.get(link, data: {index: 2}, parallel: false).then( (response) ->
 			expect(sent).to.be.equal('>>>--')
 			expect(response.data).to.be.eql({index: 2})
 		).done()
 
-		Http.receive('{"index": 3}', 'content-type': 'application/json')
 		Http.get(link, data: {index: 3}, parallel: false).then( (response) ->
 			expect(sent).to.be.equal('>>>>-')
 			expect(response.data).to.be.eql({index: 3})
 		).done()
 
-		Http.receive('{"index": 4}', 'content-type': 'application/json')
 		Http.get(link, data: {index: 4}, parallel: false).then( (response) ->
 			expect(sent).to.be.equal('>>>>>')
 			expect(response.data).to.be.eql({index: 4})

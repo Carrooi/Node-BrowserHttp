@@ -265,16 +265,17 @@ new http.Extensions.Forms(window.jQuery);
 $ npm test
 ```
 
-### Own tests
+### Test mocks
 
 ```
 var http = require('browser-http/Mocks/Http');
 
-// standalone version:
-var http = http.Mocks.Http;
+// or for standalone version: var http = http.Mocks.Http;
 
-afterEach(function() {
+afterEach(function() {		// restore original http and remove all attached listeners to events
 	http.restore();
+	http.removeAllListeners()
+    http.queue.removeAllListeners()
 });
 
 it('should load some data', function(done) {
@@ -300,6 +301,36 @@ it('should load some data and check received data', function(done) {
 		done()
 	});
 });
+```
+
+### Resending sent data back in response
+
+```
+http.receiveDataFromRequestAndSendBack({'content-type': 'application/json'});
+
+http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+	expect(response.data).to.be.eql({greeting: 'hello'});
+});
+
+http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
+	expect(response.data).to.be.eql({greeting: 'good day'});
+});
+```
+
+### Timeout
+
+Response will be send after 400 ms:
+```
+http.receive('some data', {'content-type': 'text/plain'}, 200, 400);
+
+// or simple
+
+http.receive('some data', null, null, 400);
+```
+
+Response will be send between 100 and 300 ms:
+```
+http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 300});
 ```
 
 ## Changelog

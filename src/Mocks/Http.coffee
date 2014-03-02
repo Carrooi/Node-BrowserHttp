@@ -1,28 +1,38 @@
 Http = require '../Http'
 Request = require './Request'
+Helpers = require '../Helpers'
 
 
 original = Http.createRequest
 
+createRequest = (requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders = {}, responseStatus = 200, responseTimeout = null) ->
+	if typeof responseHeaders['content-type'] == 'undefined' then responseHeaders['content-type'] = 'text/plain'
 
-Http.receive = (sendData = '', headers = {}, status = 200) ->
+	request = new Request(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix)
+
+	request.on 'afterSend', ->
+		for name, value of responseHeaders
+			request.xhr.setResponseHeader(name, value)
+
+		request.xhr.receive(responseStatus, responseData, responseTimeout)
+
+	return request
+
+
+Http.receive = (sendData = '', headers = {}, status = 200, timeout = null) ->
 	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
-		request = new Request(url, type, data, jsonp, jsonPrefix)
-		request.on 'afterSend', ->
-			if typeof headers['content-type'] == 'undefined'
-				headers['content-type'] = 'text/plain'
+		return createRequest(url, type, data, jsonp, jsonPrefix, sendData, headers, status, timeout)
 
-			for name, value of headers
-				request.xhr.setResponseHeader(name, value)
 
-			request.xhr.receive(status, sendData)
-
-		return request
+Http.receiveDataFromRequestAndSendBack = (headers = {}, status = 200, timeout = null) ->
+	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
+		return createRequest(url, type, data, jsonp, jsonPrefix, data, headers, status, timeout)
 
 
 Http.receiveError = (err) ->
 	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
 		request = new Request(url, type, data, jsonp, jsonPrefix)
+
 		request.on 'afterSend', ->
 			request.xhr.receiveError(err)
 

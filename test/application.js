@@ -368,7 +368,7 @@
 		          return done();
 		        }).done();
 		      });
-		      return it('should load json data with prefix', function(done) {
+		      it('should load json data with prefix', function(done) {
 		        Http.receive('while(1); {"message": "prefix"}', {
 		          'content-type': 'application/json'
 		        });
@@ -378,6 +378,33 @@
 		          expect(response.data).to.be.eql({
 		            message: 'prefix'
 		          });
+		          return done();
+		        }).done();
+		      });
+		      it('should receive data with exact timeout', function(done) {
+		        var start;
+		        start = (new Date).getTime();
+		        Http.receive('test', null, null, 200);
+		        return Http.get(link).then(function(response) {
+		          var elapsed;
+		          elapsed = (new Date).getTime() - start;
+		          expect(response.data).to.be.equal('test');
+		          expect(elapsed).to.be.above(199).and.to.be.below(205);
+		          return done();
+		        }).done();
+		      });
+		      return it('should receive data with random timeout', function(done) {
+		        var start;
+		        start = (new Date).getTime();
+		        Http.receive('test', null, null, {
+		          min: 100,
+		          max: 200
+		        });
+		        return Http.get(link).then(function(response) {
+		          var elapsed;
+		          elapsed = (new Date).getTime() - start;
+		          expect(response.data).to.be.equal('test');
+		          expect(elapsed).to.be.above(99).and.to.be.below(205);
 		          return done();
 		        }).done();
 		      });
@@ -456,7 +483,7 @@
 		        index = request.data.index;
 		        return sent = sent.substr(0, index) + '>' + sent.substr(index + 1);
 		      });
-		      Http.receive('{"index": 0}', {
+		      Http.receiveDataFromRequestAndSendBack({
 		        'content-type': 'application/json'
 		      });
 		      Http.get(link, {
@@ -470,9 +497,6 @@
 		          index: 0
 		        });
 		      }).done();
-		      Http.receive('{"index": 1}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 1
@@ -484,9 +508,6 @@
 		          index: 1
 		        });
 		      }).done();
-		      Http.receive('{"index": 2}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 2
@@ -498,9 +519,6 @@
 		          index: 2
 		        });
 		      }).done();
-		      Http.receive('{"index": 3}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 3
@@ -512,9 +530,6 @@
 		          index: 3
 		        });
 		      }).done();
-		      Http.receive('{"index": 4}', {
-		        'content-type': 'application/json'
-		      });
 		      Http.get(link, {
 		        data: {
 		          index: 4
