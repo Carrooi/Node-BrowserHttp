@@ -340,7 +340,9 @@
 		        }).done();
 		      });
 		      it('should send request and load response as JSON', function(done) {
-		        Http.receive('{"message": "text"}', {
+		        Http.receive({
+		          message: 'text'
+		        }, {
 		          'content-type': 'application/json'
 		        });
 		        return Http.get(link).then(function(response) {
@@ -546,7 +548,9 @@
 		    });
 		    return it('should send all GET requests assynchronously', function(done) {
 		      var promises;
-		      Http.receiveDataFromRequestAndSendBack();
+		      Http.receiveDataFromRequestAndSendBack({
+		        'content-type': 'application/json'
+		      });
 		      promises = [];
 		      promises.push(Http.get(link, {
 		        data: 1

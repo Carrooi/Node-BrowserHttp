@@ -61,7 +61,7 @@ describe 'Queue', ->
 		expect(Http.queue.requests.length).to.be.equal(4)
 
 	it 'should send all GET requests assynchronously', (done) ->
-		Http.receiveDataFromRequestAndSendBack()
+		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json')
 
 		promises = []
 
@@ -74,8 +74,7 @@ describe 'Queue', ->
 
 		Q.all(promises).then( (responses) ->
 			data = []
-			for response in responses
-				data.push(response.data)
+			data.push(response.data) for response in responses
 
 			expect(data).to.have.members([1, 2, 3, 4])
 

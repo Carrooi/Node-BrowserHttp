@@ -1,12 +1,14 @@
 Http = require '../Http'
 Request = require './Request'
-Helpers = require '../Helpers'
 
 
 original = Http.createRequest
 
 createRequest = (requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders = {}, responseStatus = 200, responseTimeout = null) ->
 	if typeof responseHeaders['content-type'] == 'undefined' then responseHeaders['content-type'] = 'text/plain'
+
+	if (responseHeaders['content-type'].match(/application\/json/) != null || @jsonPrefix != null) && Object.prototype.toString.call(responseData) in ['[object Array]', '[object Object]']
+		responseData = JSON.stringify(responseData)
 
 	request = new Request(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix)
 
