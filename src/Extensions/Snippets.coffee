@@ -1,5 +1,3 @@
-Http = require '../Http'
-
 $ = null
 
 class Snippets
@@ -8,11 +6,8 @@ class Snippets
 	constructor: (jQuery) ->
 		$ = jQuery
 
-		Http.addExtension 'snippets',
-			success: @onSuccess
 
-
-	onSuccess: (response, request) =>
+	success: (response, request) =>
 		if typeof response.data.snippets != 'undefined'
 			for id, html of response.data.snippets
 				@updateSnippet(id, html)

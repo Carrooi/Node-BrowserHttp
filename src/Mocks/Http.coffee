@@ -1,8 +1,7 @@
-Http = require '../Http'
 Request = require './Request'
 
+OriginalHttp = require '../_Http'
 
-original = Http.createRequest
 
 createRequest = (requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders = {}, responseStatus = 200, responseTimeout = null) ->
 	if typeof responseHeaders['content-type'] == 'undefined' then responseHeaders['content-type'] = 'text/plain'
@@ -21,28 +20,40 @@ createRequest = (requestUrl, requestType, requestData, requestJsonp, requestJson
 	return request
 
 
-Http.receive = (sendData = '', headers = {}, status = 200, timeout = null) ->
-	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
-		return createRequest(url, type, data, jsonp, jsonPrefix, sendData, headers, status, timeout)
+class Http extends OriginalHttp
 
 
-Http.receiveDataFromRequestAndSendBack = (headers = {}, status = 200, timeout = null) ->
-	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
-		return createRequest(url, type, data, jsonp, jsonPrefix, data, headers, status, timeout)
+	_originalCreateRequest: null
 
 
-Http.receiveError = (err) ->
-	Http.createRequest = (url, type, data, jsonp, jsonPrefix) ->
-		request = new Request(url, type, data, jsonp, jsonPrefix)
+	constructor: ->
+		super
 
-		request.on 'afterSend', ->
-			request.xhr.receiveError(err)
-
-		return request
+		@_originalCreateRequest = @createRequest
 
 
-Http.restore = ->
-	Http.createRequest = original
+	receive: (sendData = '', headers = {}, status = 200, timeout = null) ->
+		@createRequest = (url, type, data, jsonp, jsonPrefix) ->
+			return createRequest(url, type, data, jsonp, jsonPrefix, sendData, headers, status, timeout)
 
 
-module.exports = Http
+	receiveDataFromRequestAndSendBack: (headers = {}, status = 200, timeout = null) ->
+		@createRequest = (url, type, data, jsonp, jsonPrefix) ->
+			return createRequest(url, type, data, jsonp, jsonPrefix, data, headers, status, timeout)
+
+
+	receiveError: (err) ->
+		@createRequest = (url, type, data, jsonp, jsonPrefix) ->
+			request = new Request(url, type, data, jsonp, jsonPrefix)
+
+			request.on 'afterSend', ->
+				request.xhr.receiveError(err)
+
+			return request
+
+
+	restore: ->
+		@createRequest = @_originalCreateRequest
+
+
+module.exports = new Http

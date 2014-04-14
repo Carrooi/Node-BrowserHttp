@@ -189,12 +189,7 @@ framework, but can be used on any other project.
 #### Loading cursor
 
 ```
-new (require('browser-http/Extensions/Loading'));
-```
-
-standalone version:
-```
-new http.Extensions.Loading;
+http.addExtension('loading', new http.Extensions.Loading);
 ```
 
 Every time new request is send, your cursor is changed into `progress` cursor. After receiving response from server, cursor
@@ -203,12 +198,7 @@ is changed into `auto`.
 #### Redirect
 
 ```
-new (require('browser-http/Extensions/Redirect'));
-```
-
-standalone version:
-```
-new http.Extensions.Redirect;
+http.addExtension('redirect', new http.Extensions.Redirect);
 ```
 
 If your server sends json data with `redirect` variable, then you will be redirected to address in this variable.
@@ -216,13 +206,7 @@ If your server sends json data with `redirect` variable, then you will be redire
 #### Snippets
 
 ```
-var Snippets = require('browser-http/Extensions/Snippets');
-new Snippets(window.jQuery);
-```
-
-standalone version:
-```
-new http.Extensions.Snippets(window.jQuery);
+http.addExtension(new http.Extensions.Snippets(window.jQuery));
 ```
 
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
@@ -233,13 +217,7 @@ This extension depends on jquery.
 #### Ajax links
 
 ```
-var Links = require('browser-http/Extensions/Links');
-new Links(window.jQuery);
-```
-
-standalone version:
-```
-new http.Extensions.Links(window.jQuery);
+http.addExtension(new http.Extensions.Links(window.jQuery));
 ```
 
 This is not true extension for browser-http. It listen for all click events on `a` links with class `ajax` but not with
@@ -254,13 +232,7 @@ This extension can not handle forms with file uploads.
 Depends on jquery.
 
 ```
-var Forms = require('browser-http/Extensions/Forms');
-new Forms(window.jQuery);
-```
-
-standalone version:
-```
-new http.Extensions.Forms(window.jQuery);
+http.addExtension(new http.Extensions.Forms(window.jQuery));
 ```
 
 ## Tests
