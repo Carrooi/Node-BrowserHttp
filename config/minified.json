@@ -4,7 +4,7 @@
 	],
 	"packages": {
 		"browser-http": {
-			"target": "./http.min.js"
+			"target": "./build/http.min.js"
 		}
 	},
 	"debugger": {

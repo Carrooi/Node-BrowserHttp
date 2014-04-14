@@ -21,8 +21,8 @@ $ npm install browser-http
 ```
 
 or for standalone version just choose desired version and include it.
-* [Development version](https://github.com/sakren/node-browser-http/blob/master/http.js)
-* [Minified version](https://github.com/sakren/node-browser-http/blob/master/http.min.js)
+* [Development version](https://github.com/sakren/node-browser-http/blob/master/build/http.js)
+* [Minified version](https://github.com/sakren/node-browser-http/blob/master/build/http.min.js)
 
 
 ## Usage
