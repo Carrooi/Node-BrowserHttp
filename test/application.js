@@ -222,8 +222,7 @@
 		
 		  describe('Extensions', function() {
 		    afterEach(function() {
-		      Http.extensions = {};
-		      return Http.restore();
+		      return Http.extensions = {};
 		    });
 		    describe('#addExtension()', function() {
 		      return it('should add new extension', function() {
@@ -328,9 +327,7 @@
 		  link = 'http://localhost:3000/';
 		
 		  describe('Http', function() {
-		    afterEach(function() {
-		      return Http.restore();
-		    });
+		    afterEach(function() {});
 		    describe('#get()', function() {
 		      it('should send request and load its text', function(done) {
 		        Http.receive('test');
@@ -463,9 +460,7 @@
 		  link = 'http://localhost:3000/';
 		
 		  describe('Queue', function() {
-		    afterEach(function() {
-		      return Http.restore();
-		    });
+		    afterEach(function() {});
 		    it('should send one request', function(done) {
 		      Http.receive('test');
 		      return Http.get(link).then(function(response) {
