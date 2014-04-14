@@ -102,8 +102,11 @@ class Http extends EventEmitter
 		return window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
 
 
-	addExtension: (name, fns) ->
-		@extensions[name] = fns
+	addExtension: (name, object) ->
+		if typeof object.http != 'undefined'
+			object.http = @
+
+		@extensions[name] = object
 		return @
 
 

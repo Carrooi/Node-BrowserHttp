@@ -1,8 +1,9 @@
-Http = require '../Http'
-
 $ = null
 
 class Forms
+
+
+	http: null
 
 
 	constructor: (jQuery) ->
@@ -46,7 +47,10 @@ class Forms
 			data: sendValues
 			type: form.attr('method') or 'GET'
 
-		Http.request(form.attr('action'), options)
+		if @http == null
+			throw new Error 'Please add Forms extension into http object with addExtension method.'
+
+		@http.request(form.attr('action'), options)
 
 
 
