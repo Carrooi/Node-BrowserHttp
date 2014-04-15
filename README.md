@@ -250,8 +250,8 @@ var http = require('browser-http/Mocks/Http');
 
 afterEach(function() {		// restore original http and remove all attached listeners to events
 	http.restore();
-	http.removeAllListeners()
-    http.queue.removeAllListeners()
+	http.removeAllListeners();
+    http.queue.removeAllListeners();
 });
 
 it('should load some data', function(done) {
