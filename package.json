@@ -24,6 +24,7 @@
 	"main": "./lib/Http.js",
 	"dependencies": {
 		"q": "~1.0.0",
+		"events": "~1.0.0",
 		"escape-regexp": "~0.0.1"
 	},
 	"devDependencies": {

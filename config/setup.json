@@ -9,11 +9,7 @@
 			},
 			"run": [
 				"/lib/Expand.js"
-			],
-			"aliases": {
-				"util": "/lib/Node.js/Util.js",
-				"events": "/lib/Node.js/Events.js"
-			}
+			]
 		}
 	},
 	"debugger": {
