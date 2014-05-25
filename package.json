@@ -33,15 +33,19 @@
 		"phantomjs": "~1.9.7-1",
 		"chai": "~1.9.0",
 		"coffee-script": "~1.7.1",
+		"coffeeify": "~0.6.0",
 		"simq": "~5.6.4",
 		"gulp": "~3.6.2",
 		"gulp-coffee": "~1.4.3",
-		"gulp-util": "~2.2.14"
+		"gulp-util": "~2.2.14",
+		"gulp-browserify": "~0.5.0",
+		"gulp-rename": "~1.2.0",
+		"gulp-uglify": "~0.3.0"
 	},
 	"scripts": {
 		"build": "npm run compile && npm run compile-standalone",
 		"compile": "gulp compile-source",
-		"compile-standalone": "node ./node_modules/simq/bin/simq build --config ./config/source.json && ./node_modules/simq/bin/simq build --config ./config/minified.json",
+		"compile-standalone": "gulp compile-standalone",
 		"compile-test": "cd test; node ../node_modules/simq/bin/simq build;",
 		"pretest": "npm run build && npm run compile-test",
 		"test": "node ./node_modules/mocha-phantomjs/bin/mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/index.html",
