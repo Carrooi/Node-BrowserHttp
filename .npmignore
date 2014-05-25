@@ -1,6 +1,7 @@
 .idea/
 
 node_modules/
-lib/
+src/
+test/
 
 npm-debug.log
