@@ -43,3 +43,4 @@ gulp.task('compile-standalone-minify', function() {
 });
 
 gulp.task('compile-standalone', ['compile-standalone-develop', 'compile-standalone-minify'], function() {});
+gulp.task('compile', ['compile-source', 'compile-standalone', 'compile-tests'], function() {});

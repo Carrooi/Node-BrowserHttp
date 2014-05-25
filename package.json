@@ -42,7 +42,7 @@
 		"gulp-uglify": "~0.3.0"
 	},
 	"scripts": {
-		"compile": "npm run compile-source && npm run compile-standalone && npm run compile-tests",
+		"compile": "gulp compile",
 		"compile-source": "gulp compile-source",
 		"compile-standalone": "gulp compile-standalone",
 		"compile-tests": "gulp compile-tests",
