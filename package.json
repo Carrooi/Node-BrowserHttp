@@ -43,11 +43,10 @@
 		"gulp-uglify": "~0.3.0"
 	},
 	"scripts": {
-		"build": "npm run compile && npm run compile-standalone",
-		"compile": "gulp compile-source",
+		"compile": "npm run compile-source && npm run compile-standalone && npm run compile-tests",
+		"compile-source": "gulp compile-source",
 		"compile-standalone": "gulp compile-standalone",
-		"compile-test": "cd test; node ../node_modules/simq/bin/simq build;",
-		"pretest": "npm run build && npm run compile-test",
+		"compile-tests": "gulp compile-tests",
 		"test": "node ./node_modules/mocha-phantomjs/bin/mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/index.html",
 		"prepublish": "gulp compile-source"
 	}

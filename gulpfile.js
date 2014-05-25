@@ -11,6 +11,16 @@ gulp.task('compile-source', function() {
 		.pipe(gulp.dest('./lib/'));
 });
 
+gulp.task('compile-tests', function() {
+	gulp.src('./test/tests/index.coffee', {read: false})
+		.pipe(browserify({
+			transform: ['coffeeify'],
+			extensions: ['.coffee']
+		}))
+		.pipe(rename('application.js'))
+		.pipe(gulp.dest('./test/'));
+});
+
 gulp.task('compile-standalone-develop', function() {
 	gulp.src('./src/Build.coffee', {read: false})
 		.pipe(browserify({
