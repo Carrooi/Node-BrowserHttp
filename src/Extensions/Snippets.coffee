@@ -1,10 +1,4 @@
-$ = null
-
 class Snippets
-
-
-	constructor: (jQuery) ->
-		$ = jQuery
 
 
 	success: (response, request) =>
@@ -14,8 +8,7 @@ class Snippets
 
 
 	updateSnippet: (id, html) ->
-		el = $("##{id}")
-		el.html(html)
+		document.getElementById(id).innerHTML = html
 
 
 module.exports = Snippets

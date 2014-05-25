@@ -206,13 +206,11 @@ If your server sends json data with `redirect` variable, then you will be redire
 #### Snippets
 
 ```
-http.addExtension(new http.Extensions.Snippets(window.jQuery));
+http.addExtension(new http.Extensions.Snippets);
 ```
 
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
 find element in page with given id and change content of this element into the one from given data.
-
-This extension depends on jquery.
 
 #### Ajax links
 
