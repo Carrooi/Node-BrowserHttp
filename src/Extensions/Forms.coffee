@@ -9,8 +9,9 @@ class Forms
 	constructor: (jQuery) ->
 		$ = jQuery
 
-		$(document).on('submit', 'form.ajax:not(.not-ajax)', @onFormSubmitted)
-		$(document).on('click', 'form.ajax:not(.not-ajax) :submit', @onFormSubmitted)
+		$(document).on('submit', 'form.ajax:not(.not-ajax)', @onFormSubmitted)							# form.ajax
+		$(document).on('click', 'form.ajax:not(.not-ajax) input[type="submit"]', @onFormSubmitted)		# form.ajax input[type=submit]
+		$(document).on('click', 'form input[type="submit"].ajax', @onFormSubmitted)						# form		input[type=submit].ajax
 
 
 	onFormSubmitted: (e) =>
