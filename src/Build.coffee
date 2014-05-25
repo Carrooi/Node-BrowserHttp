@@ -1,0 +1,1 @@
+window.http = require './Http'
