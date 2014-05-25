@@ -212,6 +212,14 @@ http.addExtension(new http.Extensions.Snippets);
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
 find element in page with given id and change content of this element into the one from given data.
 
+Snippets HTML can be also appended to elements instead of replaced.
+
+```
+<div id="comments" data-append>
+
+</div>
+```
+
 #### Ajax links
 
 ```
