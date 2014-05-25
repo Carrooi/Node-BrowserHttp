@@ -12,6 +12,7 @@ http.Extensions =
 	Loading: require './Extensions/Loading'
 	Redirect: require './Extensions/Redirect'
 	Snippets: require './Extensions/Snippets'
+	Offline: require './Extensions/Offline'
 
 http.Mocks =
 	Http: require './Mocks/Http'

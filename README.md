@@ -241,6 +241,23 @@ Depends on jquery.
 http.addExtension(new http.Extensions.Forms(window.jQuery));
 ```
 
+#### Am I offline?
+
+```
+http.addExtension(new http.Extensions.Offline);
+
+http.on('disconnected', function() {
+	alert('Lost internet connection');
+});
+
+http.on('connected', function() {
+	alert('You were again connected');
+});
+```
+
+This extension testing if your favicon.ico is reachable. You can change test destination by specifying Offline's
+constructor argument.
+
 ## Tests
 
 ```
