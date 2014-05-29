@@ -1,6 +1,7 @@
 Request = require './Request'
 Queue = require './Queue'
 Q = require 'q'
+BaseExtension = require './Extensions/BaseExtension'
 EventEmitter = require('events').EventEmitter
 
 class Http extends EventEmitter
@@ -9,6 +10,8 @@ class Http extends EventEmitter
 	extensions: null
 
 	queue: null
+
+	historyApiSupported: null
 
 	useQueue: true
 
@@ -99,14 +102,17 @@ class Http extends EventEmitter
 
 
 	isHistoryApiSupported: ->
-		return window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
+		if @historyApiSupported
+			@historyApiSupported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
+
+		return @historyApiSupported
 
 
-	addExtension: (name, object) ->
-		if typeof object.http != 'undefined'
-			object.http = @
+	addExtension: (name, extension) ->
+		if extension instanceof BaseExtension
+			extension.setHttp(@)
 
-		@extensions[name] = object
+		@extensions[name] = extension
 		return @
 
 

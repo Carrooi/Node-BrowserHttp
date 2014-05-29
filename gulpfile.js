@@ -42,5 +42,5 @@ gulp.task('compile-standalone-minify', function() {
 		.pipe(gulp.dest('./build/'));
 });
 
-gulp.task('compile-standalone', ['compile-standalone-develop', 'compile-standalone-minify'], function() {});
-gulp.task('compile', ['compile-source', 'compile-standalone', 'compile-tests'], function() {});
+gulp.task('compile-standalone', ['compile-standalone-develop', 'compile-standalone-minify']);
+gulp.task('compile', ['compile-source', 'compile-standalone', 'compile-tests']);
