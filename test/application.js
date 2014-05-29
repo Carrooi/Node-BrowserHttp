@@ -11,17 +11,29 @@ describe('Extensions.Links', function() {
     Http.extensions = {};
     Http.restore();
     Http.removeAllListeners();
-    return Http.queue.removeAllListeners();
+    Http.queue.removeAllListeners();
+    return Http.queue.requests = [];
   });
-  return it('should send ajax request with link', function(done) {
+  it.skip('should send request on click', function(done) {
     Http.receive('test', null, null, 5);
-    expect(Http.queue.requests).to.have.length(0);
-    $('#extensionsLinks a').click();
-    expect(Http.queue.requests).to.have.length(1);
-    return Http.on('success', function(response) {
+    Http.on('success', function(response, request) {
+      expect(request.type).to.be.equal('GET');
       expect(response.data).to.be.equal('test');
       return done();
     });
+    $('#extensionsLinks a.get').click();
+    return expect(Http.queue.requests).to.have.length(0);
+  });
+  return it('should send request on click with POST', function(done) {
+    Http.receive('test', null, null, 5);
+    Http.on('success', function(response, request) {
+      expect(request.type).to.be.equal('POST');
+      expect(response.data).to.be.equal('test');
+      return done();
+    });
+    expect(Http.queue.requests).to.have.length(0);
+    $('#extensionsLinks a.post').click();
+    return expect(Http.queue.requests).to.have.length(1);
   });
 });
 
