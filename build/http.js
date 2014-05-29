@@ -2817,13 +2817,17 @@ module.exports = BaseExtension;
 
 
 },{"events":3}],8:[function(require,module,exports){
-var $, Forms,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+var $, BaseExtension, Forms,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+BaseExtension = require('./BaseExtension');
 
 $ = null;
 
-Forms = (function() {
-  Forms.prototype.http = null;
+Forms = (function(_super) {
+  __extends(Forms, _super);
 
   function Forms(jQuery) {
     this.onFormSubmitted = __bind(this.onFormSubmitted, this);
@@ -2836,6 +2840,9 @@ Forms = (function() {
   Forms.prototype.onFormSubmitted = function(e) {
     var el, form, i, name, options, sendValues, val, value, values, _i, _len;
     e.preventDefault();
+    if (this.http === null) {
+      throw new Error('Please add Forms extension into http object with addExtension method.');
+    }
     el = $(e.target);
     sendValues = {};
     if (el.is(':submit')) {
@@ -2868,20 +2875,17 @@ Forms = (function() {
       data: sendValues,
       type: form.attr('method') || 'GET'
     };
-    if (this.http === null) {
-      throw new Error('Please add Forms extension into http object with addExtension method.');
-    }
     return this.http.request(form.attr('action'), options);
   };
 
   return Forms;
 
-})();
+})(BaseExtension);
 
 module.exports = Forms;
 
 
-},{}],9:[function(require,module,exports){
+},{"./BaseExtension":7}],9:[function(require,module,exports){
 var $, BaseExtension, Links, hasAttr,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -2931,34 +2935,44 @@ module.exports = Links;
 
 
 },{"./BaseExtension":7}],10:[function(require,module,exports){
-var Loading,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+var BaseExtension, Loading,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-Loading = (function() {
+BaseExtension = require('./BaseExtension');
+
+Loading = (function(_super) {
+  __extends(Loading, _super);
+
   function Loading() {
-    this.complete = __bind(this.complete, this);
-    this.send = __bind(this.send, this);
+    return Loading.__super__.constructor.apply(this, arguments);
   }
 
-  Loading.prototype.send = function(response, request) {
+  Loading.prototype.send = function() {
     return document.body.style.cursor = 'progress';
   };
 
-  Loading.prototype.complete = function(response, request) {
+  Loading.prototype.complete = function() {
     return document.body.style.cursor = 'auto';
   };
 
   return Loading;
 
-})();
+})(BaseExtension);
 
 module.exports = Loading;
 
 
-},{}],11:[function(require,module,exports){
-var Offline;
+},{"./BaseExtension":7}],11:[function(require,module,exports){
+var BaseExtension, Offline,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-Offline = (function() {
+BaseExtension = require('./BaseExtension');
+
+Offline = (function(_super) {
+  __extends(Offline, _super);
+
   Offline.prototype.timer = null;
 
   Offline.prototype.offline = false;
@@ -2982,6 +2996,9 @@ Offline = (function() {
     }
     return this.timer = window.setInterval((function(_this) {
       return function() {
+        if (_this.http === null) {
+          throw new Error('Please add Offline extension into http object with addExtension method.');
+        }
         return _this.http.get(url, {
           data: {
             r: Math.floor(Math.random() * 1000000000)
@@ -3011,18 +3028,26 @@ Offline = (function() {
 
   return Offline;
 
-})();
+})(BaseExtension);
 
 module.exports = Offline;
 
 
-},{}],12:[function(require,module,exports){
-var Redirect;
+},{"./BaseExtension":7}],12:[function(require,module,exports){
+var BaseExtension, Redirect,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-Redirect = (function() {
-  function Redirect() {}
+BaseExtension = require('./BaseExtension');
 
-  Redirect.prototype.success = function(response, request) {
+Redirect = (function(_super) {
+  __extends(Redirect, _super);
+
+  function Redirect() {
+    return Redirect.__super__.constructor.apply(this, arguments);
+  }
+
+  Redirect.prototype.success = function(response) {
     if (typeof response.data.redirect !== 'undefined') {
       return window.location.href = response.data.redirect;
     }
@@ -3030,14 +3055,18 @@ Redirect = (function() {
 
   return Redirect;
 
-})();
+})(BaseExtension);
 
 module.exports = Redirect;
 
 
-},{}],13:[function(require,module,exports){
-var Snippets, hasAttr,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+},{"./BaseExtension":7}],13:[function(require,module,exports){
+var BaseExtension, Snippets, hasAttr,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+BaseExtension = require('./BaseExtension');
 
 hasAttr = function(el, name) {
   var attr;
@@ -3045,14 +3074,17 @@ hasAttr = function(el, name) {
   return typeof attr !== 'undefined' && attr !== false;
 };
 
-Snippets = (function() {
+Snippets = (function(_super) {
+  __extends(Snippets, _super);
+
   function Snippets() {
     this.success = __bind(this.success, this);
+    return Snippets.__super__.constructor.apply(this, arguments);
   }
 
   Snippets.APPEND_ATTRIBUTE = 'data-append';
 
-  Snippets.prototype.success = function(response, request) {
+  Snippets.prototype.success = function(response) {
     var el, html, id, _ref, _results;
     if (typeof response.data.snippets !== 'undefined') {
       _ref = response.data.snippets;
@@ -3080,12 +3112,12 @@ Snippets = (function() {
 
   return Snippets;
 
-})();
+})(BaseExtension);
 
 module.exports = Snippets;
 
 
-},{}],14:[function(require,module,exports){
+},{"./BaseExtension":7}],14:[function(require,module,exports){
 var Helpers;
 
 Helpers = (function() {

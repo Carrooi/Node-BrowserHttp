@@ -1,15 +1,18 @@
+BaseExtension = require './BaseExtension'
+
+
 hasAttr = (el, name) ->
 	attr = el.getAttribute(name)
 	return typeof attr != 'undefined' && attr != false
 
 
-class Snippets
+class Snippets extends BaseExtension
 
 
 	@APPEND_ATTRIBUTE = 'data-append'
 
 
-	success: (response, request) =>
+	success: (response) =>
 		if typeof response.data.snippets != 'undefined'
 			for id, html of response.data.snippets
 				el = document.getElementById(id)

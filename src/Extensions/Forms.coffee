@@ -1,9 +1,10 @@
+BaseExtension = require './BaseExtension'
+
+
 $ = null
 
-class Forms
 
-
-	http: null
+class Forms extends BaseExtension
 
 
 	constructor: (jQuery) ->
@@ -16,6 +17,9 @@ class Forms
 
 	onFormSubmitted: (e) =>
 		e.preventDefault()
+
+		if @http == null
+			throw new Error 'Please add Forms extension into http object with addExtension method.'
 
 		el = $(e.target)
 		sendValues = {}
@@ -47,9 +51,6 @@ class Forms
 		options =
 			data: sendValues
 			type: form.attr('method') or 'GET'
-
-		if @http == null
-			throw new Error 'Please add Forms extension into http object with addExtension method.'
 
 		@http.request(form.attr('action'), options)
 
