@@ -20,7 +20,6 @@ class Links extends BaseExtension
 
 		$(document).on('click', 'a.ajax:not(.not-ajax)', (e) =>
 			e.preventDefault()
-			debugger
 
 			if @http == null
 				throw new Error 'Please add Links extension into http object with addExtension method.'

@@ -26,7 +26,7 @@ describe 'Extensions.Links', ->
 
 		expect(Http.queue.requests).to.have.length(0)		# GET requests are called immediatelly without queue
 
-	it 'should send request on click with POST', (done) ->
+	it.skip 'should send request on click with POST', (done) ->
 		Http.receive('test', null, null, 5)
 
 		Http.on 'success', (response, request) ->
