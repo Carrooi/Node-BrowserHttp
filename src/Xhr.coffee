@@ -140,6 +140,7 @@ class Xhr extends EventEmitter
 
 	abort: ->
 		@xhr.abort()
+		@emit 'abort', @response
 		return @
 
 

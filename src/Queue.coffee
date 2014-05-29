@@ -15,10 +15,17 @@ class Queue extends EventEmitter
 
 	hasWritableRequests: ->
 		if @running
-			for request in @requests when request.type in ['PUT', 'POST', 'DELETE']
+			for request in @requests when request.request.type in ['PUT', 'POST', 'DELETE']
 				return true
 
 		return false
+
+
+	getCurrentRequest: ->
+		if @requests.length == 0
+			return null
+
+		return @requests[0].request
 
 
 	addAndSend: (request) ->
@@ -42,7 +49,7 @@ class Queue extends EventEmitter
 		@requests.shift()
 
 		if @requests.length > 0
-			@emit 'next', @requests[0]
+			@emit 'next', @requests[0].request
 			@run()
 		else
 			@running = false
@@ -68,6 +75,25 @@ class Queue extends EventEmitter
 			fn(err, null)
 			@next()
 		)
+
+
+	removePending: ->
+		if @running
+			request = @requests[0]
+			@requests = [request]
+		else
+			@requests = []
+
+		return @
+
+
+	stop: ->
+		if @running
+			@getCurrentRequest().abort()
+
+		@requests = []
+
+		return @
 
 
 module.exports = Queue

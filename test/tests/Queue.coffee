@@ -78,3 +78,37 @@ describe 'Queue', ->
 
 			done()
 		).done()
+
+	it 'should remove all pending requests', (done) ->
+		Http.receive(null, null, null, 5)
+
+		Http.post('').then( -> done() )
+		Http.post('')
+		Http.post('')
+		Http.post('')
+
+		expect(Http.queue.requests).to.have.length(4)
+
+		Http.queue.removePending()
+
+		expect(Http.queue.requests).to.have.length(1)
+
+	it 'should remove all pending requests and abort current request', ->
+		Http.receive(null, null, null, 5)
+
+		Http.post('')
+		Http.post('')
+		Http.post('')
+		Http.post('')
+
+		expect(Http.queue.requests).to.have.length(4)
+
+		aborted = false
+		request = Http.queue.getCurrentRequest()
+		request.on 'abort', ->
+			aborted = true
+
+		Http.queue.stop()
+
+		expect(aborted).to.be.true
+		expect(Http.queue.requests).to.have.length(0)

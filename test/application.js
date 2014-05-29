@@ -24,7 +24,7 @@ describe('Extensions.Links', function() {
     $('#extensionsLinks a.get').click();
     return expect(Http.queue.requests).to.have.length(0);
   });
-  return it('should send request on click with POST', function(done) {
+  return it.skip('should send request on click with POST', function(done) {
     Http.receive('test', null, null, 5);
     Http.on('success', function(response, request) {
       expect(request.type).to.be.equal('POST');
@@ -301,7 +301,7 @@ describe('Queue', function() {
     });
     return expect(Http.queue.requests.length).to.be.equal(5);
   });
-  return it('should send all GET requests assynchronously', function(done) {
+  it('should send all GET requests assynchronously', function(done) {
     var promises, start, timeout;
     promises = [];
     start = (new Date).getTime();
@@ -337,6 +337,35 @@ describe('Queue', function() {
       expect(elapsed).to.be.above(timeout.min - 1).and.to.be.below(timeout.max + 5);
       return done();
     }).done();
+  });
+  it('should remove all pending requests', function(done) {
+    Http.receive(null, null, null, 5);
+    Http.post('').then(function() {
+      return done();
+    });
+    Http.post('');
+    Http.post('');
+    Http.post('');
+    expect(Http.queue.requests).to.have.length(4);
+    Http.queue.removePending();
+    return expect(Http.queue.requests).to.have.length(1);
+  });
+  return it('should remove all pending requests and abort current request', function() {
+    var aborted, request;
+    Http.receive(null, null, null, 5);
+    Http.post('');
+    Http.post('');
+    Http.post('');
+    Http.post('');
+    expect(Http.queue.requests).to.have.length(4);
+    aborted = false;
+    request = Http.queue.getCurrentRequest();
+    request.on('abort', function() {
+      return aborted = true;
+    });
+    Http.queue.stop();
+    expect(aborted).to.be["true"];
+    return expect(Http.queue.requests).to.have.length(0);
   });
 });
 

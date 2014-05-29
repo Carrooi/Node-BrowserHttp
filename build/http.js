@@ -2911,7 +2911,6 @@ Links = (function(_super) {
       return function(e) {
         var a, link, type;
         e.preventDefault();
-        debugger;
         if (_this.http === null) {
           throw new Error('Please add Links extension into http object with addExtension method.');
         }
@@ -3408,12 +3407,19 @@ Queue = (function(_super) {
       _ref = this.requests;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         request = _ref[_i];
-        if ((_ref1 = request.type) === 'PUT' || _ref1 === 'POST' || _ref1 === 'DELETE') {
+        if ((_ref1 = request.request.type) === 'PUT' || _ref1 === 'POST' || _ref1 === 'DELETE') {
           return true;
         }
       }
     }
     return false;
+  };
+
+  Queue.prototype.getCurrentRequest = function() {
+    if (this.requests.length === 0) {
+      return null;
+    }
+    return this.requests[0].request;
   };
 
   Queue.prototype.addAndSend = function(request) {
@@ -3439,7 +3445,7 @@ Queue = (function(_super) {
   Queue.prototype.next = function() {
     this.requests.shift();
     if (this.requests.length > 0) {
-      this.emit('next', this.requests[0]);
+      this.emit('next', this.requests[0].request);
       return this.run();
     } else {
       this.running = false;
@@ -3468,6 +3474,25 @@ Queue = (function(_super) {
         return _this.next();
       };
     })(this));
+  };
+
+  Queue.prototype.removePending = function() {
+    var request;
+    if (this.running) {
+      request = this.requests[0];
+      this.requests = [request];
+    } else {
+      this.requests = [];
+    }
+    return this;
+  };
+
+  Queue.prototype.stop = function() {
+    if (this.running) {
+      this.getCurrentRequest().abort();
+    }
+    this.requests = [];
+    return this;
   };
 
   return Queue;
@@ -3503,6 +3528,8 @@ Request = (function(_super) {
 
   Request.prototype.jsonPrefix = null;
 
+  Request.prototype.aborted = false;
+
   function Request(url, type, data, jsonp, jsonPrefix) {
     this.url = url;
     this.type = type != null ? type : 'GET';
@@ -3535,6 +3562,11 @@ Request = (function(_super) {
     this.xhr.on('complete', (function(_this) {
       return function(err, response) {
         return _this.emit('complete', err, response, _this);
+      };
+    })(this));
+    this.xhr.on('abort', (function(_this) {
+      return function(response) {
+        return _this.emit('abort', response);
       };
     })(this));
   }
@@ -3761,6 +3793,7 @@ Xhr = (function(_super) {
 
   Xhr.prototype.abort = function() {
     this.xhr.abort();
+    this.emit('abort', this.response);
     return this;
   };
 
