@@ -2911,6 +2911,7 @@ Links = (function(_super) {
       return function(e) {
         var a, link, type;
         e.preventDefault();
+        debugger;
         if (_this.http === null) {
           throw new Error('Please add Links extension into http object with addExtension method.');
         }
