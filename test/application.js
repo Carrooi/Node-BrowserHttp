@@ -1,4 +1,32 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Http;
+
+Http = http.Mocks.Http;
+
+describe('Extensions.Links', function() {
+  beforeEach(function() {
+    return Http.addExtension('links', new http.Extensions.Links(jQuery));
+  });
+  afterEach(function() {
+    Http.extensions = {};
+    Http.restore();
+    Http.removeAllListeners();
+    return Http.queue.removeAllListeners();
+  });
+  return it('should send ajax request with link', function(done) {
+    Http.receive('test', null, null, 5);
+    expect(Http.queue.requests).to.have.length(0);
+    $('#extensionsLinks a').click();
+    expect(Http.queue.requests).to.have.length(1);
+    return Http.on('success', function(response) {
+      expect(response.data).to.be.equal('test');
+      return done();
+    });
+  });
+});
+
+
+},{}],2:[function(require,module,exports){
 var Http, link;
 
 Http = window.http.Mocks.Http;
@@ -43,7 +71,7 @@ describe('Extensions', function() {
 });
 
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 var Helpers;
 
 Helpers = window.http.Helpers;
@@ -71,7 +99,7 @@ describe('Helpers', function() {
 });
 
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var Http, Q, Xhr, link;
 
 Http = window.http.Mocks.Http;
@@ -194,7 +222,7 @@ describe('Http', function() {
 });
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var Http, Q, link;
 
 Http = window.http.Mocks.Http;
@@ -301,7 +329,7 @@ describe('Queue', function() {
 });
 
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 require('./Helpers');
 
 require('./Http');
@@ -310,5 +338,7 @@ require('./Extensions');
 
 require('./Queue');
 
+require('./Extensions.Links');
 
-},{"./Extensions":1,"./Helpers":2,"./Http":3,"./Queue":4}]},{},[5])
+
+},{"./Extensions":2,"./Extensions.Links":1,"./Helpers":3,"./Http":4,"./Queue":5}]},{},[6])

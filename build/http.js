@@ -2788,7 +2788,35 @@ return Q;
 window.http = require('./Http');
 
 
-},{"./Http":14}],7:[function(require,module,exports){
+},{"./Http":15}],7:[function(require,module,exports){
+var BaseExtension, EventEmitter,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+EventEmitter = require('events').EventEmitter;
+
+BaseExtension = (function(_super) {
+  __extends(BaseExtension, _super);
+
+  function BaseExtension() {
+    return BaseExtension.__super__.constructor.apply(this, arguments);
+  }
+
+  BaseExtension.prototype.http = null;
+
+  BaseExtension.prototype.setHttp = function(http) {
+    this.http = http;
+    return this.emit('httpReady', this.http);
+  };
+
+  return BaseExtension;
+
+})(EventEmitter);
+
+module.exports = BaseExtension;
+
+
+},{"events":3}],8:[function(require,module,exports){
 var $, Forms,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
@@ -2853,8 +2881,12 @@ Forms = (function() {
 module.exports = Forms;
 
 
-},{}],8:[function(require,module,exports){
-var $, Links, hasAttr;
+},{}],9:[function(require,module,exports){
+var $, BaseExtension, Links, hasAttr,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+BaseExtension = require('./BaseExtension');
 
 $ = null;
 
@@ -2864,40 +2896,41 @@ hasAttr = function(el, name) {
   return typeof attr !== 'undefined' && attr !== false;
 };
 
-Links = (function() {
+Links = (function(_super) {
+  __extends(Links, _super);
+
   Links.HISTORY_API_ATTRIBUTE = 'data-history-api';
 
-  Links.prototype.http = null;
-
   function Links(jQuery) {
-    var historyApi;
     $ = jQuery;
-    historyApi = Http.isHistoryApiSupported();
     $(document).on('click', 'a.ajax:not(.not-ajax)', (function(_this) {
       return function(e) {
-        var a, link;
+        var a, link, type;
         e.preventDefault();
-        a = e.target.nodeName.toLowerCase() === 'a' ? $(e.target) : $(e.target).closest('a');
-        link = a.attr('href');
-        if (historyApi && hasAttr(a, Links.HISTORY_API_ATTRIBUTE)) {
-          window.history.pushState({}, null, link);
-        }
         if (_this.http === null) {
           throw new Error('Please add Links extension into http object with addExtension method.');
         }
-        return _this.http.get(link);
+        a = e.target.nodeName.toLowerCase() === 'a' ? $(e.target) : $(e.target).closest('a');
+        link = a.attr('href');
+        type = hasAttr(a, 'data-type') ? a.attr('data-type').toUpperCase() : 'GET';
+        if (_this.http.isHistoryApiSupported() && hasAttr(a, Links.HISTORY_API_ATTRIBUTE)) {
+          window.history.pushState({}, null, link);
+        }
+        return _this.http.request(link, {
+          type: type
+        });
       };
     })(this));
   }
 
   return Links;
 
-})();
+})(BaseExtension);
 
 module.exports = Links;
 
 
-},{}],9:[function(require,module,exports){
+},{"./BaseExtension":7}],10:[function(require,module,exports){
 var Loading,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
@@ -2922,7 +2955,7 @@ Loading = (function() {
 module.exports = Loading;
 
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var Offline;
 
 Offline = (function() {
@@ -2983,7 +3016,7 @@ Offline = (function() {
 module.exports = Offline;
 
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var Redirect;
 
 Redirect = (function() {
@@ -3002,7 +3035,7 @@ Redirect = (function() {
 module.exports = Redirect;
 
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var Snippets, hasAttr,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
@@ -3052,7 +3085,7 @@ Snippets = (function() {
 module.exports = Snippets;
 
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var Helpers;
 
 Helpers = (function() {
@@ -3115,7 +3148,7 @@ Helpers = (function() {
 module.exports = Helpers;
 
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var Http, http;
 
 Http = require('./_Http');
@@ -3144,7 +3177,7 @@ http.Mocks = {
 module.exports = http;
 
 
-},{"./Extensions/Forms":7,"./Extensions/Links":8,"./Extensions/Loading":9,"./Extensions/Offline":10,"./Extensions/Redirect":11,"./Extensions/Snippets":12,"./Helpers":13,"./Mocks/Http":15,"./Xhr":21,"./_Http":22,"q":5}],15:[function(require,module,exports){
+},{"./Extensions/Forms":8,"./Extensions/Links":9,"./Extensions/Loading":10,"./Extensions/Offline":11,"./Extensions/Redirect":12,"./Extensions/Snippets":13,"./Helpers":14,"./Mocks/Http":16,"./Xhr":22,"./_Http":23,"q":5}],16:[function(require,module,exports){
 var Http, OriginalHttp, Request, createRequest,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -3247,7 +3280,7 @@ Http = (function(_super) {
 module.exports = new Http;
 
 
-},{"../_Http":22,"./Request":16}],16:[function(require,module,exports){
+},{"../_Http":23,"./Request":17}],17:[function(require,module,exports){
 var OriginalRequest, Request, Xhr,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -3274,7 +3307,7 @@ Request = (function(_super) {
 module.exports = Request;
 
 
-},{"../Request":19,"./Xhr":17}],17:[function(require,module,exports){
+},{"../Request":20,"./Xhr":18}],18:[function(require,module,exports){
 var OriginalXhr, Xhr, XmlHttpMocks,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -3316,7 +3349,7 @@ Xhr = (function(_super) {
 module.exports = Xhr;
 
 
-},{"../../external/XmlHttpRequest":1,"../Xhr":21}],18:[function(require,module,exports){
+},{"../../external/XmlHttpRequest":1,"../Xhr":22}],19:[function(require,module,exports){
 var EventEmitter, Q, Queue,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -3411,7 +3444,7 @@ Queue = (function(_super) {
 module.exports = Queue;
 
 
-},{"events":3,"q":5}],19:[function(require,module,exports){
+},{"events":3,"q":5}],20:[function(require,module,exports){
 var EventEmitter, Request, Xhr,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -3512,7 +3545,7 @@ Request = (function(_super) {
 module.exports = Request;
 
 
-},{"./Xhr":21,"events":3}],20:[function(require,module,exports){
+},{"./Xhr":22,"events":3}],21:[function(require,module,exports){
 var Response;
 
 Response = (function() {
@@ -3537,7 +3570,7 @@ Response = (function() {
 module.exports = Response;
 
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var EventEmitter, Helpers, Q, Response, Xhr, escape,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -3705,8 +3738,8 @@ Xhr = (function(_super) {
 module.exports = Xhr;
 
 
-},{"./Helpers":13,"./Response":20,"escape-regexp":2,"events":3,"q":5}],22:[function(require,module,exports){
-var EventEmitter, Http, Q, Queue, Request,
+},{"./Helpers":14,"./Response":21,"escape-regexp":2,"events":3,"q":5}],23:[function(require,module,exports){
+var BaseExtension, EventEmitter, Http, Q, Queue, Request,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice;
@@ -3717,6 +3750,8 @@ Queue = require('./Queue');
 
 Q = require('q');
 
+BaseExtension = require('./Extensions/BaseExtension');
+
 EventEmitter = require('events').EventEmitter;
 
 Http = (function(_super) {
@@ -3725,6 +3760,8 @@ Http = (function(_super) {
   Http.prototype.extensions = null;
 
   Http.prototype.queue = null;
+
+  Http.prototype.historyApiSupported = null;
 
   Http.prototype.useQueue = true;
 
@@ -3900,14 +3937,17 @@ Http = (function(_super) {
   };
 
   Http.prototype.isHistoryApiSupported = function() {
-    return window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
+    if (this.historyApiSupported) {
+      this.historyApiSupported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
+    }
+    return this.historyApiSupported;
   };
 
-  Http.prototype.addExtension = function(name, object) {
-    if (typeof object.http !== 'undefined') {
-      object.http = this;
+  Http.prototype.addExtension = function(name, extension) {
+    if (extension instanceof BaseExtension) {
+      extension.setHttp(this);
     }
-    this.extensions[name] = object;
+    this.extensions[name] = extension;
     return this;
   };
 
@@ -3941,4 +3981,4 @@ Http = (function(_super) {
 module.exports = Http;
 
 
-},{"./Queue":18,"./Request":19,"events":3,"q":5}]},{},[6])
+},{"./Extensions/BaseExtension":7,"./Queue":19,"./Request":20,"events":3,"q":5}]},{},[6])
