@@ -1,5 +1,6 @@
 EventEmitter = require('events').EventEmitter
 
+
 class BaseExtension extends EventEmitter
 
 

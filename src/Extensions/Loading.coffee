@@ -1,11 +1,14 @@
-class Loading
+BaseExtension = require './BaseExtension'
 
 
-	send: (response, request) =>
+class Loading extends BaseExtension
+
+
+	send: ->
 		document.body.style.cursor = 'progress'
 
 
-	complete: (response, request) =>
+	complete: ->
 		document.body.style.cursor = 'auto'
 
 

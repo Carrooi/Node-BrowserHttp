@@ -1,7 +1,10 @@
-class Redirect
+BaseExtension = require './BaseExtension'
 
 
-	success: (response, request) ->
+class Redirect extends BaseExtension
+
+
+	success: (response) ->
 		if typeof response.data.redirect != 'undefined'
 			window.location.href = response.data.redirect
 
