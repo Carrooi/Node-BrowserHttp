@@ -206,7 +206,7 @@ If your server sends json data with `redirect` variable, then you will be redire
 #### Snippets
 
 ```
-http.addExtension(new http.Extensions.Snippets);
+http.addExtension('snippets', new http.Extensions.Snippets);
 ```
 
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
@@ -223,7 +223,7 @@ Snippets HTML can be also appended to elements instead of replaced.
 #### Ajax links
 
 ```
-http.addExtension(new http.Extensions.Links(window.jQuery));
+http.addExtension('links', new http.Extensions.Links(window.jQuery));
 ```
 
 This is not true extension for browser-http. It listen for all click events on `a` links with class `ajax` but not with
@@ -238,13 +238,13 @@ This extension can not handle forms with file uploads.
 Depends on jquery.
 
 ```
-http.addExtension(new http.Extensions.Forms(window.jQuery));
+http.addExtension('forms', new http.Extensions.Forms(window.jQuery));
 ```
 
 #### Am I offline?
 
 ```
-http.addExtension(new http.Extensions.Offline);
+http.addExtension('offline', new http.Extensions.Offline);
 
 http.on('disconnected', function() {
 	alert('Lost internet connection');
