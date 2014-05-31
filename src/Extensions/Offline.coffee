@@ -4,6 +4,9 @@ BaseExtension = require './BaseExtension'
 class Offline extends BaseExtension
 
 
+	@HTTP_TYPE = 'HEAD'
+
+
 	timer: null
 
 	offline: false
@@ -18,7 +21,12 @@ class Offline extends BaseExtension
 			if @http == null
 				throw new Error 'Please add Offline extension into http object with addExtension method.'
 
-			@http.get(url, data: {r: Math.floor(Math.random() * 1000000000)}).then( (response) =>
+			options =
+				type: Offline.HTTP_TYPE
+				data:
+					r: Math.floor(Math.random() * 1000000000)
+
+			@http.request(url, options).then( (response) =>
 				if (response.status >= 200 && response.status <= 300) || response.status == 304
 					if @offline
 						@offline = false

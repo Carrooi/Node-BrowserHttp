@@ -2986,6 +2986,8 @@ BaseExtension = require('./BaseExtension');
 Offline = (function(_super) {
   __extends(Offline, _super);
 
+  Offline.HTTP_TYPE = 'HEAD';
+
   Offline.prototype.timer = null;
 
   Offline.prototype.offline = false;
@@ -3009,14 +3011,17 @@ Offline = (function(_super) {
     }
     return this.timer = window.setInterval((function(_this) {
       return function() {
+        var options;
         if (_this.http === null) {
           throw new Error('Please add Offline extension into http object with addExtension method.');
         }
-        return _this.http.get(url, {
+        options = {
+          type: Offline.HTTP_TYPE,
           data: {
             r: Math.floor(Math.random() * 1000000000)
           }
-        }).then(function(response) {
+        };
+        return _this.http.request(url, options).then(function(response) {
           if ((response.status >= 200 && response.status <= 300) || response.status === 304) {
             if (_this.offline) {
               _this.offline = false;
