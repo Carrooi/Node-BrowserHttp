@@ -1,10 +1,17 @@
 Http = null
+Links = null
 
 describe 'Extensions.Links', ->
 
 	beforeEach( ->
 		Http = new http.Mocks.Http
-		Http.addExtension('links', new http.Extensions.Links(jQuery))
+		Links = new http.Extensions.Links(jQuery)
+
+		Http.addExtension('links', Links)
+	)
+
+	afterEach( ->
+		Links.detach()
 	)
 
 	it 'should send request on click', (done) ->
@@ -19,7 +26,7 @@ describe 'Extensions.Links', ->
 
 		expect(Http.queue.requests).to.have.length(0)		# GET requests are called immediatelly without queue
 
-	it.skip 'should send request on click with POST', (done) ->
+	it 'should send request on click with POST', (done) ->
 		Http.receive('test', null, null, 5)
 
 		Http.on 'success', (response, request) ->

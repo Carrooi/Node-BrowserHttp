@@ -14,11 +14,13 @@ class Links extends BaseExtension
 
 	@HISTORY_API_ATTRIBUTE = 'data-history-api'
 
+	@EVENT_NAMESPACE = 'http-ext-links'
+
 
 	constructor: (jQuery) ->
 		$ = jQuery
 
-		$(document).on('click', 'a.ajax:not(.not-ajax)', (e) =>
+		$(document).on('click.' + Links.EVENT_NAMESPACE, 'a.ajax:not(.not-ajax)', (e) =>
 			e.preventDefault()
 
 			if @http == null
@@ -33,6 +35,10 @@ class Links extends BaseExtension
 
 			@http.request(link, type: type)
 		)
+
+
+	detach: ->
+		$(document).off('.' + Links.EVENT_NAMESPACE)
 
 
 module.exports = Links

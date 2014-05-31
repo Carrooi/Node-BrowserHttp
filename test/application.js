@@ -1,12 +1,18 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Http;
+var Http, Links;
 
 Http = null;
+
+Links = null;
 
 describe('Extensions.Links', function() {
   beforeEach(function() {
     Http = new http.Mocks.Http;
-    return Http.addExtension('links', new http.Extensions.Links(jQuery));
+    Links = new http.Extensions.Links(jQuery);
+    return Http.addExtension('links', Links);
+  });
+  afterEach(function() {
+    return Links.detach();
   });
   it('should send request on click', function(done) {
     Http.receive('test', null, null, 5);
@@ -18,7 +24,7 @@ describe('Extensions.Links', function() {
     $('#extensionsLinks a.get').click();
     return expect(Http.queue.requests).to.have.length(0);
   });
-  return it.skip('should send request on click with POST', function(done) {
+  return it('should send request on click with POST', function(done) {
     Http.receive('test', null, null, 5);
     Http.on('success', function(response, request) {
       expect(request.type).to.be.equal('POST');
