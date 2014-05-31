@@ -3,7 +3,7 @@ BaseExtension = require './BaseExtension'
 
 hasAttr = (el, name) ->
 	attr = el.getAttribute(name)
-	return typeof attr != 'undefined' && attr != false
+	return attr != null && typeof attr != 'undefined' && attr != false
 
 
 class Snippets extends BaseExtension

@@ -39,6 +39,43 @@ describe('Extensions.Links', function() {
 
 
 },{}],2:[function(require,module,exports){
+var Http;
+
+Http = null;
+
+describe('Extensions.Snippets', function() {
+  beforeEach(function() {
+    Http = new http.Mocks.Http;
+    return Http.addExtension('snippets', new http.Extensions.Snippets);
+  });
+  it('should update snippets html', function() {
+    Http.receive({
+      snippets: {
+        snippetUpdate: 'after'
+      }
+    }, {
+      'content-type': 'application/json'
+    });
+    expect($('#snippetUpdate').html()).to.be.equal('before');
+    Http.get('');
+    return expect($('#snippetUpdate').html()).to.be.equal('after');
+  });
+  return it('should append html to snippet', function() {
+    Http.receive({
+      snippets: {
+        snippetAppend: ', two'
+      }
+    }, {
+      'content-type': 'application/json'
+    });
+    expect($('#snippetAppend').html()).to.be.equal('one');
+    Http.get('');
+    return expect($('#snippetAppend').html()).to.be.equal('one, two');
+  });
+});
+
+
+},{}],3:[function(require,module,exports){
 var Http, link;
 
 Http = null;
@@ -82,7 +119,7 @@ describe('Extensions', function() {
 });
 
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var Helpers;
 
 Helpers = window.http.Helpers;
@@ -110,7 +147,7 @@ describe('Helpers', function() {
 });
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var Http, Q, Xhr, link;
 
 Http = null;
@@ -233,7 +270,7 @@ describe('Http', function() {
 });
 
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var Http, Q, link;
 
 Http = null;
@@ -369,7 +406,7 @@ describe('Queue', function() {
 });
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 require('./Helpers');
 
 require('./Http');
@@ -380,5 +417,7 @@ require('./Queue');
 
 require('./Extensions.Links');
 
+require('./Extensions.Snippets');
 
-},{"./Extensions":2,"./Extensions.Links":1,"./Helpers":3,"./Http":4,"./Queue":5}]},{},[6])
+
+},{"./Extensions":3,"./Extensions.Links":1,"./Extensions.Snippets":2,"./Helpers":4,"./Http":5,"./Queue":6}]},{},[7])
