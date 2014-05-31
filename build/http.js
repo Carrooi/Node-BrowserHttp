@@ -3077,7 +3077,7 @@ BaseExtension = require('./BaseExtension');
 hasAttr = function(el, name) {
   var attr;
   attr = el.getAttribute(name);
-  return typeof attr !== 'undefined' && attr !== false;
+  return attr !== null && typeof attr !== 'undefined' && attr !== false;
 };
 
 Snippets = (function(_super) {
