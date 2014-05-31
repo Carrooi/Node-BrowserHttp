@@ -3704,8 +3704,8 @@ Xhr = (function(_super) {
     this.response = new Response;
     Xhr.COUNTER++;
     this.type = this.type.toUpperCase();
-    if ((_ref = this.type) !== 'GET' && _ref !== 'POST' && _ref !== 'PUT' && _ref !== 'DELETE') {
-      throw new Error("Http request: type must be GET, POST, PUT or DELETE, " + this.type + " given");
+    if ((_ref = this.type) !== 'GET' && _ref !== 'POST' && _ref !== 'PUT' && _ref !== 'DELETE' && _ref !== 'HEAD' && _ref !== 'CONNECT' && _ref !== 'OPTIONS' && _ref !== 'TRACE') {
+      throw new Error("Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, " + this.type + " given");
     }
     if (this.jsonp !== false) {
       if (this.jsonp === true) {
