@@ -71,7 +71,7 @@ class Queue extends EventEmitter
 		request.send().then( (response) =>
 			fn(null, response)
 			@next()
-		).fail( (err) =>
+		).catch( (err) =>
 			fn(err, null)
 			@next()
 		)

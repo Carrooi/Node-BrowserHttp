@@ -4,7 +4,7 @@ Http = null
 Xhr = window.http.Xhr
 Q = window.http._Q
 
-Q.stopUnhandledRejectionTracking()
+#Q.stopUnhandledRejectionTracking()
 link = 'http://localhost:3000/'
 
 describe 'Http', ->
@@ -83,7 +83,7 @@ describe 'Http', ->
 		it 'should return an error - cross domain request', (done) ->
 			Http.receiveError(new Error 'XMLHttpRequest cannot load http://localhost:3000/. Origin file:// is not allowed by Access-Control-Allow-Origin.')
 
-			Http.post(link).fail( (err) ->
+			Http.post(link).catch( (err) ->
 				expect(err).to.be.instanceof(Error)
 				expect(err.message).to.be.equal('Can not load http://localhost:3000/ address')
 				done()

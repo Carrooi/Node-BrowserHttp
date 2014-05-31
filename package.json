@@ -23,16 +23,15 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "~1.0.0",
+		"q": "~2.0.1",
 		"events": "~1.0.0",
 		"escape-regexp": "~0.0.1"
 	},
 	"devDependencies": {
-		"mocha": "~1.17.1",
-		"mocha-phantomjs": "~3.3.2",
-		"phantomjs": "~1.9.7-1",
-		"chai": "~1.9.0",
-		"coffee-script": "~1.7.1",
+		"mocha": "~1.20.0",
+		"mocha-phantomjs": "~3.4.1",
+		"phantomjs": "~1.9.7-8",
+		"chai": "~1.9.1",
 		"coffeeify": "~0.6.0",
 		"gulp": "~3.6.2",
 		"gulp-coffee": "~1.4.3",
