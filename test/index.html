@@ -25,6 +25,22 @@
 			<a href="link" class="ajax post" data-type="POST"></a>
 			<div id="snippetUpdate">before</div>
 			<div id="snippetAppend" data-append>one</div>
+			<form class="ajax base">
+				<input type="text" name="firstName" value="John">
+				<input type="text" name="lastName" value="Doe">
+				<input type="checkbox" name="allow[]" checked>
+				<input type="checkbox" name="allow[]">
+				<input type="checkbox" name="allow[]" checked>
+				<input type="submit" name="add" value="Add checkbox">
+				<input type="submit" name="save">
+			</form>
+			<form class="ajax custom" action="google.com" method="POST">
+				<input type="text" name="name" value="some name">
+			</form>
+			<form class="button">
+				<input type="text" name="name" value="another name">
+				<input type="submit" class="ajax" name="add" value="Add name">
+			</form>
 		</div>
 	</body>
 </html>

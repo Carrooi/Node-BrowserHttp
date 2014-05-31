@@ -7,12 +7,15 @@ $ = null
 class Forms extends BaseExtension
 
 
+	@EVENTS_NAMESPACE = 'http-ext-forms'
+
+
 	constructor: (jQuery) ->
 		$ = jQuery
 
-		$(document).on('submit', 'form.ajax:not(.not-ajax)', @onFormSubmitted)							# form.ajax
-		$(document).on('click', 'form.ajax:not(.not-ajax) input[type="submit"]', @onFormSubmitted)		# form.ajax input[type=submit]
-		$(document).on('click', 'form input[type="submit"].ajax', @onFormSubmitted)						# form		input[type=submit].ajax
+		$(document).on('submit.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax)', @onFormSubmitted)							# form.ajax
+		$(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax) input[type="submit"]', @onFormSubmitted)		# form.ajax input[type=submit]
+		$(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form input[type="submit"].ajax', @onFormSubmitted)						# form		input[type=submit].ajax
 
 
 	onFormSubmitted: (e) =>
@@ -52,8 +55,13 @@ class Forms extends BaseExtension
 			data: sendValues
 			type: form.attr('method') or 'GET'
 
-		@http.request(form.attr('action'), options)
+		action = form.attr('action') or window.location.href
 
+		@http.request(action, options)
+
+
+	detach: ->
+		$(document).off('.' + Forms.EVENTS_NAMESPACE)
 
 
 module.exports = Forms

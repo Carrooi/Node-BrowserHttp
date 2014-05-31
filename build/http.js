@@ -2829,16 +2829,18 @@ $ = null;
 Forms = (function(_super) {
   __extends(Forms, _super);
 
+  Forms.EVENTS_NAMESPACE = 'http-ext-forms';
+
   function Forms(jQuery) {
     this.onFormSubmitted = __bind(this.onFormSubmitted, this);
     $ = jQuery;
-    $(document).on('submit', 'form.ajax:not(.not-ajax)', this.onFormSubmitted);
-    $(document).on('click', 'form.ajax:not(.not-ajax) input[type="submit"]', this.onFormSubmitted);
-    $(document).on('click', 'form input[type="submit"].ajax', this.onFormSubmitted);
+    $(document).on('submit.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax)', this.onFormSubmitted);
+    $(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax) input[type="submit"]', this.onFormSubmitted);
+    $(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form input[type="submit"].ajax', this.onFormSubmitted);
   }
 
   Forms.prototype.onFormSubmitted = function(e) {
-    var el, form, i, name, options, sendValues, val, value, values, _i, _len;
+    var action, el, form, i, name, options, sendValues, val, value, values, _i, _len;
     e.preventDefault();
     if (this.http === null) {
       throw new Error('Please add Forms extension into http object with addExtension method.');
@@ -2875,7 +2877,12 @@ Forms = (function(_super) {
       data: sendValues,
       type: form.attr('method') || 'GET'
     };
-    return this.http.request(form.attr('action'), options);
+    action = form.attr('action') || window.location.href;
+    return this.http.request(action, options);
+  };
+
+  Forms.prototype.detach = function() {
+    return $(document).off('.' + Forms.EVENTS_NAMESPACE);
   };
 
   return Forms;

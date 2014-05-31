@@ -5,3 +5,4 @@ require './Queue'
 
 require './Extensions.Links'
 require './Extensions.Snippets'
+require './Extensions.Forms'
