@@ -2,7 +2,7 @@
 Http = null
 Q = window.http._Q
 
-Q.stopUnhandledRejectionTracking()
+#Q.stopUnhandledRejectionTracking()
 
 link = 'http://localhost:3000/'
 

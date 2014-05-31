@@ -282,8 +282,6 @@ Xhr = window.http.Xhr;
 
 Q = window.http._Q;
 
-Q.stopUnhandledRejectionTracking();
-
 link = 'http://localhost:3000/';
 
 describe('Http', function() {
@@ -371,7 +369,7 @@ describe('Http', function() {
   describe('#post()', function() {
     return it('should return an error - cross domain request', function(done) {
       Http.receiveError(new Error('XMLHttpRequest cannot load http://localhost:3000/. Origin file:// is not allowed by Access-Control-Allow-Origin.'));
-      return Http.post(link).fail(function(err) {
+      return Http.post(link)["catch"](function(err) {
         expect(err).to.be["instanceof"](Error);
         expect(err.message).to.be.equal('Can not load http://localhost:3000/ address');
         return done();
@@ -402,8 +400,6 @@ var Http, Q, link;
 Http = null;
 
 Q = window.http._Q;
-
-Q.stopUnhandledRejectionTracking();
 
 link = 'http://localhost:3000/';
 
