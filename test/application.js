@@ -21,7 +21,7 @@ describe('Extensions.Links', function() {
       expect(response.data).to.be.equal('test');
       return done();
     });
-    $('#extensionsLinks a.get').click();
+    $('#tests a.get').click();
     return expect(Http.queue.requests).to.have.length(0);
   });
   return it('should send request on click with POST', function(done) {
@@ -32,7 +32,7 @@ describe('Extensions.Links', function() {
       return done();
     });
     expect(Http.queue.requests).to.have.length(0);
-    $('#extensionsLinks a.post').click();
+    $('#tests a.post').click();
     return expect(Http.queue.requests).to.have.length(1);
   });
 });
