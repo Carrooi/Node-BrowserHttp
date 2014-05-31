@@ -1,1 +1,0 @@
-window.http = require './Http'

@@ -1,20 +1,30 @@
 Http = require './_Http'
 
-http = new Http
 
-http.Helpers = require './Helpers'
-http.Xhr = require './Xhr'
-http._Q = require 'q'
+createInstance = ->
+	http = new Http
 
-http.Extensions =
-	Forms: require './Extensions/Forms'
-	Links: require './Extensions/Links'
-	Loading: require './Extensions/Loading'
-	Redirect: require './Extensions/Redirect'
-	Snippets: require './Extensions/Snippets'
-	Offline: require './Extensions/Offline'
+	http.Helpers = require './Helpers'
+	http.Xhr = require './Xhr'
+	http._Q = require 'q'
 
-http.Mocks =
-	Http: require './Mocks/Http'
+	http.Extensions =
+		Forms: require './Extensions/Forms'
+		Links: require './Extensions/Links'
+		Loading: require './Extensions/Loading'
+		Redirect: require './Extensions/Redirect'
+		Snippets: require './Extensions/Snippets'
+		Offline: require './Extensions/Offline'
+
+	http.Mocks =
+		Http: require './Mocks/Http'
+
+
+	return http
+
+
+http = createInstance()
+http.createInstance = createInstance
+
 
 module.exports = http

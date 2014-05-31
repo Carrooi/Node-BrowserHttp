@@ -1,13 +1,12 @@
 
-Http = window.http.Mocks.Http
+Http = null
 
 link = 'http://localhost:3000/'
 
 describe 'Extensions', ->
 
-	afterEach( ->
-		Http.extensions = {}
-		Http.restore()
+	beforeEach( ->
+		Http = new http.Mocks.Http
 	)
 
 	describe '#addExtension()', ->

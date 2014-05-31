@@ -1,5 +1,5 @@
 
-Http = window.http.Mocks.Http
+Http = null
 Q = window.http._Q
 
 Q.stopUnhandledRejectionTracking()
@@ -8,8 +8,8 @@ link = 'http://localhost:3000/'
 
 describe 'Queue', ->
 
-	afterEach( ->
-		Http.restore()
+	beforeEach( ->
+		Http = new http.Mocks.Http
 	)
 
 	it 'should send one request', (done) ->
