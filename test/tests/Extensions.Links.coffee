@@ -1,6 +1,7 @@
 Http = null
 Links = null
 
+
 describe 'Extensions.Links', ->
 
 	beforeEach( ->
