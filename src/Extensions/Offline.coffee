@@ -25,7 +25,11 @@ class Offline extends BaseExtension
 						@http.emit 'connected'
 
 				else if !@offline
-					@offline = false
+					@offline = true
+					@http.emit 'disconnected'
+			).fail( =>
+				if !@offline
+					@offline = true
 					@http.emit 'disconnected'
 			)
 		, timeout)

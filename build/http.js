@@ -3023,7 +3023,12 @@ Offline = (function(_super) {
               return _this.http.emit('connected');
             }
           } else if (!_this.offline) {
-            _this.offline = false;
+            _this.offline = true;
+            return _this.http.emit('disconnected');
+          }
+        }).fail(function() {
+          if (!_this.offline) {
+            _this.offline = true;
             return _this.http.emit('disconnected');
           }
         });
@@ -3644,6 +3649,8 @@ Response = (function() {
 
   Response.prototype.xml = null;
 
+  Response.prototype.error = null;
+
   return Response;
 
 })();
@@ -3730,7 +3737,7 @@ Xhr = (function(_super) {
     }
     this.xhr.onreadystatechange = (function(_this) {
       return function() {
-        var contentType, prefix;
+        var contentType, error, prefix;
         _this.response.state = _this.xhr.readyState;
         if (_this.response.state === 4) {
           _this.response.status = _this.xhr.status;
@@ -3753,7 +3760,9 @@ Xhr = (function(_super) {
           if (_this.response.status === 200) {
             return _this.emit('success', _this.response);
           } else {
-            return _this.emit('error', new Error("Can not load " + url + " address", _this.response));
+            error = new Error("Can not load " + url + " address");
+            error.response = _this.response;
+            return _this.emit('error', error, _this.response);
           }
         }
       };
