@@ -1,95 +1,110 @@
-
-Http = window.http.Mocks.Http
+Http = null
 Q = window.http._Q
 
-Q.stopUnhandledRejectionTracking()
-link = -> return 'http://localhost:3000/'
 
 describe 'Queue', ->
 
-	afterEach( ->
-		Http.restore()
+	beforeEach( ->
+		Http = new http.Mocks.Http
 	)
 
 	it 'should send one request', (done) ->
 		Http.receive('test')
 
-		Http.get(link()).then( (response) ->
+		Http.get('localhost').then( (response) ->
 			expect(response.data).to.be.equal('test')
 			done()
 		).done()
 
-	it 'should send many requests', (done) ->
-		buf =
-			1: false
-			2: false
-			3: false
-			4: false
-			5: false
+	it 'should send all GET requests synchronously', (done) ->
+		data = ''
+		start = (new Date).getTime()
+		timeout =
+			min: 50
+			max: 150
 
-		Http.on('send', (response, request) ->
-			buf[request.data.param] = true
+		onComplete = (error, response) ->
+			data += response.data + ''
+
+		Http.on('complete', onComplete)
+
+		Http.queue.once('finish', ->
+			Http.removeListener('complete', onComplete)
+			elapsed = (new Date).getTime() - start
+
+			expect(data).to.be.equal('12345')
+			expect(elapsed).to.be.above(timeout.min * 5 - 1).and.to.be.below(timeout.max * 5 + 5)
+
+			done()
 		)
 
-		Http.receive('{"param": "1"}', 'content-type': 'application/json')
-		Http.get(link(), data: {param: 1}).then( (response) ->
-			expect(
-				1: true
-				2: true
-				3: false
-				4: false
-				5: false
-			).to.be.eql(buf)
-			expect(response.data).to.be.eql({param: '1'})
-		).done()
+		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
 
-		Http.receive('{"param": "2"}', 'content-type': 'application/json')
-		Http.get(link('give-back'), data: {param: 2}).then( (response) ->
-			expect(
-				1: true
-				2: true
-				3: true
-				4: false
-				5: false
-			).to.be.eql(buf)
-			expect(response.data).to.be.eql({param: '2'})
-		).done()
+		Http.get('localhost', data: 1, parallel: false)
+		Http.get('localhost', data: 2, parallel: false)
+		Http.get('localhost', data: 3, parallel: false)
+		Http.get('localhost', data: 4, parallel: false)
+		Http.get('localhost', data: 5, parallel: false)
 
-		Http.receive('{"param": "3"}', 'content-type': 'application/json')
-		Http.get(link('give-back'), data: {param: 3}).then( (response) ->
-			expect(
-				1: true
-				2: true
-				3: true
-				4: true
-				5: false
-			).to.be.eql(buf)
-			expect(response.data).to.be.eql({param: '3'})
-		).done()
+		expect(Http.queue.requests.length).to.be.equal(5)
 
-		Http.receive('{"param": "4"}', 'content-type': 'application/json')
-		Http.get(link('give-back'), data: {param: 4}).then( (response) ->
-			expect(
-				1: true
-				2: true
-				3: true
-				4: true
-				5: true
-			).to.be.eql(buf)
-			expect(response.data).to.be.eql({param: '4'})
-		).done()
+	it 'should send all GET requests assynchronously', (done) ->
+		promises = []
+		start = (new Date).getTime()
+		timeout =
+			min: 50
+			max: 150
 
-		Http.receive('{"param": "5"}', 'content-type': 'application/json')
-		Http.get(link('give-back'), data: {param: 5}).then( (response) ->
-			expect(
-				1: true
-				2: true
-				3: true
-				4: true
-				5: true
-			).to.be.eql(buf)
-			expect(response.data).to.be.eql({param: '5'})
+		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
+
+		promises.push Http.get('localhost', data: 1)
+		promises.push Http.get('localhost', data: 2)
+		promises.push Http.get('localhost', data: 3)
+		promises.push Http.get('localhost', data: 4)
+
+		expect(Http.queue.requests.length).to.be.equal(0)
+
+		Q.all(promises).then( (responses) ->
+			elapsed = (new Date).getTime() - start
+			data = []
+			data.push(response.data) for response in responses
+
+			expect(data).to.have.members([1, 2, 3, 4])
+			expect(elapsed).to.be.above(timeout.min - 1).and.to.be.below(timeout.max + 5)
+
 			done()
 		).done()
 
-		expect(Http.queue.requests.length).to.be.equal(4)
+	it 'should remove all pending requests', (done) ->
+		Http.receive(null, null, null, 5)
+
+		Http.post('').then( -> done() )
+		Http.post('')
+		Http.post('')
+		Http.post('')
+
+		expect(Http.queue.requests).to.have.length(4)
+
+		Http.queue.removePending()
+
+		expect(Http.queue.requests).to.have.length(1)
+
+	it 'should remove all pending requests and abort current request', ->
+		Http.receive(null, null, null, 5)
+
+		Http.post('')
+		Http.post('')
+		Http.post('')
+		Http.post('')
+
+		expect(Http.queue.requests).to.have.length(4)
+
+		aborted = false
+		request = Http.queue.getCurrentRequest()
+		request.on 'abort', ->
+			aborted = true
+
+		Http.queue.stop()
+
+		expect(aborted).to.be.true
+		expect(Http.queue.requests).to.have.length(0)

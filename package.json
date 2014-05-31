@@ -1,7 +1,7 @@
 {
 	"name": "browser-http",
 	"description": "Simple (but advanced) HTTP for browser",
-	"version": "2.2.0",
+	"version": "3.0.0",
 	"author": {
 		"name": "David Kudera",
 		"email": "sakren@gmail.com"
@@ -23,21 +23,29 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "1.0.0",
-		"escape-regexp": "0.0.1"
+		"q": "~2.0.1",
+		"events": "~1.0.0",
+		"escape-regexp": "~0.0.1"
 	},
 	"devDependencies": {
-		"mocha": "1.17.0",
-		"mocha-phantomjs": "3.3.1",
-		"phantomjs": "1.9.2-6",
-		"chai": "1.8.1"
+		"mocha": "~1.20.0",
+		"mocha-phantomjs": "~3.4.1",
+		"phantomjs": "~1.9.7-8",
+		"chai": "~1.9.1",
+		"coffeeify": "~0.6.0",
+		"gulp": "~3.6.2",
+		"gulp-coffee": "~1.4.3",
+		"gulp-util": "~2.2.14",
+		"gulp-browserify": "~0.5.0",
+		"gulp-rename": "~1.2.0",
+		"gulp-uglify": "~0.3.0"
 	},
 	"scripts": {
-		"test": "mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/index.html",
-		"build-and-test": "npm run build && npm run test",
-		"build": "npm run build-standalone && npm run build-minified && npm run build-test",
-		"build-test": "cd test; simq build;",
-		"build-standalone": "simq build --config ./config/source.json",
-		"build-minified": "simq build --config ./config/minified.json"
+		"compile": "gulp compile",
+		"compile-source": "gulp compile-source",
+		"compile-standalone": "gulp compile-standalone",
+		"compile-tests": "gulp compile-tests",
+		"test": "mocha-phantomjs ./test/index.html",
+		"prepublish": "gulp compile-source"
 	}
 }

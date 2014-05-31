@@ -1,19 +1,28 @@
-Http = require '../Http'
+BaseExtension = require './BaseExtension'
+
 
 $ = null
 
-class Forms
+
+class Forms extends BaseExtension
+
+
+	@EVENTS_NAMESPACE = 'http-ext-forms'
 
 
 	constructor: (jQuery) ->
 		$ = jQuery
 
-		$(document).on('submit', 'form.ajax:not(.not-ajax)', @onFormSubmitted)
-		$(document).on('click', 'form.ajax:not(.not-ajax) :submit', @onFormSubmitted)
+		$(document).on('submit.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax)', @onFormSubmitted)							# form.ajax
+		$(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax) input[type="submit"]', @onFormSubmitted)		# form.ajax input[type=submit]
+		$(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form input[type="submit"].ajax', @onFormSubmitted)						# form		input[type=submit].ajax
 
 
 	onFormSubmitted: (e) =>
 		e.preventDefault()
+
+		if @http == null
+			throw new Error 'Please add Forms extension into http object with addExtension method.'
 
 		el = $(e.target)
 		sendValues = {}
@@ -46,8 +55,13 @@ class Forms
 			data: sendValues
 			type: form.attr('method') or 'GET'
 
-		Http.request(form.attr('action'), options)
+		action = form.attr('action') or window.location.href
 
+		@http.request(action, options)
+
+
+	detach: ->
+		$(document).off('.' + Forms.EVENTS_NAMESPACE)
 
 
 module.exports = Forms

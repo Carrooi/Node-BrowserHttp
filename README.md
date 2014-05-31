@@ -10,9 +10,6 @@ Simple (but advanced) library for working with http in browser (like for example
 
 http-browser uses [q](https://github.com/kriskowal/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
 
-You can use it for example with [simq](https://github.com/sakren/node-simq) as you are used to from node environment or use
-standalone build with expanded package into window:
-
 ## Installation
 
 
@@ -21,8 +18,8 @@ $ npm install browser-http
 ```
 
 or for standalone version just choose desired version and include it.
-* [Development version](https://github.com/sakren/node-browser-http/blob/master/http.js)
-* [Minified version](https://github.com/sakren/node-browser-http/blob/master/http.min.js)
+* [Development version](https://github.com/sakren/node-browser-http/blob/master/build/http.js)
+* [Minified version](https://github.com/sakren/node-browser-http/blob/master/build/http.min.js)
 
 
 ## Usage
@@ -51,14 +48,28 @@ http.get('http://www.google.com');
 http.post('http://www.google.com');
 http.put('http://www.google.com');
 http.delete('http://www.google.com');
+http.getJson('http://www.google.com');
+http.postJson('http://www.google.com');
+http.jsonp('http://www.google.com');
 ```
 
 ## Options
 
 In every http function, you can set other options. Now it is just type and data.
 
-* type: GET, POST, PUT or DELETE
-* data: literal object of data which needs to be send to server
+* `type`: GET, POST, PUT or DELETE. This is always replaced in shorthand methods
+* `data`: literal object of data which needs to be send to server
+* `jsonp`: name of callback for jsonp requests, when true is given `callback` name is used. Default is false
+* `jsonPrefix`: prefix for json requests
+* `parallel`: can disable parallel sending of GET requests, see issue [#4](https://github.com/sakren/node-browser-http/issues/4)
+
+### Rewriting default options
+
+Some options can be rewritten globally for all requests.
+
+* `http.options.type`: default is `GET`
+* `http.options.jsonPrefix`: default is `null`, see section `json hijacking` below
+* `http.options.parallel`: default is `true`, see issue [#4](https://github.com/sakren/node-browser-http/issues/4)
 
 ## Response object
 
@@ -70,6 +81,7 @@ Basically it is just wrapper for some data from XMLHttpRequest.
 * rawData: same like responseText
 * data: same like responseText or literal object (json)
 * xml: same like responseXML
+* error: possible error
 
 ## Load JSON
 
@@ -131,8 +143,12 @@ http.on('send', function(response, request) {
 	console.log('In any moment, new http request will be send to server');
 });
 
-http.on('complete', function(response, request) {
-	console.log('I just finished some request, but there may be some errors');
+http.on('afterSend', function(response, request) {
+	console.log('I just sent some request to server, but there is still no response');
+});
+
+http.on('complete', function(error, response, request) {
+	console.log('I just finished some request, but there may be some error');
 });
 
 http.on('success', function(response, request) {
@@ -171,12 +187,7 @@ framework, but can be used on any other project.
 #### Loading cursor
 
 ```
-new (require('browser-http/Extensions/Loading'));
-```
-
-standalone version:
-```
-new http.Extensions.Loading;
+http.addExtension('loading', new http.Extensions.Loading);
 ```
 
 Every time new request is send, your cursor is changed into `progress` cursor. After receiving response from server, cursor
@@ -185,12 +196,7 @@ is changed into `auto`.
 #### Redirect
 
 ```
-new (require('browser-http/Extensions/Redirect'));
-```
-
-standalone version:
-```
-new http.Extensions.Redirect;
+http.addExtension('redirect', new http.Extensions.Redirect);
 ```
 
 If your server sends json data with `redirect` variable, then you will be redirected to address in this variable.
@@ -198,30 +204,24 @@ If your server sends json data with `redirect` variable, then you will be redire
 #### Snippets
 
 ```
-var Snippets = require('browser-http/Extensions/Snippets');
-new Snippets(window.jQuery);
-```
-
-standalone version:
-```
-new http.Extensions.Snippets(window.jQuery);
+http.addExtension('snippets', new http.Extensions.Snippets);
 ```
 
 If in response data is `snippets` object with html id and content pairs, then browser-http will iterate throw this object,
 find element in page with given id and change content of this element into the one from given data.
 
-This extension depends on jquery.
+Snippets HTML can be also appended to elements instead of replaced.
+
+```
+<div id="comments" data-append>
+
+</div>
+```
 
 #### Ajax links
 
 ```
-var Links = require('browser-http/Extensions/Links');
-new Links(window.jQuery);
-```
-
-standalone version:
-```
-new http.Extensions.Links(window.jQuery);
+http.addExtension('links', new http.Extensions.Links(window.jQuery));
 ```
 
 This is not true extension for browser-http. It listen for all click events on `a` links with class `ajax` but not with
@@ -236,14 +236,25 @@ This extension can not handle forms with file uploads.
 Depends on jquery.
 
 ```
-var Forms = require('browser-http/Extensions/Forms');
-new Forms(window.jQuery);
+http.addExtension('forms', new http.Extensions.Forms(window.jQuery));
 ```
 
-standalone version:
+#### Am I offline?
+
 ```
-new http.Extensions.Forms(window.jQuery);
+http.addExtension('offline', new http.Extensions.Offline);
+
+http.on('disconnected', function() {
+	alert('Lost internet connection');
+});
+
+http.on('connected', function() {
+	alert('You were again connected');
+});
 ```
+
+This extension testing if your favicon.ico is reachable. You can change test destination by specifying Offline's
+constructor argument.
 
 ## Tests
 
@@ -251,22 +262,21 @@ new http.Extensions.Forms(window.jQuery);
 $ npm test
 ```
 
-### Own tests
+### Test mocks
 
 ```
-var http = require('browser-http/Mocks/Http');
+var Http = null;
 
-// standalone version:
-var http = http.Mocks.Http;
+beforeEach(function() {		// create new mocked Http object for each test case
+	Http = new (require('browser-http/lib/Mocks/Http'));
 
-afterEach(function() {
-	http.restore();
+	// or standalone version: Http = new http.Mocks.Http;
 });
 
 it('should load some data', function(done) {
-	http.receive('some data', {'content-type': 'text/plain'}, 200);
+	Http.receive('some data', {'content-type': 'text/plain'}, 200);
 
-	http.get('localhost').then(function(response) {
+	Http.get('localhost').then(function(response) {
 		expect(response.data).to.be.equal('some data');
 		done();
 	});
@@ -277,18 +287,71 @@ it('should load some data', function(done) {
 it('should load some data and check received data', function(done) {
 	http.receive('some data', {'content-type': 'application/json'});
 
-	http.once('send', function(response, request) {
+	Http.once('send', function(response, request) {
 		expect(request.xhr.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
 	});
 
-	http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+	Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
 		expect(response.data).to.be.eql({greeting: 'hello'});
 		done()
 	});
 });
 ```
 
+### Resending sent data back in response
+
+```
+Http.receiveDataFromRequestAndSendBack({'content-type': 'application/json'});
+
+Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+	expect(response.data).to.be.eql({greeting: 'hello'});
+});
+
+Http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
+	expect(response.data).to.be.eql({greeting: 'good day'});
+});
+```
+
+### Timeout
+
+Response will be send after 400 ms:
+```
+Http.receive('some data', {'content-type': 'text/plain'}, 200, 400);
+
+// or simple
+
+Http.receive('some data', null, null, 400);
+```
+
+Response will be send between 100 and 300 ms:
+```
+Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 300});
+```
+
 ## Changelog
+
+* 3.0.0
+	+ Updated and optimized all dependencies
+	+ Added global options [#5](https://github.com/sakren/node-browser-http/issues/5)
+	+ Refactored and optimized queue
+	+ Intelligent queue [#4](https://github.com/sakren/node-browser-http/issues/4)
+	+ Mocked http object can automatically resend received data
+	+ Mocked http object can work also with timeouts
+	+ Optimized mocked http
+	+ Added many tests
+	+ Optimized development and npm environments
+	+ Optimized all build-in extensions
+	+ All extensions must be added via `addExtension` method (BC break)
+	+ Removed all shortcut files, use objects in main `http` object (BC break)
+	+ Removed dependency on jQuery in snippets extension [#6](https://github.com/sakren/node-browser-http/issues/6)
+	+ Added support for browser history api with links extension [#7](https://github.com/sakren/node-browser-http/issues/7)
+	+ Added support for appending HTML with snippets extension [#11](https://github.com/sakren/node-browser-http/issues/11)
+	+ Ajax forms can be submitted just with submit inputs with `ajax` class [#12](https://github.com/sakren/node-browser-http/issues/12)
+	+ Added offline extension for checking for internet connection [#10](https://github.com/sakren/node-browser-http/issues/10)
+	+ Optimized standalone versions (using [gulp](http://gulpjs.com/))
+	+ Added `removePending` and `stop` methods to queue [#3](https://github.com/sakren/node-browser-http/issues/3)
+	+ Mocked http object must be instantiate by hand (BC break)
+	+ Added support for missing HEAD, CONNECT, OPTIONS, and TRACE HTTP methods
 
 * 2.2.0
 	+ Added support for environments without `require` (like with [simq](https://github.com/sakren/node-simq))

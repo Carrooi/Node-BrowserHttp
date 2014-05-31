@@ -1,14 +1,10 @@
-Http = require '../Http'
-
-class Redirect
+BaseExtension = require './BaseExtension'
 
 
-	constructor: ->
-		Http.addExtension 'redirect',
-			success: @onSuccess
+class Redirect extends BaseExtension
 
 
-	onSuccess: (response, request) ->
+	success: (response) ->
 		if typeof response.data.redirect != 'undefined'
 			window.location.href = response.data.redirect
 

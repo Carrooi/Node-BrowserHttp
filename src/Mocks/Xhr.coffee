@@ -1,6 +1,6 @@
 OriginalXhr = require '../Xhr'
 
-XmlHttpMocks = require '../../Mocks/XmlHttpRequest'
+XmlHttpMocks = require '../../external/XmlHttpRequest'
 
 class Xhr extends OriginalXhr
 
@@ -9,8 +9,8 @@ class Xhr extends OriginalXhr
 		return new XmlHttpMocks
 
 
-	receive: (status, data) ->
-		return @xhr.receive(status, data)
+	receive: (status, data, timeout = null) ->
+		return @xhr.receive(status, data, timeout)
 
 
 	receiveError: (err) ->

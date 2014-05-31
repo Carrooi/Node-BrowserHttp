@@ -1,19 +1,14 @@
-Http = require '../Http'
-
-class Loading
+BaseExtension = require './BaseExtension'
 
 
-	constructor: ->
-		Http.addExtension 'loading',
-			send: @onSend
-			complete: @onComplete
+class Loading extends BaseExtension
 
 
-	onSend: (response, request) =>
+	send: ->
 		document.body.style.cursor = 'progress'
 
 
-	onComplete: (response, request) =>
+	complete: ->
 		document.body.style.cursor = 'auto'
 
 

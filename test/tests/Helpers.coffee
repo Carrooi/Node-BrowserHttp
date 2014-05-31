@@ -1,5 +1,5 @@
-
 Helpers = window.http.Helpers
+
 
 describe 'Helpers', ->
 
