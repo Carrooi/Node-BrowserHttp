@@ -1,4 +1,81 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Forms, Http;
+
+Http = null;
+
+Forms = null;
+
+describe('Extensions.Forms', function() {
+  beforeEach(function() {
+    Http = new http.Mocks.Http;
+    Forms = new http.Extensions.Forms($);
+    return Http.addExtension('forms', Forms);
+  });
+  afterEach(function() {
+    return Forms.detach();
+  });
+  it('should send form', function(done) {
+    Http.receiveDataFromRequestAndSendBack({
+      'content-type': 'application/json'
+    });
+    Http.on('success', function(response, request) {
+      expect(request.type).to.be.equal('GET');
+      expect(request.url).to.be.equal(window.location.href);
+      expect(response.data).to.be.eql({
+        'allow[]': ['on', 'on'],
+        firstName: 'John',
+        lastName: 'Doe'
+      });
+      return done();
+    });
+    return $('#tests form.base').submit();
+  });
+  it('should send form with button click', function(done) {
+    Http.receiveDataFromRequestAndSendBack({
+      'content-type': 'application/json'
+    });
+    Http.on('success', function(response) {
+      expect(response.data).to.be.eql({
+        add: 'Add checkbox',
+        'allow[]': ['on', 'on'],
+        firstName: 'John',
+        lastName: 'Doe'
+      });
+      return done();
+    });
+    return $('#tests form.base input[name="add"]').click();
+  });
+  it('should send form with different action and method', function(done) {
+    Http.receiveDataFromRequestAndSendBack({
+      'content-type': 'application/json'
+    });
+    Http.on('success', function(response, request) {
+      expect(request.type).to.be.equal('POST');
+      expect(request.url).to.be.equal('google.com');
+      expect(response.data).to.be.eql({
+        name: 'some name'
+      });
+      return done();
+    });
+    return $('#tests form.custom').submit();
+  });
+  return it('should send non-ajax form with ajax button', function(done) {
+    Http.receiveDataFromRequestAndSendBack({
+      'content-type': 'application/json'
+    });
+    Http.on('success', function(response) {
+      expect(response.data).to.be.eql({
+        add: 'Add name',
+        name: 'another name'
+      });
+      return done();
+    });
+    return $('#tests form.button input[name="add"]').click();
+  });
+});
+
+
+},{}],2:[function(require,module,exports){
 var Http, Links;
 
 Http = null;
@@ -38,7 +115,7 @@ describe('Extensions.Links', function() {
 });
 
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 var Http;
 
 Http = null;
@@ -75,7 +152,7 @@ describe('Extensions.Snippets', function() {
 });
 
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var Http, link;
 
 Http = null;
@@ -119,7 +196,7 @@ describe('Extensions', function() {
 });
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var Helpers;
 
 Helpers = window.http.Helpers;
@@ -147,7 +224,7 @@ describe('Helpers', function() {
 });
 
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var Http, Q, Xhr, link;
 
 Http = null;
@@ -270,7 +347,7 @@ describe('Http', function() {
 });
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var Http, Q, link;
 
 Http = null;
@@ -406,7 +483,7 @@ describe('Queue', function() {
 });
 
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 require('./Helpers');
 
 require('./Http');
@@ -419,5 +496,7 @@ require('./Extensions.Links');
 
 require('./Extensions.Snippets');
 
+require('./Extensions.Forms');
 
-},{"./Extensions":3,"./Extensions.Links":1,"./Extensions.Snippets":2,"./Helpers":4,"./Http":5,"./Queue":6}]},{},[7])
+
+},{"./Extensions":4,"./Extensions.Forms":1,"./Extensions.Links":2,"./Extensions.Snippets":3,"./Helpers":5,"./Http":6,"./Queue":7}]},{},[8])
