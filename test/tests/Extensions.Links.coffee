@@ -1,20 +1,13 @@
-Http = http.Mocks.Http
+Http = null
 
 describe 'Extensions.Links', ->
 
 	beforeEach( ->
+		Http = new http.Mocks.Http
 		Http.addExtension('links', new http.Extensions.Links(jQuery))
 	)
 
-	afterEach( ->
-		Http.extensions = {}
-		Http.restore()
-		Http.removeAllListeners()
-		Http.queue.removeAllListeners()
-		Http.queue.requests = []
-	)
-
-	it.skip 'should send request on click', (done) ->
+	it 'should send request on click', (done) ->
 		Http.receive('test', null, null, 5)
 
 		Http.on 'success', (response, request) ->

@@ -56,4 +56,4 @@ class Http extends OriginalHttp
 		@createRequest = @_originalCreateRequest
 
 
-module.exports = new Http
+module.exports = Http

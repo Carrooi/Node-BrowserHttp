@@ -1,6 +1,6 @@
 
 
-Http = window.http.Mocks.Http
+Http = null
 Xhr = window.http.Xhr
 Q = window.http._Q
 
@@ -9,8 +9,8 @@ link = 'http://localhost:3000/'
 
 describe 'Http', ->
 
-	afterEach( ->
-		Http.restore()
+	beforeEach( ->
+		Http = new http.Mocks.Http
 	)
 
 	describe '#get()', ->

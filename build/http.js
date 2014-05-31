@@ -3181,30 +3181,33 @@ module.exports = Helpers;
 
 
 },{}],15:[function(require,module,exports){
-var Http, http;
+var Http, createInstance, http;
 
 Http = require('./_Http');
 
-http = new Http;
-
-http.Helpers = require('./Helpers');
-
-http.Xhr = require('./Xhr');
-
-http._Q = require('q');
-
-http.Extensions = {
-  Forms: require('./Extensions/Forms'),
-  Links: require('./Extensions/Links'),
-  Loading: require('./Extensions/Loading'),
-  Redirect: require('./Extensions/Redirect'),
-  Snippets: require('./Extensions/Snippets'),
-  Offline: require('./Extensions/Offline')
+createInstance = function() {
+  var http;
+  http = new Http;
+  http.Helpers = require('./Helpers');
+  http.Xhr = require('./Xhr');
+  http._Q = require('q');
+  http.Extensions = {
+    Forms: require('./Extensions/Forms'),
+    Links: require('./Extensions/Links'),
+    Loading: require('./Extensions/Loading'),
+    Redirect: require('./Extensions/Redirect'),
+    Snippets: require('./Extensions/Snippets'),
+    Offline: require('./Extensions/Offline')
+  };
+  http.Mocks = {
+    Http: require('./Mocks/Http')
+  };
+  return http;
 };
 
-http.Mocks = {
-  Http: require('./Mocks/Http')
-};
+http = createInstance();
+
+http.createInstance = createInstance;
 
 module.exports = http;
 
@@ -3309,7 +3312,7 @@ Http = (function(_super) {
 
 })(OriginalHttp);
 
-module.exports = new Http;
+module.exports = Http;
 
 
 },{"../_Http":23,"./Request":17}],17:[function(require,module,exports){

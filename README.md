@@ -267,20 +267,18 @@ $ npm test
 ### Test mocks
 
 ```
-var http = require('browser-http/Mocks/Http');
+var Http = null;
 
-// or for standalone version: var http = http.Mocks.Http;
+beforeEach(function() {		// create new mocked Http object for each test case
+	Http = new (require('browser-http/Mocks/Http'));
 
-afterEach(function() {		// restore original http and remove all attached listeners to events
-	http.restore();
-	http.removeAllListeners();
-    http.queue.removeAllListeners();
+	// or standalone version: Http = new http.Mocks.Http;
 });
 
 it('should load some data', function(done) {
-	http.receive('some data', {'content-type': 'text/plain'}, 200);
+	Http.receive('some data', {'content-type': 'text/plain'}, 200);
 
-	http.get('localhost').then(function(response) {
+	Http.get('localhost').then(function(response) {
 		expect(response.data).to.be.equal('some data');
 		done();
 	});
@@ -291,11 +289,11 @@ it('should load some data', function(done) {
 it('should load some data and check received data', function(done) {
 	http.receive('some data', {'content-type': 'application/json'});
 
-	http.once('send', function(response, request) {
+	Http.once('send', function(response, request) {
 		expect(request.xhr.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
 	});
 
-	http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+	Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
 		expect(response.data).to.be.eql({greeting: 'hello'});
 		done()
 	});
@@ -305,13 +303,13 @@ it('should load some data and check received data', function(done) {
 ### Resending sent data back in response
 
 ```
-http.receiveDataFromRequestAndSendBack({'content-type': 'application/json'});
+Http.receiveDataFromRequestAndSendBack({'content-type': 'application/json'});
 
-http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
 	expect(response.data).to.be.eql({greeting: 'hello'});
 });
 
-http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
+Http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
 	expect(response.data).to.be.eql({greeting: 'good day'});
 });
 ```
@@ -320,16 +318,16 @@ http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
 
 Response will be send after 400 ms:
 ```
-http.receive('some data', {'content-type': 'text/plain'}, 200, 400);
+Http.receive('some data', {'content-type': 'text/plain'}, 200, 400);
 
 // or simple
 
-http.receive('some data', null, null, 400);
+Http.receive('some data', null, null, 400);
 ```
 
 Response will be send between 100 and 300 ms:
 ```
-http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 300});
+Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 300});
 ```
 
 ## Changelog
