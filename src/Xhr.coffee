@@ -35,8 +35,8 @@ class Xhr extends EventEmitter
 
 		@type = @type.toUpperCase()
 
-		if @type not in ['GET', 'POST', 'PUT', 'DELETE']
-			throw new Error "Http request: type must be GET, POST, PUT or DELETE, #{@type} given"
+		if @type not in ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE']
+			throw new Error "Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, #{@type} given"
 
 		if @jsonp != false
 			if @jsonp == true
