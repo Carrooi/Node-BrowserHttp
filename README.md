@@ -10,9 +10,6 @@ Simple (but advanced) library for working with http in browser (like for example
 
 http-browser uses [q](https://github.com/kriskowal/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
 
-You can use it for example with [simq](https://github.com/sakren/node-simq) as you are used to from node environment or use
-standalone build with expanded package into window:
-
 ## Installation
 
 
@@ -84,6 +81,7 @@ Basically it is just wrapper for some data from XMLHttpRequest.
 * rawData: same like responseText
 * data: same like responseText or literal object (json)
 * xml: same like responseXML
+* error: possible error
 
 ## Load JSON
 
@@ -270,7 +268,7 @@ $ npm test
 var Http = null;
 
 beforeEach(function() {		// create new mocked Http object for each test case
-	Http = new (require('browser-http/Mocks/Http'));
+	Http = new (require('browser-http/lib/Mocks/Http'));
 
 	// or standalone version: Http = new http.Mocks.Http;
 });
@@ -331,6 +329,29 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 ```
 
 ## Changelog
+
+* 3.0.0
+	+ Updated and optimized all dependencies
+	+ Added global options [#5](https://github.com/sakren/node-browser-http/issues/5)
+	+ Refactored and optimized queue
+	+ Intelligent queue [#4](https://github.com/sakren/node-browser-http/issues/4)
+	+ Mocked http object can automatically resend received data
+	+ Mocked http object can work also with timeouts
+	+ Optimized mocked http
+	+ Added many tests
+	+ Optimized development and npm environments
+	+ Optimized all build-in extensions
+	+ All extensions must be added via `addExtension` method (BC break)
+	+ Removed all shortcut files, use objects in main `http` object (BC break)
+	+ Removed dependency on jQuery in snippets extension [#6](https://github.com/sakren/node-browser-http/issues/6)
+	+ Added support for browser history api with links extension [#7](https://github.com/sakren/node-browser-http/issues/7)
+	+ Added support for appending HTML with snippets extension [#11](https://github.com/sakren/node-browser-http/issues/11)
+	+ Ajax forms can be submitted just with submit inputs with `ajax` class [#12](https://github.com/sakren/node-browser-http/issues/12)
+	+ Added offline extension for checking for internet connection [#10](https://github.com/sakren/node-browser-http/issues/10)
+	+ Optimized standalone versions (using [gulp](http://gulpjs.com/))
+	+ Added `removePending` and `stop` methods to queue [#3](https://github.com/sakren/node-browser-http/issues/3)
+	+ Mocked http object must be instantiate by hand (BC break)
+	+ Added support for missing HEAD, CONNECT, OPTIONS, and TRACE HTTP methods
 
 * 2.2.0
 	+ Added support for environments without `require` (like with [simq](https://github.com/sakren/node-simq))
