@@ -22,7 +22,7 @@ describe 'Extensions.Links', ->
 			expect(response.data).to.be.equal('test')
 			done()
 
-		$('#extensionsLinks a.get').click()
+		$('#tests a.get').click()
 
 		expect(Http.queue.requests).to.have.length(0)		# GET requests are called immediatelly without queue
 
@@ -36,6 +36,6 @@ describe 'Extensions.Links', ->
 
 		expect(Http.queue.requests).to.have.length(0)
 
-		$('#extensionsLinks a.post').click();
+		$('#tests a.post').click();
 
 		expect(Http.queue.requests).to.have.length(1)
