@@ -2905,9 +2905,11 @@ Links = (function(_super) {
 
   Links.HISTORY_API_ATTRIBUTE = 'data-history-api';
 
+  Links.EVENT_NAMESPACE = 'http-ext-links';
+
   function Links(jQuery) {
     $ = jQuery;
-    $(document).on('click', 'a.ajax:not(.not-ajax)', (function(_this) {
+    $(document).on('click.' + Links.EVENT_NAMESPACE, 'a.ajax:not(.not-ajax)', (function(_this) {
       return function(e) {
         var a, link, type;
         e.preventDefault();
@@ -2926,6 +2928,10 @@ Links = (function(_super) {
       };
     })(this));
   }
+
+  Links.prototype.detach = function() {
+    return $(document).off('.' + Links.EVENT_NAMESPACE);
+  };
 
   return Links;
 
