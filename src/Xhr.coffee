@@ -90,7 +90,10 @@ class Xhr extends EventEmitter
 				if @response.status == 200
 					@emit 'success', @response
 				else
-					@emit 'error', new Error "Can not load #{url} address", @response
+					error = new Error "Can not load #{url} address"
+					error.response = @response
+
+					@emit 'error', error, @response
 
 
 	createXhr: ->

@@ -116,6 +116,55 @@ describe('Extensions.Links', function() {
 
 
 },{}],3:[function(require,module,exports){
+var Http, Offline;
+
+Http = null;
+
+Offline = null;
+
+describe('Extensions.Offline', function() {
+  beforeEach(function() {
+    Http = new http.Mocks.Http;
+    Offline = new http.Extensions.Offline(null, 50);
+    return Http.addExtension('offline', Offline);
+  });
+  afterEach(function() {
+    return Offline.stop();
+  });
+  it('should call disconnected event', function(done) {
+    var counter;
+    Http.receive();
+    counter = 0;
+    Http.on('disconnected', function() {
+      counter++;
+      return window.setTimeout(function() {
+        expect(counter).to.be.equal(1);
+        return done();
+      }, 200);
+    });
+    return window.setTimeout(function() {
+      return Http.receive(null, null, 404);
+    }, 200);
+  });
+  return it('should call connected event', function(done) {
+    var counter;
+    Http.receive(null, null, 404);
+    counter = 0;
+    Http.on('connected', function() {
+      counter++;
+      return window.setTimeout(function() {
+        expect(counter).to.be.equal(1);
+        return done();
+      }, 200);
+    });
+    return window.setTimeout(function() {
+      return Http.receive();
+    }, 200);
+  });
+});
+
+
+},{}],4:[function(require,module,exports){
 var Http;
 
 Http = null;
@@ -152,7 +201,7 @@ describe('Extensions.Snippets', function() {
 });
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var Http, link;
 
 Http = null;
@@ -196,7 +245,7 @@ describe('Extensions', function() {
 });
 
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var Helpers;
 
 Helpers = window.http.Helpers;
@@ -224,7 +273,7 @@ describe('Helpers', function() {
 });
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var Http, Q, Xhr, link;
 
 Http = null;
@@ -347,7 +396,7 @@ describe('Http', function() {
 });
 
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var Http, Q, link;
 
 Http = null;
@@ -483,7 +532,7 @@ describe('Queue', function() {
 });
 
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 require('./Helpers');
 
 require('./Http');
@@ -498,5 +547,7 @@ require('./Extensions.Snippets');
 
 require('./Extensions.Forms');
 
+require('./Extensions.Offline');
 
-},{"./Extensions":4,"./Extensions.Forms":1,"./Extensions.Links":2,"./Extensions.Snippets":3,"./Helpers":5,"./Http":6,"./Queue":7}]},{},[8])
+
+},{"./Extensions":5,"./Extensions.Forms":1,"./Extensions.Links":2,"./Extensions.Offline":3,"./Extensions.Snippets":4,"./Helpers":6,"./Http":7,"./Queue":8}]},{},[9])

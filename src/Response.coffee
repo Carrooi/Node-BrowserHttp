@@ -13,5 +13,7 @@ class Response
 
 	xml: null
 
+	error: null
+
 
 module.exports = Response
