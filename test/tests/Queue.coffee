@@ -1,10 +1,6 @@
-
 Http = null
 Q = window.http._Q
 
-#Q.stopUnhandledRejectionTracking()
-
-link = 'http://localhost:3000/'
 
 describe 'Queue', ->
 
@@ -15,7 +11,7 @@ describe 'Queue', ->
 	it 'should send one request', (done) ->
 		Http.receive('test')
 
-		Http.get(link).then( (response) ->
+		Http.get('localhost').then( (response) ->
 			expect(response.data).to.be.equal('test')
 			done()
 		).done()
@@ -44,11 +40,11 @@ describe 'Queue', ->
 
 		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
 
-		Http.get(link, data: 1, parallel: false)
-		Http.get(link, data: 2, parallel: false)
-		Http.get(link, data: 3, parallel: false)
-		Http.get(link, data: 4, parallel: false)
-		Http.get(link, data: 5, parallel: false)
+		Http.get('localhost', data: 1, parallel: false)
+		Http.get('localhost', data: 2, parallel: false)
+		Http.get('localhost', data: 3, parallel: false)
+		Http.get('localhost', data: 4, parallel: false)
+		Http.get('localhost', data: 5, parallel: false)
 
 		expect(Http.queue.requests.length).to.be.equal(5)
 
@@ -61,10 +57,10 @@ describe 'Queue', ->
 
 		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
 
-		promises.push Http.get(link, data: 1)
-		promises.push Http.get(link, data: 2)
-		promises.push Http.get(link, data: 3)
-		promises.push Http.get(link, data: 4)
+		promises.push Http.get('localhost', data: 1)
+		promises.push Http.get('localhost', data: 2)
+		promises.push Http.get('localhost', data: 3)
+		promises.push Http.get('localhost', data: 4)
 
 		expect(Http.queue.requests.length).to.be.equal(0)
 

@@ -202,11 +202,9 @@ describe('Extensions.Snippets', function() {
 
 
 },{}],5:[function(require,module,exports){
-var Http, link;
+var Http;
 
 Http = null;
-
-link = 'http://localhost:3000/';
 
 describe('Extensions', function() {
   beforeEach(function() {
@@ -239,7 +237,7 @@ describe('Extensions', function() {
         }
       });
       Http.receive('test');
-      return Http.get(link);
+      return Http.get('localhost');
     });
   });
 });
@@ -274,15 +272,11 @@ describe('Helpers', function() {
 
 
 },{}],7:[function(require,module,exports){
-var Http, Q, Xhr, link;
+var Http, Xhr;
 
 Http = null;
 
 Xhr = window.http.Xhr;
-
-Q = window.http._Q;
-
-link = 'http://localhost:3000/';
 
 describe('Http', function() {
   beforeEach(function() {
@@ -291,7 +285,7 @@ describe('Http', function() {
   describe('#get()', function() {
     it('should send request and load its text', function(done) {
       Http.receive('test');
-      return Http.get(link).then(function(response) {
+      return Http.get('localhost').then(function(response) {
         expect(response.data).to.be.equal('test');
         return done();
       }).done();
@@ -300,7 +294,7 @@ describe('Http', function() {
       Http.receive('{"message": "text"}', {
         'content-type': 'application/json'
       });
-      return Http.get(link).then(function(response) {
+      return Http.get('localhost').then(function(response) {
         expect(response.data).to.be.eql({
           message: 'text'
         });
@@ -312,9 +306,9 @@ describe('Http', function() {
         'content-type': 'application/json'
       });
       Http.once('send', function(response, request) {
-        return expect(request.xhr.url).to.be.equal('http://localhost:3000/?first=first+message');
+        return expect(request.xhr.url).to.be.equal('localhost?first=first+message');
       });
-      return Http.get(link, {
+      return Http.get('localhost', {
         data: {
           first: 'first message'
         }
@@ -329,7 +323,7 @@ describe('Http', function() {
       Http.receive('while(1); {"message": "prefix"}', {
         'content-type': 'application/json'
       });
-      return Http.get(link, {
+      return Http.get('localhost', {
         jsonPrefix: 'while(1); '
       }).then(function(response) {
         expect(response.data).to.be.eql({
@@ -342,7 +336,7 @@ describe('Http', function() {
       var start;
       start = (new Date).getTime();
       Http.receive('test', null, null, 200);
-      return Http.get(link).then(function(response) {
+      return Http.get('localhost').then(function(response) {
         var elapsed;
         elapsed = (new Date).getTime() - start;
         expect(response.data).to.be.equal('test');
@@ -357,7 +351,7 @@ describe('Http', function() {
         min: 100,
         max: 200
       });
-      return Http.get(link).then(function(response) {
+      return Http.get('localhost').then(function(response) {
         var elapsed;
         elapsed = (new Date).getTime() - start;
         expect(response.data).to.be.equal('test');
@@ -369,9 +363,9 @@ describe('Http', function() {
   describe('#post()', function() {
     return it('should return an error - cross domain request', function(done) {
       Http.receiveError(new Error('XMLHttpRequest cannot load http://localhost:3000/. Origin file:// is not allowed by Access-Control-Allow-Origin.'));
-      return Http.post(link)["catch"](function(err) {
+      return Http.post('localhost')["catch"](function(err) {
         expect(err).to.be["instanceof"](Error);
-        expect(err.message).to.be.equal('Can not load http://localhost:3000/ address');
+        expect(err.message).to.be.equal('Can not load localhost address');
         return done();
       }).done();
     });
@@ -383,7 +377,7 @@ describe('Http', function() {
       Http.receive("typeof " + method + " === 'function' && " + method + "({\n\"message\": \"jsonp text\"\n});", {
         'content-type': 'application/javascript'
       });
-      return Http.jsonp(link).then(function(response) {
+      return Http.jsonp('localhost').then(function(response) {
         expect(response.data).to.be.eql({
           message: 'jsonp text'
         });
@@ -395,13 +389,11 @@ describe('Http', function() {
 
 
 },{}],8:[function(require,module,exports){
-var Http, Q, link;
+var Http, Q;
 
 Http = null;
 
 Q = window.http._Q;
-
-link = 'http://localhost:3000/';
 
 describe('Queue', function() {
   beforeEach(function() {
@@ -409,7 +401,7 @@ describe('Queue', function() {
   });
   it('should send one request', function(done) {
     Http.receive('test');
-    return Http.get(link).then(function(response) {
+    return Http.get('localhost').then(function(response) {
       expect(response.data).to.be.equal('test');
       return done();
     }).done();
@@ -437,23 +429,23 @@ describe('Queue', function() {
     Http.receiveDataFromRequestAndSendBack({
       'content-type': 'application/json'
     }, null, timeout);
-    Http.get(link, {
+    Http.get('localhost', {
       data: 1,
       parallel: false
     });
-    Http.get(link, {
+    Http.get('localhost', {
       data: 2,
       parallel: false
     });
-    Http.get(link, {
+    Http.get('localhost', {
       data: 3,
       parallel: false
     });
-    Http.get(link, {
+    Http.get('localhost', {
       data: 4,
       parallel: false
     });
-    Http.get(link, {
+    Http.get('localhost', {
       data: 5,
       parallel: false
     });
@@ -470,16 +462,16 @@ describe('Queue', function() {
     Http.receiveDataFromRequestAndSendBack({
       'content-type': 'application/json'
     }, null, timeout);
-    promises.push(Http.get(link, {
+    promises.push(Http.get('localhost', {
       data: 1
     }));
-    promises.push(Http.get(link, {
+    promises.push(Http.get('localhost', {
       data: 2
     }));
-    promises.push(Http.get(link, {
+    promises.push(Http.get('localhost', {
       data: 3
     }));
-    promises.push(Http.get(link, {
+    promises.push(Http.get('localhost', {
       data: 4
     }));
     expect(Http.queue.requests.length).to.be.equal(0);

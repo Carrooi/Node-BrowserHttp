@@ -1,5 +1,6 @@
 Http = null
 
+
 describe 'Extensions.Snippets', ->
 
 	beforeEach( ->

@@ -1,7 +1,5 @@
-
 Http = null
 
-link = 'http://localhost:3000/'
 
 describe 'Extensions', ->
 
@@ -32,4 +30,4 @@ describe 'Extensions', ->
 
 			Http.receive('test')
 
-			Http.get(link)
+			Http.get('localhost')
