@@ -330,6 +330,9 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 
 ## Changelog
 
+* 3.0.2
+	+ Use upper-cased HTTP methods everywhere [#13](https://github.com/sakren/node-browser-http/issues/13)
+
 * 3.0.0 - 3.0.1
 	+ Updated and optimized all dependencies
 	+ Added global options [#5](https://github.com/sakren/node-browser-http/issues/5)

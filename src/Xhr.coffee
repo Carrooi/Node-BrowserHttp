@@ -33,11 +33,6 @@ class Xhr extends EventEmitter
 
 		Xhr.COUNTER++
 
-		@type = @type.toUpperCase()
-
-		if @type not in ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE']
-			throw new Error "Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, #{@type} given"
-
 		if @jsonp != false
 			if @jsonp == true
 				@jsonp = 'callback'
@@ -51,7 +46,7 @@ class Xhr extends EventEmitter
 
 		if @data != null
 			@data = Helpers.buildQuery(@data)
-			if type != 'POST'
+			if @type != 'POST'
 				@url += if @url.indexOf('?') != -1 then '&' else '?'
 				@url += @data
 

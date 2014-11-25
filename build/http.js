@@ -566,10 +566,8 @@ EventEmitter.prototype.emit = function(type) {
       er = arguments[1];
       if (er instanceof Error) {
         throw er; // Unhandled 'error' event
-      } else {
-        throw TypeError('Uncaught, unspecified "error" event.');
       }
-      return false;
+      throw TypeError('Uncaught, unspecified "error" event.');
     }
   }
 
@@ -3530,7 +3528,7 @@ module.exports = require("weak-map");
 
 },{"weak-map":9}],16:[function(require,module,exports){
 (function (process){
-// vim:ts=4:sts=4:sw=4:
+/* vim:ts=4:sts=4:sw=4: */
 /*!
  *
  * Copyright 2009-2013 Kris Kowal under the terms of the MIT
@@ -3713,7 +3711,7 @@ function deprecate(callback, name, alternative) {
 
 var handlers = new WeakMap();
 
-function Q_inspect(promise) {
+function Q_getHandler(promise) {
     var handler = handlers.get(promise);
     if (!handler || !handler.became) {
         return handler;
@@ -3734,7 +3732,7 @@ function follow(handler) {
 
 var theViciousCycleError = new Error("Can't resolve a promise with itself");
 var theViciousCycleRejection = Q_reject(theViciousCycleError);
-var theViciousCycle = Q_inspect(theViciousCycleRejection);
+var theViciousCycle = Q_getHandler(theViciousCycleRejection);
 
 var thenables = new WeakMap();
 
@@ -3856,7 +3854,7 @@ function Q_all(questions) {
         var handler;
         if (
             Q_isPromise(promise) &&
-            (handler = Q_inspect(promise)).state === "fulfilled"
+            (handler = Q_getHandler(promise)).state === "fulfilled"
         ) {
             answers[index] = handler.value;
         } else {
@@ -4156,7 +4154,7 @@ function Promise(handler) {
     if (typeof handler === "function") {
         var setup = handler;
         var deferred = defer();
-        handler = Q_inspect(deferred.promise);
+        handler = Q_getHandler(deferred.promise);
         try {
             setup(deferred.resolve, deferred.reject, deferred.setEstimate);
         } catch (error) {
@@ -4237,14 +4235,14 @@ Promise.prototype.inspect = function Promise_inspect() {
     // the second layer captures only the relevant "state" properties of the
     // handler to prevent leaking the capability to access or alter the
     // handler.
-    return Q_inspect(this).inspect();
+    return Q_getHandler(this).inspect();
 };
 
 /**
  * @returns {boolean} whether the promise is waiting for a result.
  */
 Promise.prototype.isPending = function Promise_isPending() {
-    return Q_inspect(this).state === "pending";
+    return Q_getHandler(this).state === "pending";
 };
 
 /**
@@ -4252,7 +4250,7 @@ Promise.prototype.isPending = function Promise_isPending() {
  * fulfillment value.
  */
 Promise.prototype.isFulfilled = function Promise_isFulfilled() {
-    return Q_inspect(this).state === "fulfilled";
+    return Q_getHandler(this).state === "fulfilled";
 };
 
 /**
@@ -4260,7 +4258,14 @@ Promise.prototype.isFulfilled = function Promise_isFulfilled() {
  * its rejection.
  */
 Promise.prototype.isRejected = function Promise_isRejected() {
-    return Q_inspect(this).state === "rejected";
+    return Q_getHandler(this).state === "rejected";
+};
+
+/**
+ * TODO
+ */
+Promise.prototype.toBePassed = function Promise_toBePassed() {
+    return Q_getHandler(this).state === "passed";
 };
 
 /**
@@ -4394,7 +4399,7 @@ Promise.prototype.done = function Promise_done(fulfilled, rejected) {
             _rejected = process.domain.bind(_rejected);
         }
 
-        Q_inspect(self).dispatch(_fulfilled, "then", [_rejected]);
+        Q_getHandler(self).dispatch(_fulfilled, "then", [_rejected]);
     });
 };
 
@@ -4476,7 +4481,7 @@ Promise.prototype.finally = function Promise_finally(callback, ms) {
  * TODO
  */
 Promise.prototype.observeEstimate = function Promise_observeEstimate(emit) {
-    this.dispatch("estimate", [emit]);
+    this.rawDispatch(null, "estimate", [emit]);
     return this;
 };
 
@@ -4484,7 +4489,7 @@ Promise.prototype.observeEstimate = function Promise_observeEstimate(emit) {
  * TODO
  */
 Promise.prototype.getEstimate = function Promise_getEstimate() {
-    return Q_inspect(this).estimate;
+    return Q_getHandler(this).estimate;
 };
 
 /**
@@ -4501,15 +4506,15 @@ Promise.prototype.dispatch = function Promise_dispatch(op, args) {
 Promise.prototype.rawDispatch = function Promise_rawDispatch(resolve, op, args) {
     var self = this;
     asap(function Promise_dispatch_task() {
-        Q_inspect(self).dispatch(resolve, op, args);
+        Q_getHandler(self).dispatch(resolve, op, args);
     });
 };
 
 /**
  * TODO
  */
-Promise.prototype.get = function Promise_get(key) {
-    return this.dispatch("get", [key]);
+Promise.prototype.get = function Promise_get(name) {
+    return this.dispatch("get", [name]);
 };
 
 /**
@@ -4634,6 +4639,17 @@ Promise.prototype.pull = function Promise_pull() {
     return this.dispatch("pull", []);
 };
 
+/**
+ * TODO
+ */
+Promise.prototype.pass = function Promise_pass() {
+    if (!this.toBePassed()) {
+        return new Promise(new Passed(this));
+    } else {
+        return this;
+    }
+};
+
 
 // Thus begins the portion dedicated to the deferred
 
@@ -4661,7 +4677,7 @@ function Deferred(promise) {
  * TODO
  */
 Deferred.prototype.resolve = function Deferred_resolve(value) {
-    var handler = Q_inspect(promises.get(this));
+    var handler = Q_getHandler(promises.get(this));
     if (!handler.messages) {
         return;
     }
@@ -4672,7 +4688,7 @@ Deferred.prototype.resolve = function Deferred_resolve(value) {
  * TODO
  */
 Deferred.prototype.reject = function Deferred_reject(reason) {
-    var handler = Q_inspect(promises.get(this));
+    var handler = Q_getHandler(promises.get(this));
     if (!handler.messages) {
         return;
     }
@@ -4690,7 +4706,7 @@ Deferred.prototype.setEstimate = function Deferred_setEstimate(estimate) {
     if (estimate < 1e12 && estimate !== -Infinity) {
         throw new Error("Estimate values should be a number of miliseconds in the future");
     }
-    var handler = Q_inspect(promises.get(this));
+    var handler = Q_getHandler(promises.get(this));
     // TODO There is a bit of capability leakage going on here. The Deferred
     // should only be able to set the estimate for its original
     // Pending, not for any handler that promise subsequently became.
@@ -4753,14 +4769,36 @@ Fulfilled.prototype.get = function Fulfilled_get(name) {
     return this.value[name];
 };
 
-Fulfilled.prototype.invoke = function Fulfilled_invoke(
-    name, args
-) {
-    return this.value[name].apply(this.value, args);
+Fulfilled.prototype.call = function Fulfilled_call(args, thisp) {
+    return this.callInvoke(this.value, args, thisp);
 };
 
-Fulfilled.prototype.call = function Fulfilled_call(args, thisp) {
-    return this.value.apply(thisp, args);
+Fulfilled.prototype.invoke = function Fulfilled_invoke(name, args) {
+    return this.callInvoke(this.value[name], args, this.value);
+};
+
+Fulfilled.prototype.callInvoke = function Fulfilled_callInvoke(callback, args, thisp) {
+    var waitToBePassed;
+    for (var index = 0; index < args.length; index++) {
+        if (Q_isPromise(args[index]) && args[index].toBePassed()) {
+            waitToBePassed = waitToBePassed || [];
+            waitToBePassed.push(args[index]);
+        }
+    }
+    if (waitToBePassed) {
+        var self = this;
+        return Q_all(waitToBePassed).then(function () {
+            return self.callInvoke(callback, args.map(function (arg) {
+                if (Q_isPromise(arg) && arg.toBePassed()) {
+                    return arg.inspect().value;
+                } else {
+                    return arg;
+                }
+            }), thisp);
+        });
+    } else {
+        return callback.apply(thisp, args);
+    }
 };
 
 Fulfilled.prototype.keys = function Fulfilled_keys() {
@@ -4848,7 +4886,7 @@ Pending.prototype.dispatch = function Pending_dispatch(resolve, op, operands) {
 
 Pending.prototype.become = function Pending_become(promise) {
     this.became = theViciousCycle;
-    var handler = Q_inspect(promise);
+    var handler = Q_getHandler(promise);
     this.became = handler;
 
     handlers.set(promise, handler);
@@ -4858,7 +4896,7 @@ Pending.prototype.become = function Pending_become(promise) {
         // makeQ does not have this asap call, so it must be queueing events
         // downstream. TODO look at makeQ to ascertain
         asap(function Pending_become_eachMessage_task() {
-            var handler = Q_inspect(promise);
+            var handler = Q_getHandler(promise);
             handler.dispatch.apply(handler, message);
         });
     });
@@ -4902,13 +4940,28 @@ Thenable.prototype.cast = function Thenable_cast() {
                 deferred.reject(exception);
             }
         });
-        this.became = Q_inspect(deferred.promise);
+        this.became = Q_getHandler(deferred.promise);
     }
     return this.became;
 };
 
 Thenable.prototype.dispatch = function Thenable_dispatch(resolve, op, args) {
     this.cast().dispatch(resolve, op, args);
+};
+
+
+function Passed(promise) {
+    this.promise = promise;
+}
+
+Passed.prototype.state = "passed";
+
+Passed.prototype.inspect = function Passed_inspect() {
+    return this.promise.inspect();
+};
+
+Passed.prototype.dispatch = function Passed_dispatch(resolve, op, args) {
+    return this.promise.rawDispatch(resolve, op, args);
 };
 
 
@@ -4930,8 +4983,19 @@ Q.ninvoke = function Q_ninvoke(object, name /*...args*/) {
         args[index - 2] = arguments[index];
     }
     var deferred = Q.defer();
-    args[index - 2] = makeNodebackResolver(deferred.resolve);
+    args[index - 2] = deferred.makeNodeResolver();
     Q(object).dispatch("invoke", [name, args]).catch(deferred.reject);
+    return deferred.promise;
+};
+
+Promise.prototype.ninvoke = function Promise_ninvoke(name /*...args*/) {
+    var args = new Array(arguments.length);
+    for (var index = 1; index < arguments.length; index++) {
+        args[index - 1] = arguments[index];
+    }
+    var deferred = Q.defer();
+    args[index - 1] = deferred.makeNodeResolver();
+    this.dispatch("invoke", [name, args]).catch(deferred.reject);
     return deferred.promise;
 };
 
@@ -4951,7 +5015,7 @@ Q.denodeify = function Q_denodeify(callback, pattern) {
             args[index] = arguments[index];
         }
         var deferred = Q.defer();
-        args[index] = makeNodebackResolver(deferred.resolve, pattern);
+        args[index] = deferred.makeNodeResolver(pattern);
         Q(callback).apply(this, args).catch(deferred.reject);
         return deferred.promise;
     };
@@ -4960,12 +5024,17 @@ Q.denodeify = function Q_denodeify(callback, pattern) {
 /**
  * Creates a Node.js-style callback that will resolve or reject the deferred
  * promise.
- * TODO
+ * @param unpack `true` means that the Node.js-style-callback accepts a
+ * fixed or variable number of arguments and that the deferred should be resolved
+ * with an array of these value arguments, or rejected with the error argument.
+ * An array of names means that the Node.js-style-callback accepts a fixed
+ * number of arguments, and that the resolution should be an object with
+ * properties corresponding to the given names and respective value arguments.
  * @returns a nodeback
- * @private
  */
-function makeNodebackResolver(resolve, names) {
-    if (names === true) {
+Deferred.prototype.makeNodeResolver = function (unpack) {
+    var resolve = this.resolve;
+    if (unpack === true) {
         return function variadicNodebackToResolver(error) {
             if (error) {
                 resolve(Q_reject(error));
@@ -4977,14 +5046,14 @@ function makeNodebackResolver(resolve, names) {
                 resolve(value);
             }
         };
-    } else if (names) {
+    } else if (unpack) {
         return function namedArgumentNodebackToResolver(error) {
             if (error) {
                 resolve(Q_reject(error));
             } else {
                 var value = {};
-                for (var index in names) {
-                    value[names[index]] = arguments[index + 1];
+                for (var index in unpack) {
+                    value[unpack[index]] = arguments[index + 1];
                 }
                 resolve(value);
             }
@@ -4998,7 +5067,7 @@ function makeNodebackResolver(resolve, names) {
             }
         };
     }
-}
+};
 
 /**
  * TODO
@@ -5185,7 +5254,7 @@ Promise.prototype.passByCopy = deprecate(function (value) {
 Q.nfapply = deprecate(function (callback, args) {
     var deferred = Q.defer();
     var nodeArgs = Array.prototype.slice.call(args);
-    nodeArgs.push(makeNodebackResolver(deferred.resolve));
+    nodeArgs.push(deferred.makeNodeResolver());
     Q(callback).apply(this, nodeArgs).catch(deferred.reject);
     return deferred.promise;
 }, "nfapply");
@@ -5212,7 +5281,7 @@ Q.nfbind = deprecate(function (callback /*...args*/) {
     return function () {
         var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
         var deferred = Q.defer();
-        nodeArgs.push(makeNodebackResolver(deferred.resolve));
+        nodeArgs.push(deferred.makeNodeResolver());
         Q(callback).apply(this, nodeArgs).catch(deferred.reject);
         return deferred.promise;
     };
@@ -5231,7 +5300,7 @@ Q.nbind = deprecate(function (callback, thisp /*...args*/) {
     return function () {
         var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
         var deferred = Q.defer();
-        nodeArgs.push(makeNodebackResolver(deferred.resolve));
+        nodeArgs.push(deferred.makeNodeResolver());
         function bound() {
             return callback.apply(thisp, arguments);
         }
@@ -5242,7 +5311,7 @@ Q.nbind = deprecate(function (callback, thisp /*...args*/) {
 
 Q.npost = deprecate(function (object, name, nodeArgs) {
     var deferred = Q.defer();
-    nodeArgs.push(makeNodebackResolver(deferred.resolve));
+    nodeArgs.push(deferred.makeNodeResolver());
     Q(object).dispatch("invoke", [name, nodeArgs]).catch(deferred.reject);
     return deferred.promise;
 }, "npost", "ninvoke (with spread arguments)");
@@ -5250,16 +5319,6 @@ Q.npost = deprecate(function (object, name, nodeArgs) {
 Promise.prototype.npost = deprecate(function (name, args) {
     return Q.npost(this, name, args);
 }, "npost", "Q.ninvoke (with caveats)");
-
-Q.makeNodeResolver = deprecate(makeNodebackResolver, "makeNodeResolver");
-
-Promise.prototype.ninvoke = deprecate(function (name) {
-    var args = new Array(arguments.length - 1);
-    for (var index = 1; index < arguments.length; index++) {
-        args[index - 1] = arguments[index];
-    }
-    return Q.npost(this, name, args);
-}, "ninvoke", "Q.ninvoke");
 
 Q.nmapply = deprecate(Q.nmapply, "nmapply", "q/node nmapply");
 Promise.prototype.nmapply = deprecate(Promise.prototype.npost, "nmapply", "Q.nmapply");
@@ -6047,12 +6106,17 @@ Request = (function(_super) {
   Request.prototype.aborted = false;
 
   function Request(url, type, data, jsonp, jsonPrefix) {
+    var _ref;
     this.url = url;
     this.type = type != null ? type : 'GET';
     this.data = data != null ? data : null;
     this.jsonp = jsonp != null ? jsonp : false;
     this.jsonPrefix = jsonPrefix != null ? jsonPrefix : null;
     Request.__super__.constructor.apply(this, arguments);
+    this.type = this.type.toUpperCase();
+    if ((_ref = this.type) !== 'GET' && _ref !== 'POST' && _ref !== 'PUT' && _ref !== 'DELETE' && _ref !== 'HEAD' && _ref !== 'CONNECT' && _ref !== 'OPTIONS' && _ref !== 'TRACE') {
+      throw new Error("Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, " + this.type + " given");
+    }
     this.xhr = this.createXhr(this.url, this.type, this.data, this.jsonp, this.jsonPrefix);
     this.response = this.xhr.response;
     this.xhr.on('send', (function(_this) {
@@ -6190,7 +6254,7 @@ Xhr = (function(_super) {
   Xhr.prototype.jsonPrefix = null;
 
   function Xhr(url, type, data, jsonp, jsonPrefix) {
-    var method, _ref;
+    var method;
     this.url = url;
     this.type = type != null ? type : 'GET';
     this.data = data != null ? data : null;
@@ -6198,10 +6262,6 @@ Xhr = (function(_super) {
     this.jsonPrefix = jsonPrefix != null ? jsonPrefix : null;
     this.response = new Response;
     Xhr.COUNTER++;
-    this.type = this.type.toUpperCase();
-    if ((_ref = this.type) !== 'GET' && _ref !== 'POST' && _ref !== 'PUT' && _ref !== 'DELETE' && _ref !== 'HEAD' && _ref !== 'CONNECT' && _ref !== 'OPTIONS' && _ref !== 'TRACE') {
-      throw new Error("Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, " + this.type + " given");
-    }
     if (this.jsonp !== false) {
       if (this.jsonp === true) {
         this.jsonp = 'callback';
@@ -6217,7 +6277,7 @@ Xhr = (function(_super) {
     }
     if (this.data !== null) {
       this.data = Helpers.buildQuery(this.data);
-      if (type !== 'POST') {
+      if (this.type !== 'POST') {
         this.url += this.url.indexOf('?') !== -1 ? '&' : '?';
         this.url += this.data;
       }
