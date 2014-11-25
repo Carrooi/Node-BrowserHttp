@@ -24,6 +24,11 @@ class Request extends EventEmitter
 	constructor: (@url, @type = 'GET', @data = null, @jsonp = false, @jsonPrefix = null) ->
 		super
 
+		@type = @type.toUpperCase()
+
+		if @type not in ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE']
+			throw new Error "Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, #{@type} given"
+
 		@xhr = @createXhr(@url, @type, @data, @jsonp, @jsonPrefix)
 
 		@response = @xhr.response
