@@ -6292,27 +6292,34 @@ Xhr = (function(_super) {
     }
     this.xhr.onreadystatechange = (function(_this) {
       return function() {
-        var contentType, error, prefix;
+        var contentType, error, isSuccess, prefix;
         _this.response.state = _this.xhr.readyState;
         if (_this.response.state === 4) {
           _this.response.status = _this.xhr.status;
-          _this.response.statusText = _this.xhr.statusText;
-          _this.response.rawData = _this.xhr.responseText;
-          _this.response.xml = _this.xhr.responseXML;
-          _this.response.data = _this.xhr.responseText;
-          contentType = _this.xhr.getResponseHeader('content-type');
-          if (contentType !== null && (contentType.match(/application\/json/) !== null || _this.jsonPrefix !== null)) {
-            data = _this.response.data;
-            if (_this.jsonPrefix !== null) {
-              prefix = escape(_this.jsonPrefix);
-              data = data.replace(new RegExp('^' + prefix), '');
+          isSuccess = (_this.response.status >= 200 && _this.response.status < 300) || _this.response.status === 304;
+          if (isSuccess) {
+            if (_this.response.status === 204 || _this.type === 'HEAD') {
+              _this.response.statusText = 'nocontent';
+            } else if (_this.response.status === 304) {
+              _this.response.statusText = 'notmodified';
+            } else {
+              _this.response.statusText = _this.xhr.statusText;
+              _this.response.rawData = _this.xhr.responseText;
+              _this.response.xml = _this.xhr.responseXML;
+              _this.response.data = _this.xhr.responseText;
+              contentType = _this.xhr.getResponseHeader('content-type');
+              if (contentType !== null && (contentType.match(/application\/json/) !== null || _this.jsonPrefix !== null)) {
+                data = _this.response.data;
+                if (_this.jsonPrefix !== null) {
+                  prefix = escape(_this.jsonPrefix);
+                  data = data.replace(new RegExp('^' + prefix), '');
+                }
+                _this.response.data = JSON.parse(data);
+              }
+              if (contentType !== null && (contentType.match(/text\/javascript/) !== null || contentType.match(/application\/javascript/) !== null) && _this.jsonp) {
+                eval(_this.response.data);
+              }
             }
-            _this.response.data = JSON.parse(data);
-          }
-          if (contentType !== null && (contentType.match(/text\/javascript/) !== null || contentType.match(/application\/javascript/) !== null) && _this.jsonp) {
-            eval(_this.response.data);
-          }
-          if (_this.response.status === 200) {
             return _this.emit('success', _this.response);
           } else {
             error = new Error("Can not load " + url + " address");
