@@ -330,6 +330,10 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 
 ## Changelog
 
+* 3.0.3
+	+ Accepting all responses with status 2xx and 304 as successful responses
+	+ Added responseText to errored responses
+
 * 3.0.2
 	+ Use upper-cased HTTP methods everywhere [#13](https://github.com/sakren/node-browser-http/issues/13)
 

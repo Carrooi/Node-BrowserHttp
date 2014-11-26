@@ -62,29 +62,43 @@ class Xhr extends EventEmitter
 		@xhr.onreadystatechange = =>
 			@response.state = @xhr.readyState
 
+			# with little help from jquery: https://github.com/jquery/jquery/blob/master/src/ajax.js#L694-L735
 			if @response.state == 4
 				@response.status = @xhr.status
-				@response.statusText = @xhr.statusText
 
-				@response.rawData = @xhr.responseText
-				@response.xml = @xhr.responseXML
-				@response.data = @xhr.responseText
+				isSuccess = (@response.status >= 200 && @response.status < 300) || @response.status == 304
 
-				contentType = @xhr.getResponseHeader('content-type')
-				if contentType != null && (contentType.match(/application\/json/) != null || @jsonPrefix != null)
-					data = @response.data
-					if @jsonPrefix != null
-						prefix = escape(@jsonPrefix)
-						data = data.replace(new RegExp('^' + prefix), '')
+				if isSuccess
+					if @response.status == 204 || @type == 'HEAD'
+						@response.statusText = 'nocontent'
 
-					@response.data = JSON.parse(data)
+					else if @response.status == 304
+						@response.statusText = 'notmodified'
 
-				if contentType != null && (contentType.match(/text\/javascript/) != null || contentType.match(/application\/javascript/) != null) && @jsonp
-					eval(@response.data)
+					else
+						@response.statusText = @xhr.statusText
 
-				if @response.status == 200
+						@response.rawData = @xhr.responseText
+						@response.xml = @xhr.responseXML
+						@response.data = @xhr.responseText
+
+						contentType = @xhr.getResponseHeader('content-type')
+						if contentType != null && (contentType.match(/application\/json/) != null || @jsonPrefix != null)
+							data = @response.data
+							if @jsonPrefix != null
+								prefix = escape(@jsonPrefix)
+								data = data.replace(new RegExp('^' + prefix), '')
+
+							@response.data = JSON.parse(data)
+
+						if contentType != null && (contentType.match(/text\/javascript/) != null || contentType.match(/application\/javascript/) != null) && @jsonp
+							eval(@response.data)
+
 					@emit 'success', @response
+
 				else
+					@response.statusText = @xhr.statusText
+
 					error = new Error "Can not load #{url} address"
 					error.response = @response
 
