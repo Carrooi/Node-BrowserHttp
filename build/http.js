@@ -6322,6 +6322,7 @@ Xhr = (function(_super) {
             }
             return _this.emit('success', _this.response);
           } else {
+            _this.response.statusText = _this.xhr.statusText;
             error = new Error("Can not load " + url + " address");
             error.response = _this.response;
             return _this.emit('error', error, _this.response);

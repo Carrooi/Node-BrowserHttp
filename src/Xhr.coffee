@@ -97,6 +97,8 @@ class Xhr extends EventEmitter
 					@emit 'success', @response
 
 				else
+					@response.statusText = @xhr.statusText
+
 					error = new Error "Can not load #{url} address"
 					error.response = @response
 
