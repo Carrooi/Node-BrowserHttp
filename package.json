@@ -23,22 +23,23 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "~2.0.1",
-		"events": "~1.0.0",
+		"q": "~2.0.2",
+		"events": "~1.0.2",
 		"escape-regexp": "~0.0.1"
 	},
 	"devDependencies": {
-		"mocha": "~1.20.0",
-		"mocha-phantomjs": "~3.4.1",
-		"phantomjs": "~1.9.7-8",
-		"chai": "~1.9.1",
-		"coffeeify": "~0.6.0",
-		"gulp": "~3.6.2",
-		"gulp-coffee": "~1.4.3",
-		"gulp-util": "~2.2.14",
-		"gulp-browserify": "~0.5.0",
+		"mocha": "~2.1.0",
+		"mocha-phantomjs": "~3.5.2",
+		"phantomjs": "~1.9.16",
+		"chai": "~2.1.1",
+		"vinyl-source-stream": "~1.1.0",
+		"browserify": "~9.0.3",
+		"coffeeify": "~1.0.0",
+		"gulp": "~3.8.11",
+		"gulp-coffee": "~2.3.1",
+		"gulp-util": "~3.0.4",
 		"gulp-rename": "~1.2.0",
-		"gulp-uglify": "~0.3.0"
+		"gulp-uglify": "~1.1.0"
 	},
 	"scripts": {
 		"compile": "gulp compile",

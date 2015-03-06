@@ -55,7 +55,7 @@ describe 'Http', ->
 				elapsed = (new Date).getTime() - start
 
 				expect(response.data).to.be.equal('test')
-				expect(elapsed).to.be.above(199).and.to.be.below(205)
+				expect(elapsed).to.be.above(199).and.to.be.below(220)
 
 				done()
 			).done()
@@ -69,7 +69,7 @@ describe 'Http', ->
 				elapsed = (new Date).getTime() - start
 
 				expect(response.data).to.be.equal('test')
-				expect(elapsed).to.be.above(99).and.to.be.below(205)
+				expect(elapsed).to.be.above(99).and.to.be.below(225)
 
 				done()
 			).done()

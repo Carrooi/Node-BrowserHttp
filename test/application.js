@@ -1,4 +1,23 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+require('./Helpers');
+
+require('./Http');
+
+require('./Extensions');
+
+require('./Queue');
+
+require('./Extensions.Links');
+
+require('./Extensions.Snippets');
+
+require('./Extensions.Forms');
+
+require('./Extensions.Offline');
+
+
+
+},{"./Extensions":6,"./Extensions.Forms":2,"./Extensions.Links":3,"./Extensions.Offline":4,"./Extensions.Snippets":5,"./Helpers":7,"./Http":8,"./Queue":9}],2:[function(require,module,exports){
 var Forms, Http;
 
 Http = null;
@@ -75,7 +94,8 @@ describe('Extensions.Forms', function() {
 });
 
 
-},{}],2:[function(require,module,exports){
+
+},{}],3:[function(require,module,exports){
 var Http, Links;
 
 Http = null;
@@ -115,7 +135,8 @@ describe('Extensions.Links', function() {
 });
 
 
-},{}],3:[function(require,module,exports){
+
+},{}],4:[function(require,module,exports){
 var Http, Offline;
 
 Http = null;
@@ -164,7 +185,8 @@ describe('Extensions.Offline', function() {
 });
 
 
-},{}],4:[function(require,module,exports){
+
+},{}],5:[function(require,module,exports){
 var Http;
 
 Http = null;
@@ -201,7 +223,8 @@ describe('Extensions.Snippets', function() {
 });
 
 
-},{}],5:[function(require,module,exports){
+
+},{}],6:[function(require,module,exports){
 var Http;
 
 Http = null;
@@ -243,7 +266,8 @@ describe('Extensions', function() {
 });
 
 
-},{}],6:[function(require,module,exports){
+
+},{}],7:[function(require,module,exports){
 var Helpers;
 
 Helpers = window.http.Helpers;
@@ -271,7 +295,8 @@ describe('Helpers', function() {
 });
 
 
-},{}],7:[function(require,module,exports){
+
+},{}],8:[function(require,module,exports){
 var Http, Xhr;
 
 Http = null;
@@ -340,7 +365,7 @@ describe('Http', function() {
         var elapsed;
         elapsed = (new Date).getTime() - start;
         expect(response.data).to.be.equal('test');
-        expect(elapsed).to.be.above(199).and.to.be.below(205);
+        expect(elapsed).to.be.above(199).and.to.be.below(220);
         return done();
       }).done();
     });
@@ -355,7 +380,7 @@ describe('Http', function() {
         var elapsed;
         elapsed = (new Date).getTime() - start;
         expect(response.data).to.be.equal('test');
-        expect(elapsed).to.be.above(99).and.to.be.below(205);
+        expect(elapsed).to.be.above(99).and.to.be.below(225);
         return done();
       }).done();
     });
@@ -388,7 +413,8 @@ describe('Http', function() {
 });
 
 
-},{}],8:[function(require,module,exports){
+
+},{}],9:[function(require,module,exports){
 var Http, Q;
 
 Http = null;
@@ -476,11 +502,11 @@ describe('Queue', function() {
     }));
     expect(Http.queue.requests.length).to.be.equal(0);
     return Q.all(promises).then(function(responses) {
-      var data, elapsed, response, _i, _len;
+      var data, elapsed, i, len, response;
       elapsed = (new Date).getTime() - start;
       data = [];
-      for (_i = 0, _len = responses.length; _i < _len; _i++) {
-        response = responses[_i];
+      for (i = 0, len = responses.length; i < len; i++) {
+        response = responses[i];
         data.push(response.data);
       }
       expect(data).to.have.members([1, 2, 3, 4]);
@@ -520,22 +546,5 @@ describe('Queue', function() {
 });
 
 
-},{}],9:[function(require,module,exports){
-require('./Helpers');
 
-require('./Http');
-
-require('./Extensions');
-
-require('./Queue');
-
-require('./Extensions.Links');
-
-require('./Extensions.Snippets');
-
-require('./Extensions.Forms');
-
-require('./Extensions.Offline');
-
-
-},{"./Extensions":5,"./Extensions.Forms":1,"./Extensions.Links":2,"./Extensions.Offline":3,"./Extensions.Snippets":4,"./Helpers":6,"./Http":7,"./Queue":8}]},{},[9])
+},{}]},{},[1]);

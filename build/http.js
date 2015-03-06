@@ -1,4 +1,9 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+window.http = require('./Http');
+
+
+
+},{"./Http":23}],2:[function(require,module,exports){
 /**
  * from https://github.com/philikon/MockHttpRequest
  * thanks
@@ -493,7 +498,135 @@ MockHttpServer.prototype = {
 };
 
 module.exports = MockHttpRequest;
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
+/*global define:false require:false */
+module.exports = (function(){
+	// Import Events
+	var events = require('events')
+
+	// Export Domain
+	var domain = {}
+	domain.createDomain = domain.create = function(){
+		var d = new events.EventEmitter()
+
+		function emitError(e) {
+			d.emit('error', e)
+		}
+
+		d.add = function(emitter){
+			emitter.on('error', emitError)
+		}
+		d.remove = function(emitter){
+			emitter.removeListener('error', emitError)
+		}
+		d.bind = function(fn){
+			return function(){
+				var args = Array.prototype.slice.call(arguments)
+				try {
+					fn.apply(null, args)
+				}
+				catch (err){
+					emitError(err)
+				}
+			}
+		}
+		d.intercept = function(fn){
+			return function(err){
+				if ( err ) {
+					emitError(err)
+				}
+				else {
+					var args = Array.prototype.slice.call(arguments, 1)
+					try {
+						fn.apply(null, args)
+					}
+					catch (err){
+						emitError(err)
+					}
+				}
+			}
+		}
+		d.run = function(fn){
+			try {
+				fn()
+			}
+			catch (err) {
+				emitError(err)
+			}
+			return this
+		};
+		d.dispose = function(){
+			this.removeAllListeners()
+			return this
+		};
+		d.enter = d.exit = function(){
+			return this
+		}
+		return d
+	};
+	return domain
+}).call(this)
+},{"events":6}],4:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+var queue = [];
+var draining = false;
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    draining = true;
+    var currentQueue;
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        var i = -1;
+        while (++i < len) {
+            currentQueue[i]();
+        }
+        len = queue.length;
+    }
+    draining = false;
+}
+process.nextTick = function (fun) {
+    queue.push(fun);
+    if (!draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],5:[function(require,module,exports){
 
 /**
  * Escape regexp special characters in `str`.
@@ -506,7 +639,7 @@ module.exports = MockHttpRequest;
 module.exports = function(str){
   return String(str).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
 };
-},{}],3:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -809,1054 +942,273 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],4:[function(require,module,exports){
-// shim for using process in browser
+},{}],7:[function(require,module,exports){
+(function (process){
+"use strict";
 
-var process = module.exports = {};
+var rawAsap = require("./raw");
+var freeTasks = [];
 
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
+/**
+ * Calls a task as soon as possible after returning, in its own event, with
+ * priority over IO events. An exception thrown in a task can be handled by
+ * `process.on("uncaughtException") or `domain.on("error")`, but will otherwise
+ * crash the process. If the error is handled, all subsequent tasks will
+ * resume.
+ *
+ * @param {{call}} task A callable object, typically a function that takes no
+ * arguments.
+ */
+module.exports = asap;
+function asap(task) {
+    var rawTask;
+    if (freeTasks.length) {
+        rawTask = freeTasks.pop();
+    } else {
+        rawTask = new RawTask();
     }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
+    rawTask.task = task;
+    rawTask.domain = process.domain;
+    rawAsap(rawTask);
 }
 
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
+function RawTask() {
+    this.task = null;
+    this.domain = null;
+}
+
+RawTask.prototype.call = function () {
+    if (this.domain) {
+        this.domain.enter();
+    }
+    var threw = true;
+    try {
+        this.task.call();
+        threw = false;
+        // If the task throws an exception (presumably) Node.js restores the
+        // domain stack for the next event.
+        if (this.domain) {
+            this.domain.exit();
+        }
+    } finally {
+        // We use try/finally and a threw flag to avoid messing up stack traces
+        // when we catch and release errors.
+        if (threw) {
+            // In Node.js, uncaught exceptions are considered fatal errors.
+            // Re-throw them to interrupt flushing!
+            // Ensure that flushing continues if an uncaught exception is
+            // suppressed listening process.on("uncaughtException") or
+            // domain.on("error").
+            rawAsap.requestFlush();
+        }
+        // If the task threw an error, we do not want to exit the domain here.
+        // Exiting the domain would prevent the domain from catching the error.
+        this.task = null;
+        this.domain = null;
+        freeTasks.push(this);
+    }
 };
 
-},{}],5:[function(require,module,exports){
+
+}).call(this,require('_process'))
+},{"./raw":8,"_process":4}],8:[function(require,module,exports){
 (function (process){
+"use strict";
 
-// Use the fastest possible means to execute a task in a future turn
-// of the event loop.
+var domain; // The domain module is executed on demand
+var hasSetImmediate = typeof setImmediate === "function";
 
-// linked list of tasks (single, with head node)
-var head = {task: void 0, next: null};
-var tail = head;
+// Use the fastest means possible to execute a task in its own turn, with
+// priority over other events including network IO events in Node.js.
+//
+// An exception thrown by a task will permanently interrupt the processing of
+// subsequent tasks. The higher level `asap` function ensures that if an
+// exception is thrown by a task, that the task queue will continue flushing as
+// soon as possible, but if you use `rawAsap` directly, you are responsible to
+// either ensure that no exceptions are thrown from your task, or to manually
+// call `rawAsap.requestFlush` if an exception is thrown.
+module.exports = rawAsap;
+function rawAsap(task) {
+    if (!queue.length) {
+        requestFlush();
+        flushing = true;
+    }
+    // Avoids a function call
+    queue[queue.length] = task;
+}
+
+var queue = [];
+// Once a flush has been requested, no further calls to `requestFlush` are
+// necessary until the next `flush` completes.
 var flushing = false;
-var requestFlush = void 0;
-var isNodeJS = false;
+// The position of the next task to execute in the task queue. This is
+// preserved between calls to `flush` so that it can be resumed if
+// a task throws an exception.
+var index = 0;
+// If a task schedules additional tasks recursively, the task queue can grown
+// unbounded. To prevent memory excaustion, the task queue will periodically
+// truncate already-completed tasks.
+var capacity = 1024;
 
+// The flush function processes all tasks that have been scheduled with
+// `rawAsap` unless and until one of those tasks throws an exception.
+// If a task throws an exception, `flush` ensures that its state will remain
+// consistent and will resume where it left off when called again.
+// However, `flush` does not make any arrangements to be called again if an
+// exception is thrown.
 function flush() {
-    /* jshint loopfunc: true */
-
-    while (head.next) {
-        head = head.next;
-        var task = head.task;
-        head.task = void 0;
-        var domain = head.domain;
-
-        if (domain) {
-            head.domain = void 0;
-            domain.enter();
-        }
-
-        try {
-            task();
-
-        } catch (e) {
-            if (isNodeJS) {
-                // In node, uncaught exceptions are considered fatal errors.
-                // Re-throw them synchronously to interrupt flushing!
-
-                // Ensure continuation if the uncaught exception is suppressed
-                // listening "uncaughtException" events (as domains does).
-                // Continue in next event to avoid tick recursion.
-                if (domain) {
-                    domain.exit();
-                }
-                setTimeout(flush, 0);
-                if (domain) {
-                    domain.enter();
-                }
-
-                throw e;
-
-            } else {
-                // In browsers, uncaught exceptions are not fatal.
-                // Re-throw them asynchronously to avoid slow-downs.
-                setTimeout(function() {
-                   throw e;
-                }, 0);
+    while (index < queue.length) {
+        var currentIndex = index;
+        // Advance the index before calling the task. This ensures that we will
+        // begin flushing on the next task the task throws an error.
+        index = index + 1;
+        queue[currentIndex].call();
+        // Prevent leaking memory for long chains of recursive calls to `asap`.
+        // If we call `asap` within tasks scheduled by `asap`, the queue will
+        // grow, but to avoid an O(n) walk for every task we execute, we don't
+        // shift tasks off the queue after they have been executed.
+        // Instead, we periodically shift 1024 tasks off the queue.
+        if (index > capacity) {
+            // Manually shift all values starting at the index back to the
+            // beginning of the queue.
+            for (var scan = 0; scan < index; scan++) {
+                queue[scan] = queue[scan + index];
             }
-        }
-
-        if (domain) {
-            domain.exit();
+            queue.length -= index;
+            index = 0;
         }
     }
-
+    queue.length = 0;
+    index = 0;
     flushing = false;
 }
 
-if (typeof process !== "undefined" && process.nextTick) {
-    // Node.js before 0.9. Note that some fake-Node environments, like the
-    // Mocha test runner, introduce a `process` global without a `nextTick`.
-    isNodeJS = true;
-
-    requestFlush = function () {
-        process.nextTick(flush);
-    };
-
-} else if (typeof setImmediate === "function") {
-    // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
-    if (typeof window !== "undefined") {
-        requestFlush = setImmediate.bind(window, flush);
-    } else {
-        requestFlush = function () {
-            setImmediate(flush);
-        };
+rawAsap.requestFlush = requestFlush;
+function requestFlush() {
+    // Ensure flushing is not bound to any domain.
+    // It is not sufficient to exit the domain, because domains exist on a stack.
+    // To execute code outside of any domain, the following dance is necessary.
+    var parentDomain = process.domain;
+    if (parentDomain) {
+        if (!domain) {
+            // Lazy execute the domain module.
+            // Only employed if the user elects to use domains.
+            domain = require("domain");
+        }
+        domain.active = process.domain = null;
     }
 
-} else if (typeof MessageChannel !== "undefined") {
-    // modern browsers
-    // http://www.nonblocking.io/2011/06/windownexttick.html
-    var channel = new MessageChannel();
-    channel.port1.onmessage = flush;
-    requestFlush = function () {
-        channel.port2.postMessage(0);
-    };
+    // `setImmediate` is slower that `process.nextTick`, but `process.nextTick`
+    // cannot handle recursion.
+    // `requestFlush` will only be called recursively from `asap.js`, to resume
+    // flushing after an error is thrown into a domain.
+    // Conveniently, `setImmediate` was introduced in the same version
+    // `process.nextTick` started throwing recursion errors.
+    if (flushing && hasSetImmediate) {
+        setImmediate(flush);
+    } else {
+        process.nextTick(flush);
+    }
 
-} else {
-    // old browsers
-    requestFlush = function () {
-        setTimeout(flush, 0);
-    };
+    if (parentDomain) {
+        domain.active = process.domain = parentDomain;
+    }
 }
 
-function asap(task) {
-    tail = tail.next = {
-        task: task,
-        domain: isNodeJS && process.domain,
-        next: null
-    };
 
-    if (!flushing) {
-        flushing = true;
-        requestFlush();
-    }
-};
-
-module.exports = asap;
-
-
-}).call(this,require("1YiZ5S"))
-},{"1YiZ5S":4}],6:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":4,"domain":3}],9:[function(require,module,exports){
 "use strict";
 
-module.exports = GenericCollection;
-function GenericCollection() {
-    throw new Error("Can't construct. GenericCollection is a mixin.");
+var Iteration = require("./iteration");
+
+module.exports = ArrayIterator;
+function ArrayIterator(iterable, start, stop, step) {
+    this.array = iterable;
+    this.start = start || 0;
+    this.stop = stop || Infinity;
+    this.step = step || 1;
 }
 
-GenericCollection.prototype.addEach = function (values) {
-    if (values && Object(values) === values) {
-        if (typeof values.forEach === "function") {
-            values.forEach(this.add, this);
-        } else if (typeof values.length === "number") {
-            // Array-like objects that do not implement forEach, ergo,
-            // Arguments
-            for (var i = 0; i < values.length; i++) {
-                this.add(values[i], i);
-            }
-        } else {
-            Object.keys(values).forEach(function (key) {
-                this.add(values[key], key);
-            }, this);
-        }
-    }
-    return this;
-};
-
-// This is sufficiently generic for Map (since the value may be a key)
-// and ordered collections (since it forwards the equals argument)
-GenericCollection.prototype.deleteEach = function (values, equals) {
-    values.forEach(function (value) {
-        this["delete"](value, equals);
-    }, this);
-    return this;
-};
-
-// all of the following functions are implemented in terms of "reduce".
-// some need "constructClone".
-
-GenericCollection.prototype.forEach = function (callback /*, thisp*/) {
-    var thisp = arguments[1];
-    return this.reduce(function (undefined, value, key, object, depth) {
-        callback.call(thisp, value, key, object, depth);
-    }, undefined);
-};
-
-GenericCollection.prototype.map = function (callback /*, thisp*/) {
-    var thisp = arguments[1];
-    var result = [];
-    this.reduce(function (undefined, value, key, object, depth) {
-        result.push(callback.call(thisp, value, key, object, depth));
-    }, undefined);
-    return result;
-};
-
-GenericCollection.prototype.enumerate = function (start) {
-    if (start == null) {
-        start = 0;
-    }
-    var result = [];
-    this.reduce(function (undefined, value) {
-        result.push([start++, value]);
-    }, undefined);
-    return result;
-};
-
-GenericCollection.prototype.group = function (callback, thisp, equals) {
-    equals = equals || Object.equals;
-    var groups = [];
-    var keys = [];
-    this.forEach(function (value, key, object) {
-        var key = callback.call(thisp, value, key, object);
-        var index = keys.indexOf(key, equals);
-        var group;
-        if (index === -1) {
-            group = [];
-            groups.push([key, group]);
-            keys.push(key);
-        } else {
-            group = groups[index][1];
-        }
-        group.push(value);
-    });
-    return groups;
-};
-
-GenericCollection.prototype.toArray = function () {
-    return this.map(Function.identity);
-};
-
-// this depends on stringable keys, which apply to Array and Iterator
-// because they have numeric keys and all Maps since they may use
-// strings as keys.  List, Set, and SortedSet have nodes for keys, so
-// toObject would not be meaningful.
-GenericCollection.prototype.toObject = function () {
-    var object = {};
-    this.reduce(function (undefined, value, key) {
-        object[key] = value;
-    }, undefined);
-    return object;
-};
-
-GenericCollection.prototype.filter = function (callback /*, thisp*/) {
-    var thisp = arguments[1];
-    var result = this.constructClone();
-    this.reduce(function (undefined, value, key, object, depth) {
-        if (callback.call(thisp, value, key, object, depth)) {
-            result.add(value, key);
-        }
-    }, undefined);
-    return result;
-};
-
-GenericCollection.prototype.every = function (callback /*, thisp*/) {
-    var thisp = arguments[1];
-    var iterator = this.iterate();
-    while (true) {
-        var iteration = iterator.next();
-        if (iteration.done) {
-            return true;
-        } else if (!callback.call(thisp, iteration.value, iteration.index, this)) {
-            return false;
-        }
-    }
-};
-
-GenericCollection.prototype.some = function (callback /*, thisp*/) {
-    var thisp = arguments[1];
-    var iterator = this.iterate();
-    while (true) {
-        var iteration = iterator.next();
-        if (iteration.done) {
-            return false;
-        } else if (callback.call(thisp, iteration.value, iteration.index, this)) {
-            return true;
-        }
-    }
-};
-
-GenericCollection.prototype.min = function (compare) {
-    compare = compare || this.contentCompare || Object.compare;
-    var first = true;
-    return this.reduce(function (result, value) {
-        if (first) {
-            first = false;
-            return value;
-        } else {
-            return compare(value, result) < 0 ? value : result;
-        }
-    }, undefined);
-};
-
-GenericCollection.prototype.max = function (compare) {
-    compare = compare || this.contentCompare || Object.compare;
-    var first = true;
-    return this.reduce(function (result, value) {
-        if (first) {
-            first = false;
-            return value;
-        } else {
-            return compare(value, result) > 0 ? value : result;
-        }
-    }, undefined);
-};
-
-GenericCollection.prototype.sum = function (zero) {
-    zero = zero === undefined ? 0 : zero;
-    return this.reduce(function (a, b) {
-        return a + b;
-    }, zero);
-};
-
-GenericCollection.prototype.average = function (zero) {
-    var sum = zero === undefined ? 0 : zero;
-    var count = zero === undefined ? 0 : zero;
-    this.reduce(function (undefined, value) {
-        sum += value;
-        count += 1;
-    }, undefined);
-    return sum / count;
-};
-
-GenericCollection.prototype.concat = function () {
-    var result = this.constructClone(this);
-    for (var i = 0; i < arguments.length; i++) {
-        result.addEach(arguments[i]);
-    }
-    return result;
-};
-
-GenericCollection.prototype.flatten = function () {
-    var self = this;
-    return this.reduce(function (result, array) {
-        array.forEach(function (value) {
-            this.push(value);
-        }, result, self);
-        return result;
-    }, []);
-};
-
-GenericCollection.prototype.zip = function () {
-    var table = Array.prototype.slice.call(arguments);
-    table.unshift(this);
-    return Array.unzip(table);
-}
-
-GenericCollection.prototype.join = function (delimiter) {
-    return this.reduce(function (result, string) {
-        return result + delimiter + string;
-    });
-};
-
-GenericCollection.prototype.sorted = function (compare, by, order) {
-    compare = compare || this.contentCompare || Object.compare;
-    // account for comparators generated by Function.by
-    if (compare.by) {
-        by = compare.by;
-        compare = compare.compare || this.contentCompare || Object.compare;
+ArrayIterator.prototype.next = function () {
+    var iteration;
+    if (this.start < Math.min(this.array.length, this.stop)) {
+        iteration = new Iteration(this.array[this.start], false, this.start);
+        this.start += this.step;
     } else {
-        by = by || Function.identity;
+        iteration =  new Iteration(undefined, true);
     }
-    if (order === undefined)
-        order = 1;
-    return this.map(function (item) {
-        return {
-            by: by(item),
-            value: item
-        };
-    })
-    .sort(function (a, b) {
-        return compare(a.by, b.by) * order;
-    })
-    .map(function (pair) {
-        return pair.value;
-    });
+    return iteration;
 };
 
-GenericCollection.prototype.reversed = function () {
-    return this.constructClone(this).reverse();
-};
 
-GenericCollection.prototype.clone = function (depth, memo) {
-    if (depth === undefined) {
-        depth = Infinity;
-    } else if (depth === 0) {
-        return this;
-    }
-    var clone = this.constructClone();
-    this.forEach(function (value, key) {
-        clone.add(Object.clone(value, depth - 1, memo), key);
-    }, this);
-    return clone;
-};
+},{"./iteration":10}],10:[function(require,module,exports){
+"use strict";
 
-GenericCollection.prototype.only = function () {
-    if (this.length === 1) {
-        return this.one();
-    }
-};
-
-require("./shim-array");
-
-
-},{"./shim-array":10}],7:[function(require,module,exports){
-
-var Object = require("./shim-object");
-
-module.exports = GenericOrder;
-function GenericOrder() {
-    throw new Error("Can't construct. GenericOrder is a mixin.");
+module.exports = Iteration;
+function Iteration(value, done, index) {
+    this.value = value;
+    this.done = done;
+    this.index = index;
 }
 
-GenericOrder.prototype.equals = function (that, equals) {
-    equals = equals || this.contentEquals || Object.equals;
-
-    if (this === that) {
-        return true;
-    }
-    if (!that) {
-        return false;
-    }
-
-    var self = this;
+Iteration.prototype.equals = function (other) {
     return (
-        this.length === that.length &&
-        this.zip(that).every(function (pair) {
-            return equals(pair[0], pair[1]);
-        })
+        typeof other == 'object' &&
+        other.value === this.value &&
+        other.done === this.done &&
+        other.index === this.index
     );
 };
 
-GenericOrder.prototype.compare = function (that, compare) {
-    compare = compare || this.contentCompare || Object.compare;
 
-    if (this === that) {
-        return 0;
-    }
-    if (!that) {
-        return 1;
-    }
+},{}],11:[function(require,module,exports){
+"use strict";
 
-    var length = Math.min(this.length, that.length);
-    var comparison = this.zip(that).reduce(function (comparison, pair, index) {
-        if (comparison === 0) {
-            if (index >= length) {
-                return comparison;
-            } else {
-                return compare(pair[0], pair[1]);
-            }
-        } else {
-            return comparison;
-        }
-    }, 0);
-    if (comparison === 0) {
-        return this.length - that.length;
+var Iteration = require("./iteration");
+var ArrayIterator = require("./array-iterator");
+
+module.exports = ObjectIterator;
+function ObjectIterator(iterable, start, stop, step) {
+    this.object = iterable;
+    this.keysIterator = new ArrayIterator(Object.keys(iterable), start, stop, step);
+}
+
+ObjectIterator.prototype.next = function () {
+    var iteration = this.keysIterator.next();
+    if (iteration.done) {
+        return iteration;
     }
-    return comparison;
+    var key = iteration.value;
+    return new Iteration(this.object[key], false, key);
 };
 
 
-},{"./shim-object":12}],8:[function(require,module,exports){
+},{"./array-iterator":9,"./iteration":10}],12:[function(require,module,exports){
 "use strict";
 
-module.exports = Iterator;
+var ArrayIterator = require("./array-iterator");
+var ObjectIterator = require("./object-iterator");
 
-var WeakMap = require("./weak-map");
-var GenericCollection = require("./generic-collection");
-
-// upgrades an iterable to a Iterator
-function Iterator(iterable, start, stop, step) {
+module.exports = iterate;
+function iterate(iterable, start, stop, step) {
     if (!iterable) {
-        return Iterator.empty;
-    } else if (iterable instanceof Iterator) {
+        return empty;
+    } else if (Array.isArray(iterable)) {
+        return new ArrayIterator(iterable, start, stop, step);
+    } else if (typeof iterable.next === "function") {
         return iterable;
-    } else if (!(this instanceof Iterator)) {
-        return new Iterator(iterable, start, stop, step);
-    } else if (Array.isArray(iterable) || typeof iterable === "string") {
-        iterators.set(this, new IndexIterator(iterable, start, stop, step));
-        return;
-    }
-    iterable = Object(iterable);
-    if (iterable.next) {
-        iterators.set(this, iterable);
-    } else if (iterable.iterate) {
-        iterators.set(this, iterable.iterate(start, stop, step));
-    } else if (Object.prototype.toString.call(iterable) === "[object Function]") {
-        this.next = iterable;
+    } else if (typeof iterable.iterate === "function") {
+        return iterable.iterate(start, stop, step);
+    } else if (typeof iterable === "object") {
+        return new ObjectIterator(iterable);
     } else {
         throw new TypeError("Can't iterate " + iterable);
     }
 }
 
-// Using iterators as a hidden table associating a full-fledged Iterator with
-// an underlying, usually merely "nextable", iterator.
-var iterators = new WeakMap();
 
-// Selectively apply generic methods of GenericCollection
-Iterator.prototype.forEach = GenericCollection.prototype.forEach;
-Iterator.prototype.map = GenericCollection.prototype.map;
-Iterator.prototype.filter = GenericCollection.prototype.filter;
-Iterator.prototype.every = GenericCollection.prototype.every;
-Iterator.prototype.some = GenericCollection.prototype.some;
-Iterator.prototype.min = GenericCollection.prototype.min;
-Iterator.prototype.max = GenericCollection.prototype.max;
-Iterator.prototype.sum = GenericCollection.prototype.sum;
-Iterator.prototype.average = GenericCollection.prototype.average;
-Iterator.prototype.flatten = GenericCollection.prototype.flatten;
-Iterator.prototype.zip = GenericCollection.prototype.zip;
-Iterator.prototype.enumerate = GenericCollection.prototype.enumerate;
-Iterator.prototype.sorted = GenericCollection.prototype.sorted;
-Iterator.prototype.group = GenericCollection.prototype.group;
-Iterator.prototype.reversed = GenericCollection.prototype.reversed;
-Iterator.prototype.toArray = GenericCollection.prototype.toArray;
-Iterator.prototype.toObject = GenericCollection.prototype.toObject;
-
-// This is a bit of a cheat so flatten and such work with the generic reducible
-Iterator.prototype.constructClone = function (values) {
-    var clone = [];
-    clone.addEach(values);
-    return clone;
-};
-
-// A level of indirection so a full-interface iterator can proxy for a simple
-// nextable iterator, and to allow the child iterator to replace its governing
-// iterator, as with drop-while iterators.
-Iterator.prototype.next = function () {
-    var nextable = iterators.get(this);
-    if (nextable) {
-        return nextable.next();
-    } else {
-        return Iterator.done;
-    }
-};
-
-Iterator.prototype.iterateMap = function (callback /*, thisp*/) {
-    var self = Iterator(this),
-        thisp = arguments[1];
-    return new MapIterator(self, callback, thisp);
-};
-
-function MapIterator(iterator, callback, thisp) {
-    this.iterator = iterator;
-    this.callback = callback;
-    this.thisp = thisp;
-}
-
-MapIterator.prototype = Object.create(Iterator.prototype);
-MapIterator.prototype.constructor = MapIterator;
-
-MapIterator.prototype.next = function () {
-    var iteration = this.iterator.next();
-    if (iteration.done) {
-        return iteration;
-    } else {
-        return new Iteration(
-            this.callback.call(
-                this.thisp,
-                iteration.value,
-                iteration.index,
-                this.iteration
-            ),
-            iteration.index
-        );
-    }
-};
-
-Iterator.prototype.iterateFilter = function (callback /*, thisp*/) {
-    var self = Iterator(this),
-        thisp = arguments[1],
-        index = 0;
-
-    return new FilterIterator(self, callback, thisp);
-};
-
-function FilterIterator(iterator, callback, thisp) {
-    this.iterator = iterator;
-    this.callback = callback;
-    this.thisp = thisp;
-}
-
-FilterIterator.prototype = Object.create(Iterator.prototype);
-FilterIterator.prototype.constructor = FilterIterator;
-
-FilterIterator.prototype.next = function () {
-    var iteration;
-    while (true) {
-        iteration = this.iterator.next();
-        if (iteration.done || this.callback.call(
-            this.thisp,
-            iteration.value,
-            iteration.index,
-            this.iteration
-        )) {
-            return iteration;
-        }
-    }
-};
-
-Iterator.prototype.reduce = function (callback /*, initial, thisp*/) {
-    var self = Iterator(this),
-        result = arguments[1],
-        thisp = arguments[2],
-        iteration;
-
-    // First iteration unrolled
-    iteration = self.next();
-    if (iteration.done) {
-        if (arguments.length > 1) {
-            return arguments[1];
-        } else {
-            throw TypeError("Reduce of empty iterator with no initial value");
-        }
-    } else if (arguments.length > 1) {
-        result = callback.call(
-            thisp,
-            result,
-            iteration.value,
-            iteration.index,
-            self
-        );
-    } else {
-        result = iteration.value;
-    }
-
-    // Remaining entries
-    while (true) {
-        iteration = self.next();
-        if (iteration.done) {
-            return result;
-        } else {
-            result = callback.call(
-                thisp,
-                result,
-                iteration.value,
-                iteration.index,
-                self
-            );
-        }
-    }
-};
-
-Iterator.prototype.dropWhile = function (callback /*, thisp */) {
-    var self = Iterator(this),
-        thisp = arguments[1],
-        iteration;
-
-    while (true) {
-        iteration = self.next();
-        if (iteration.done) {
-            return Iterator.empty;
-        } else if (!callback.call(thisp, iteration.value, iteration.index, self)) {
-            return new DropWhileIterator(iteration, self);
-        }
-    }
-};
-
-function DropWhileIterator(iteration, iterator) {
-    this.iteration = iteration;
-    this.iterator = iterator;
-    this.parent = null;
-}
-
-DropWhileIterator.prototype = Object.create(Iterator.prototype);
-DropWhileIterator.prototype.constructor = DropWhileIterator;
-
-DropWhileIterator.prototype.next = function () {
-    var result = this.iteration;
-    if (result) {
-        this.iteration = null;
-        return result;
-    } else {
-        return this.iterator.next();
-    }
-};
-
-Iterator.prototype.takeWhile = function (callback /*, thisp*/) {
-    var self = Iterator(this),
-        thisp = arguments[1];
-    return new TakeWhileIterator(self, callback, thisp);
-};
-
-function TakeWhileIterator(iterator, callback, thisp) {
-    this.iterator = iterator;
-    this.callback = callback;
-    this.thisp = thisp;
-}
-
-TakeWhileIterator.prototype = Object.create(Iterator.prototype);
-TakeWhileIterator.prototype.constructor = TakeWhileIterator;
-
-TakeWhileIterator.prototype.next = function () {
-    var iteration = this.iterator.next();
-    if (iteration.done) {
-        return iteration;
-    } else if (this.callback.call(
-        this.thisp,
-        iteration.value,
-        iteration.index,
-        this.iterator
-    )) {
-        return iteration;
-    } else {
-        return Iterator.done;
-    }
-};
-
-Iterator.prototype.iterateZip = function () {
-    return Iterator.unzip(Array.prototype.concat.apply(this, arguments));
-};
-
-Iterator.prototype.iterateUnzip = function () {
-    return Iterator.unzip(this);
-};
-
-Iterator.prototype.iterateEnumerate = function (start) {
-    return Iterator.count(start).iterateZip(this);
-};
-
-Iterator.prototype.iterateConcat = function () {
-    return Iterator.flatten(Array.prototype.concat.apply(this, arguments));
-};
-
-Iterator.prototype.iterateFlatten = function () {
-    return Iterator.flatten(this);
-};
-
-Iterator.prototype.recount = function (start) {
-    return new RecountIterator(this, start);
-};
-
-function RecountIterator(iterator, start) {
-    this.iterator = iterator;
-    this.index = start || 0;
-}
-
-RecountIterator.prototype = Object.create(Iterator.prototype);
-RecountIterator.prototype.constructor = RecountIterator;
-
-RecountIterator.prototype.next = function () {
-    var iteration = this.iterator.next();
-    if (iteration.done) {
-        return iteration;
-    } else {
-        return new Iteration(
-            iteration.value,
-            this.index++
-        );
-    }
-};
-
-// creates an iterator for Array and String
-function IndexIterator(iterable, start, stop, step) {
-    if (step == null) {
-        step = 1;
-    }
-    if (stop == null) {
-        stop = start;
-        start = 0;
-    }
-    if (start == null) {
-        start = 0;
-    }
-    if (step == null) {
-        step = 1;
-    }
-    if (stop == null) {
-        stop = iterable.length;
-    }
-    this.iterable = iterable;
-    this.start = start;
-    this.stop = stop;
-    this.step = step;
-}
-
-IndexIterator.prototype.next = function () {
-    // Advance to next owned entry
-    if (typeof this.iterable === "object") { // as opposed to string
-        while (!(this.start in this.iterable)) {
-            if (this.start >= this.stop) {
-                return Iterator.done;
-            } else {
-                this.start += this.step;
-            }
-        }
-    }
-    if (this.start >= this.stop) { // end of string
-        return Iterator.done;
-    }
-    var iteration = new Iteration(
-        this.iterable[this.start],
-        this.start
-    );
-    this.start += this.step;
-    return iteration;
-};
-
-Iterator.cycle = function (cycle, times) {
-    if (arguments.length < 2) {
-        times = Infinity;
-    }
-    return new CycleIterator(cycle, times);
-};
-
-function CycleIterator(cycle, times) {
-    this.cycle = cycle;
-    this.times = times;
-    this.iterator = Iterator.empty;
-}
-
-CycleIterator.prototype = Object.create(Iterator.prototype);
-CycleIterator.prototype.constructor = CycleIterator;
-
-CycleIterator.prototype.next = function () {
-    var iteration = this.iterator.next();
-    if (iteration.done) {
-        if (this.times > 0) {
-            this.times--;
-            this.iterator = new Iterator(this.cycle);
-            return this.iterator.next();
-        } else {
-            return iteration;
-        }
-    } else {
-        return iteration;
-    }
-};
-
-Iterator.concat = function (/* ...iterators */) {
-    return Iterator.flatten(Array.prototype.slice.call(arguments));
-};
-
-Iterator.flatten = function (iterators) {
-    iterators = Iterator(iterators);
-    return new ChainIterator(iterators);
-};
-
-function ChainIterator(iterators) {
-    this.iterators = iterators;
-    this.iterator = Iterator.empty;
-}
-
-ChainIterator.prototype = Object.create(Iterator.prototype);
-ChainIterator.prototype.constructor = ChainIterator;
-
-ChainIterator.prototype.next = function () {
-    var iteration = this.iterator.next();
-    if (iteration.done) {
-        var iteratorIteration = this.iterators.next();
-        if (iteratorIteration.done) {
-            return Iterator.done;
-        } else {
-            this.iterator = new Iterator(iteratorIteration.value);
-            return this.iterator.next();
-        }
-    } else {
-        return iteration;
-    }
-};
-
-Iterator.unzip = function (iterators) {
-    iterators = Iterator(iterators).map(Iterator);
-    if (iterators.length === 0)
-        return new Iterator.empty;
-    return new UnzipIterator(iterators);
-};
-
-function UnzipIterator(iterators) {
-    this.iterators = iterators;
-    this.index = 0;
-}
-
-UnzipIterator.prototype = Object.create(Iterator.prototype);
-UnzipIterator.prototype.constructor = UnzipIterator;
-
-UnzipIterator.prototype.next = function () {
-    var done = false
-    var result = this.iterators.map(function (iterator) {
-        var iteration = iterator.next();
-        if (iteration.done) {
-            done = true;
-        } else {
-            return iteration.value;
-        }
-    });
-    if (done) {
-        return Iterator.done;
-    } else {
-        return new Iteration(result, this.index++);
-    }
-};
-
-Iterator.zip = function () {
-    return Iterator.unzip(Array.prototype.slice.call(arguments));
-};
-
-Iterator.range = function (start, stop, step) {
-    if (arguments.length < 3) {
-        step = 1;
-    }
-    if (arguments.length < 2) {
-        stop = start;
-        start = 0;
-    }
-    start = start || 0;
-    step = step || 1;
-    return new RangeIterator(start, stop, step);
-};
-
-Iterator.count = function (start, step) {
-    return Iterator.range(start, Infinity, step);
-};
-
-function RangeIterator(start, stop, step) {
-    this.start = start;
-    this.stop = stop;
-    this.step = step;
-    this.index = 0;
-}
-
-RangeIterator.prototype = Object.create(Iterator.prototype);
-RangeIterator.prototype.constructor = RangeIterator;
-
-RangeIterator.prototype.next = function () {
-    if (this.start >= this.stop) {
-        return Iterator.done;
-    } else {
-        var result = this.start;
-        this.start += this.step;
-        return new Iteration(result, this.index++);
-    }
-};
-
-Iterator.repeat = function (value, times) {
-    if (times == null) {
-        times = Infinity;
-    }
-    return new RepeatIterator(value, times);
-};
-
-function RepeatIterator(value, times) {
-    this.value = value;
-    this.times = times;
-    this.index = 0;
-}
-
-RepeatIterator.prototype = Object.create(Iterator.prototype);
-RepeatIterator.prototype.constructor = RepeatIterator;
-
-RepeatIterator.prototype.next = function () {
-    if (this.index < this.times) {
-        return new Iteration(this.value, this.index++);
-    } else {
-        return Iterator.done;
-    }
-};
-
-Iterator.enumerate = function (values, start) {
-    return Iterator.count(start).iterateZip(new Iterator(values));
-};
-
-function EmptyIterator() {}
-
-EmptyIterator.prototype = Object.create(Iterator.prototype);
-EmptyIterator.prototype.constructor = EmptyIterator;
-
-EmptyIterator.prototype.next = function () {
-    return Iterator.done;
-};
-
-Iterator.empty = new EmptyIterator();
-
-// Iteration and DoneIteration exist here only to encourage hidden classes.
-// Otherwise, iterations are merely duck-types.
-
-function Iteration(value, index) {
-    this.value = value;
-    this.index = index;
-}
-
-Iteration.prototype.done = false;
-
-Iteration.prototype.equals = function (that, equals, memo) {
-    if (!that) return false;
-    return (
-        equals(this.value, that.value, equals, memo) &&
-        this.index === that.index &&
-        this.done === that.done
-    );
-
-};
-
-function DoneIteration(value) {
-    Iteration.call(this, value);
-    this.done = true; // reflected on the instance to make it more obvious
-}
-
-DoneIteration.prototype = Object.create(Iteration.prototype);
-DoneIteration.prototype.constructor = DoneIteration;
-DoneIteration.prototype.done = true;
-
-Iterator.Iteration = Iteration;
-Iterator.DoneIteration = DoneIteration;
-Iterator.done = new DoneIteration();
-
-
-},{"./generic-collection":6,"./weak-map":15}],9:[function(require,module,exports){
+},{"./array-iterator":9,"./object-iterator":11}],13:[function(require,module,exports){
 // Copyright (C) 2011 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -2543,990 +1895,7 @@ Iterator.done = new DoneIteration();
   }
 })();
 
-},{}],10:[function(require,module,exports){
-"use strict";
-
-/*
-    Based in part on extras from Motorola Mobility’s Montage
-    Copyright (c) 2012, Motorola Mobility LLC. All Rights Reserved.
-    3-Clause BSD License
-    https://github.com/motorola-mobility/montage/blob/master/LICENSE.md
-*/
-
-var Function = require("./shim-function");
-var GenericCollection = require("./generic-collection");
-var GenericOrder = require("./generic-order");
-var Iterator = require("./iterator");
-var WeakMap = require("weak-map");
-
-module.exports = Array;
-
-var array_splice = Array.prototype.splice;
-var array_slice = Array.prototype.slice;
-
-Array.empty = [];
-
-if (Object.freeze) {
-    Object.freeze(Array.empty);
-}
-
-Array.from = function (values) {
-    var array = [];
-    array.addEach(values);
-    return array;
-};
-
-Array.unzip = function (table) {
-    var transpose = [];
-    var length = Infinity;
-    // compute shortest row
-    for (var i = 0; i < table.length; i++) {
-        var row = table[i];
-        table[i] = row.toArray();
-        if (row.length < length) {
-            length = row.length;
-        }
-    }
-    for (var i = 0; i < table.length; i++) {
-        var row = table[i];
-        for (var j = 0; j < row.length; j++) {
-            if (j < length && j in row) {
-                transpose[j] = transpose[j] || [];
-                transpose[j][i] = row[j];
-            }
-        }
-    }
-    return transpose;
-};
-
-function define(key, value) {
-    Object.defineProperty(Array.prototype, key, {
-        value: value,
-        writable: true,
-        configurable: true,
-        enumerable: false
-    });
-}
-
-define("addEach", GenericCollection.prototype.addEach);
-define("deleteEach", GenericCollection.prototype.deleteEach);
-define("toArray", GenericCollection.prototype.toArray);
-define("toObject", GenericCollection.prototype.toObject);
-define("min", GenericCollection.prototype.min);
-define("max", GenericCollection.prototype.max);
-define("sum", GenericCollection.prototype.sum);
-define("average", GenericCollection.prototype.average);
-define("only", GenericCollection.prototype.only);
-define("flatten", GenericCollection.prototype.flatten);
-define("zip", GenericCollection.prototype.zip);
-define("enumerate", GenericCollection.prototype.enumerate);
-define("group", GenericCollection.prototype.group);
-define("sorted", GenericCollection.prototype.sorted);
-define("reversed", GenericCollection.prototype.reversed);
-
-define("constructClone", function (values) {
-    var clone = new this.constructor();
-    clone.addEach(values);
-    return clone;
-});
-
-define("has", function (value, equals) {
-    return this.findValue(value, equals) !== -1;
-});
-
-define("get", function (index, defaultValue) {
-    if (+index !== index)
-        throw new Error("Indicies must be numbers");
-    if (!index in this) {
-        return defaultValue;
-    } else {
-        return this[index];
-    }
-});
-
-define("set", function (index, value) {
-    if (index < this.length) {
-        this.splice(index, 1, value);
-    } else {
-        // Must use swap instead of splice, dispite the unfortunate array
-        // argument, because splice would truncate index to length.
-        this.swap(index, 1, [value]);
-    }
-    return this;
-});
-
-define("add", function (value) {
-    this.push(value);
-    return true;
-});
-
-define("delete", function (value, equals) {
-    var index = this.findValue(value, equals);
-    if (index !== -1) {
-        this.splice(index, 1);
-        return true;
-    }
-    return false;
-});
-
-define("findValue", function (value, equals) {
-    equals = equals || this.contentEquals || Object.equals;
-    for (var index = 0; index < this.length; index++) {
-        if (index in this && equals(this[index], value)) {
-            return index;
-        }
-    }
-    return -1;
-});
-
-define("findLastValue", function (value, equals) {
-    equals = equals || this.contentEquals || Object.equals;
-    var index = this.length;
-    do {
-        index--;
-        if (index in this && equals(this[index], value)) {
-            return index;
-        }
-    } while (index > 0);
-    return -1;
-});
-
-define("swap", function (start, minusLength, plus) {
-    // Unrolled implementation into JavaScript for a couple reasons.
-    // Calling splice can cause large stack sizes for large swaps. Also,
-    // splice cannot handle array holes.
-    if (plus) {
-        if (!Array.isArray(plus)) {
-            plus = array_slice.call(plus);
-        }
-    } else {
-        plus = Array.empty;
-    }
-
-    if (start < 0) {
-        start = this.length + start;
-    } else if (start > this.length) {
-        this.length = start;
-    }
-
-    if (start + minusLength > this.length) {
-        // Truncate minus length if it extends beyond the length
-        minusLength = this.length - start;
-    } else if (minusLength < 0) {
-        // It is the JavaScript way.
-        minusLength = 0;
-    }
-
-    var diff = plus.length - minusLength;
-    var oldLength = this.length;
-    var newLength = this.length + diff;
-
-    if (diff > 0) {
-        // Head Tail Plus Minus
-        // H H H H M M T T T T
-        // H H H H P P P P T T T T
-        //         ^ start
-        //         ^-^ minus.length
-        //           ^ --> diff
-        //         ^-----^ plus.length
-        //             ^------^ tail before
-        //                 ^------^ tail after
-        //                   ^ start iteration
-        //                       ^ start iteration offset
-        //             ^ end iteration
-        //                 ^ end iteration offset
-        //             ^ start + minus.length
-        //                     ^ length
-        //                   ^ length - 1
-        for (var index = oldLength - 1; index >= start + minusLength; index--) {
-            var offset = index + diff;
-            if (index in this) {
-                this[offset] = this[index];
-            } else {
-                // Oddly, PhantomJS complains about deleting array
-                // properties, unless you assign undefined first.
-                this[offset] = void 0;
-                delete this[offset];
-            }
-        }
-    }
-    for (var index = 0; index < plus.length; index++) {
-        if (index in plus) {
-            this[start + index] = plus[index];
-        } else {
-            this[start + index] = void 0;
-            delete this[start + index];
-        }
-    }
-    if (diff < 0) {
-        // Head Tail Plus Minus
-        // H H H H M M M M T T T T
-        // H H H H P P T T T T
-        //         ^ start
-        //         ^-----^ length
-        //         ^-^ plus.length
-        //             ^ start iteration
-        //                 ^ offset start iteration
-        //                     ^ end
-        //                         ^ offset end
-        //             ^ start + minus.length - plus.length
-        //             ^ start - diff
-        //                 ^------^ tail before
-        //             ^------^ tail after
-        //                     ^ length - diff
-        //                     ^ newLength
-        for (var index = start + plus.length; index < oldLength - diff; index++) {
-            var offset = index - diff;
-            if (offset in this) {
-                this[index] = this[offset];
-            } else {
-                this[index] = void 0;
-                delete this[index];
-            }
-        }
-    }
-    this.length = newLength;
-});
-
-define("peek", function () {
-    return this[0];
-});
-
-define("poke", function (value) {
-    if (this.length > 0) {
-        this[0] = value;
-    }
-});
-
-define("peekBack", function () {
-    if (this.length > 0) {
-        return this[this.length - 1];
-    }
-});
-
-define("pokeBack", function (value) {
-    if (this.length > 0) {
-        this[this.length - 1] = value;
-    }
-});
-
-define("one", function () {
-    for (var i in this) {
-        if (Object.owns(this, i)) {
-            return this[i];
-        }
-    }
-});
-
-define("clear", function () {
-    this.length = 0;
-    return this;
-});
-
-define("compare", function (that, compare) {
-    compare = compare || Object.compare;
-    var i;
-    var length;
-    var lhs;
-    var rhs;
-    var relative;
-
-    if (this === that) {
-        return 0;
-    }
-
-    if (!that || !Array.isArray(that)) {
-        return GenericOrder.prototype.compare.call(this, that, compare);
-    }
-
-    length = Math.min(this.length, that.length);
-
-    for (i = 0; i < length; i++) {
-        if (i in this) {
-            if (!(i in that)) {
-                return -1;
-            } else {
-                lhs = this[i];
-                rhs = that[i];
-                relative = compare(lhs, rhs);
-                if (relative) {
-                    return relative;
-                }
-            }
-        } else if (i in that) {
-            return 1;
-        }
-    }
-
-    return this.length - that.length;
-});
-
-define("equals", function (that, equals, memo) {
-    equals = equals || Object.equals;
-    var i = 0;
-    var length = this.length;
-    var left;
-    var right;
-
-    if (this === that) {
-        return true;
-    }
-    if (!that || !Array.isArray(that)) {
-        return GenericOrder.prototype.equals.call(this, that);
-    }
-
-    if (length !== that.length) {
-        return false;
-    } else {
-        for (; i < length; ++i) {
-            if (i in this) {
-                if (!(i in that)) {
-                    return false;
-                }
-                left = this[i];
-                right = that[i];
-                if (!equals(left, right, equals, memo)) {
-                    return false;
-                }
-            } else {
-                if (i in that) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
-});
-
-define("clone", function (depth, memo) {
-    if (depth === undefined) {
-        depth = Infinity;
-    } else if (depth === 0) {
-        return this;
-    }
-    memo = memo || new WeakMap();
-    var clone = [];
-    for (var i in this) {
-        if (Object.owns(this, i)) {
-            clone[i] = Object.clone(this[i], depth - 1, memo);
-        }
-    };
-    return clone;
-});
-
-define("iterate", function (start, stop, step) {
-    return new Iterator(this, start, stop, step);
-});
-
-
-},{"./generic-collection":6,"./generic-order":7,"./iterator":8,"./shim-function":11,"weak-map":9}],11:[function(require,module,exports){
-
-module.exports = Function;
-
-/**
-    A utility to reduce unnecessary allocations of <code>function () {}</code>
-    in its many colorful variations.  It does nothing and returns
-    <code>undefined</code> thus makes a suitable default in some circumstances.
-
-    @function external:Function.noop
-*/
-Function.noop = function () {
-};
-
-/**
-    A utility to reduce unnecessary allocations of <code>function (x) {return
-    x}</code> in its many colorful but ultimately wasteful parameter name
-    variations.
-
-    @function external:Function.identity
-    @param {Any} any value
-    @returns {Any} that value
-*/
-Function.identity = function (value) {
-    return value;
-};
-
-/**
-    A utility for creating a comparator function for a particular aspect of a
-    figurative class of objects.
-
-    @function external:Function.by
-    @param {Function} relation A function that accepts a value and returns a
-    corresponding value to use as a representative when sorting that object.
-    @param {Function} compare an alternate comparator for comparing the
-    represented values.  The default is <code>Object.compare</code>, which
-    does a deep, type-sensitive, polymorphic comparison.
-    @returns {Function} a comparator that has been annotated with
-    <code>by</code> and <code>compare</code> properties so
-    <code>sorted</code> can perform a transform that reduces the need to call
-    <code>by</code> on each sorted object to just once.
- */
-Function.by = function (by , compare) {
-    compare = compare || Object.compare;
-    by = by || Function.identity;
-    var compareBy = function (a, b) {
-        return compare(by(a), by(b));
-    };
-    compareBy.compare = compare;
-    compareBy.by = by;
-    return compareBy;
-};
-
-// TODO document
-Function.get = function (key) {
-    return function (object) {
-        return Object.get(object, key);
-    };
-};
-
-
-},{}],12:[function(require,module,exports){
-"use strict";
-
-var WeakMap = require("weak-map");
-
-module.exports = Object;
-
-/*
-    Based in part on extras from Motorola Mobility’s Montage
-    Copyright (c) 2012, Motorola Mobility LLC. All Rights Reserved.
-    3-Clause BSD License
-    https://github.com/motorola-mobility/montage/blob/master/LICENSE.md
-*/
-
-/**
-    Defines extensions to intrinsic <code>Object</code>.
-    @see [Object class]{@link external:Object}
-*/
-
-/**
-    A utility object to avoid unnecessary allocations of an empty object
-    <code>{}</code>.  This object is frozen so it is safe to share.
-
-    @object external:Object.empty
-*/
-Object.empty = Object.freeze(Object.create(null));
-
-/**
-    Returns whether the given value is an object, as opposed to a value.
-    Unboxed numbers, strings, true, false, undefined, and null are not
-    objects.  Arrays are objects.
-
-    @function external:Object.isObject
-    @param {Any} value
-    @returns {Boolean} whether the given value is an object
-*/
-Object.isObject = function (object) {
-    return Object(object) === object;
-};
-
-/**
-    Returns the value of an any value, particularly objects that
-    implement <code>valueOf</code>.
-
-    <p>Note that, unlike the precedent of methods like
-    <code>Object.equals</code> and <code>Object.compare</code> would suggest,
-    this method is named <code>Object.getValueOf</code> instead of
-    <code>valueOf</code>.  This is a delicate issue, but the basis of this
-    decision is that the JavaScript runtime would be far more likely to
-    accidentally call this method with no arguments, assuming that it would
-    return the value of <code>Object</code> itself in various situations,
-    whereas <code>Object.equals(Object, null)</code> protects against this case
-    by noting that <code>Object</code> owns the <code>equals</code> property
-    and therefore does not delegate to it.
-
-    @function external:Object.getValueOf
-    @param {Any} value a value or object wrapping a value
-    @returns {Any} the primitive value of that object, if one exists, or passes
-    the value through
-*/
-Object.getValueOf = function (value) {
-    if (value && typeof value.valueOf === "function") {
-        value = value.valueOf();
-    }
-    return value;
-};
-
-var hashMap = new WeakMap();
-Object.hash = function (object) {
-    if (object && typeof object.hash === "function") {
-        return "" + object.hash();
-    } else if (Object.isObject(object)) {
-        if (!hashMap.has(object)) {
-            hashMap.set(object, Math.random().toString(36).slice(2));
-        }
-        return hashMap.get(object);
-    } else {
-        return "" + object;
-    }
-};
-
-/**
-    A shorthand for <code>Object.prototype.hasOwnProperty.call(object,
-    key)</code>.  Returns whether the object owns a property for the given key.
-    It does not consult the prototype chain and works for any string (including
-    "hasOwnProperty") except "__proto__".
-
-    @function external:Object.owns
-    @param {Object} object
-    @param {String} key
-    @returns {Boolean} whether the object owns a property wfor the given key.
-*/
-var owns = Object.prototype.hasOwnProperty;
-Object.owns = function (object, key) {
-    return owns.call(object, key);
-};
-
-/**
-    A utility that is like Object.owns but is also useful for finding
-    properties on the prototype chain, provided that they do not refer to
-    methods on the Object prototype.  Works for all strings except "__proto__".
-
-    <p>Alternately, you could use the "in" operator as long as the object
-    descends from "null" instead of the Object.prototype, as with
-    <code>Object.create(null)</code>.  However,
-    <code>Object.create(null)</code> only works in fully compliant EcmaScript 5
-    JavaScript engines and cannot be faithfully shimmed.
-
-    <p>If the given object is an instance of a type that implements a method
-    named "has", this function defers to the collection, so this method can be
-    used to generically handle objects, arrays, or other collections.  In that
-    case, the domain of the key depends on the instance.
-
-    @param {Object} object
-    @param {String} key
-    @returns {Boolean} whether the object, or any of its prototypes except
-    <code>Object.prototype</code>
-    @function external:Object.has
-*/
-Object.has = function (object, key) {
-    if (typeof object !== "object") {
-        throw new Error("Object.has can't accept non-object: " + typeof object);
-    }
-    // forward to mapped collections that implement "has"
-    if (object && typeof object.has === "function") {
-        return object.has(key);
-    // otherwise report whether the key is on the prototype chain,
-    // as long as it is not one of the methods on object.prototype
-    } else if (typeof key === "string") {
-        return key in object && object[key] !== Object.prototype[key];
-    } else {
-        throw new Error("Key must be a string for Object.has on plain objects");
-    }
-};
-
-/**
-    Gets the value for a corresponding key from an object.
-
-    <p>Uses Object.has to determine whether there is a corresponding value for
-    the given key.  As such, <code>Object.get</code> is capable of retriving
-    values from the prototype chain as long as they are not from the
-    <code>Object.prototype</code>.
-
-    <p>If there is no corresponding value, returns the given default, which may
-    be <code>undefined</code>.
-
-    <p>If the given object is an instance of a type that implements a method
-    named "get", this function defers to the collection, so this method can be
-    used to generically handle objects, arrays, or other collections.  In that
-    case, the domain of the key depends on the implementation.  For a `Map`,
-    for example, the key might be any object.
-
-    @param {Object} object
-    @param {String} key
-    @param {Any} value a default to return, <code>undefined</code> if omitted
-    @returns {Any} value for key, or default value
-    @function external:Object.get
-*/
-Object.get = function (object, key, value) {
-    if (typeof object !== "object") {
-        throw new Error("Object.get can't accept non-object: " + typeof object);
-    }
-    // forward to mapped collections that implement "get"
-    if (object && typeof object.get === "function") {
-        return object.get(key, value);
-    } else if (Object.has(object, key)) {
-        return object[key];
-    } else {
-        return value;
-    }
-};
-
-/**
-    Sets the value for a given key on an object.
-
-    <p>If the given object is an instance of a type that implements a method
-    named "set", this function defers to the collection, so this method can be
-    used to generically handle objects, arrays, or other collections.  As such,
-    the key domain varies by the object type.
-
-    @param {Object} object
-    @param {String} key
-    @param {Any} value
-    @returns <code>undefined</code>
-    @function external:Object.set
-*/
-Object.set = function (object, key, value) {
-    if (object && typeof object.set === "function") {
-        object.set(key, value);
-    } else {
-        object[key] = value;
-    }
-};
-
-Object.addEach = function (target, source) {
-    if (!source) {
-    } else if (typeof source.forEach === "function" && !source.hasOwnProperty("forEach")) {
-        // copy map-alikes
-        if (typeof source.keys === "function") {
-            source.forEach(function (value, key) {
-                target[key] = value;
-            });
-        // iterate key value pairs of other iterables
-        } else {
-            source.forEach(function (pair) {
-                target[pair[0]] = pair[1];
-            });
-        }
-    } else {
-        // copy other objects as map-alikes
-        Object.keys(source).forEach(function (key) {
-            target[key] = source[key];
-        });
-    }
-    return target;
-};
-
-/**
-    Iterates over the owned properties of an object.
-
-    @function external:Object.forEach
-    @param {Object} object an object to iterate.
-    @param {Function} callback a function to call for every key and value
-    pair in the object.  Receives <code>value</code>, <code>key</code>,
-    and <code>object</code> as arguments.
-    @param {Object} thisp the <code>this</code> to pass through to the
-    callback
-*/
-Object.forEach = function (object, callback, thisp) {
-    Object.keys(object).forEach(function (key) {
-        callback.call(thisp, object[key], key, object);
-    });
-};
-
-/**
-    Iterates over the owned properties of a map, constructing a new array of
-    mapped values.
-
-    @function external:Object.map
-    @param {Object} object an object to iterate.
-    @param {Function} callback a function to call for every key and value
-    pair in the object.  Receives <code>value</code>, <code>key</code>,
-    and <code>object</code> as arguments.
-    @param {Object} thisp the <code>this</code> to pass through to the
-    callback
-    @returns {Array} the respective values returned by the callback for each
-    item in the object.
-*/
-Object.map = function (object, callback, thisp) {
-    return Object.keys(object).map(function (key) {
-        return callback.call(thisp, object[key], key, object);
-    });
-};
-
-/**
-    Returns the values for owned properties of an object.
-
-    @function external:Object.map
-    @param {Object} object
-    @returns {Array} the respective value for each owned property of the
-    object.
-*/
-Object.values = function (object) {
-    return Object.map(object, Function.identity);
-};
-
-// TODO inline document concat
-Object.concat = function () {
-    var object = {};
-    for (var i = 0; i < arguments.length; i++) {
-        Object.addEach(object, arguments[i]);
-    }
-    return object;
-};
-
-Object.from = Object.concat;
-
-/**
-    Returns whether two values are identical.  Any value is identical to itself
-    and only itself.  This is much more restictive than equivalence and subtly
-    different than strict equality, <code>===</code> because of edge cases
-    including negative zero and <code>NaN</code>.  Identity is useful for
-    resolving collisions among keys in a mapping where the domain is any value.
-    This method does not delgate to any method on an object and cannot be
-    overridden.
-    @see http://wiki.ecmascript.org/doku.php?id=harmony:egal
-    @param {Any} this
-    @param {Any} that
-    @returns {Boolean} whether this and that are identical
-    @function external:Object.is
-*/
-Object.is = function (x, y) {
-    if (x === y) {
-        // 0 === -0, but they are not identical
-        return x !== 0 || 1 / x === 1 / y;
-    }
-    // NaN !== NaN, but they are identical.
-    // NaNs are the only non-reflexive value, i.e., if x !== x,
-    // then x is a NaN.
-    // isNaN is broken: it converts its argument to number, so
-    // isNaN("foo") => true
-    return x !== x && y !== y;
-};
-
-/**
-    Performs a polymorphic, type-sensitive deep equivalence comparison of any
-    two values.
-
-    <p>As a basic principle, any value is equivalent to itself (as in
-    identity), any boxed version of itself (as a <code>new Number(10)</code> is
-    to 10), and any deep clone of itself.
-
-    <p>Equivalence has the following properties:
-
-    <ul>
-        <li><strong>polymorphic:</strong>
-            If the given object is an instance of a type that implements a
-            methods named "equals", this function defers to the method.  So,
-            this function can safely compare any values regardless of type,
-            including undefined, null, numbers, strings, any pair of objects
-            where either implements "equals", or object literals that may even
-            contain an "equals" key.
-        <li><strong>type-sensitive:</strong>
-            Incomparable types are not equal.  No object is equivalent to any
-            array.  No string is equal to any other number.
-        <li><strong>deep:</strong>
-            Collections with equivalent content are equivalent, recursively.
-        <li><strong>equivalence:</strong>
-            Identical values and objects are equivalent, but so are collections
-            that contain equivalent content.  Whether order is important varies
-            by type.  For Arrays and lists, order is important.  For Objects,
-            maps, and sets, order is not important.  Boxed objects are mutally
-            equivalent with their unboxed values, by virtue of the standard
-            <code>valueOf</code> method.
-    </ul>
-    @param this
-    @param that
-    @returns {Boolean} whether the values are deeply equivalent
-    @function external:Object.equals
-*/
-Object.equals = function (a, b, equals, memo) {
-    equals = equals || Object.equals;
-    // unbox objects, but do not confuse object literals
-    a = Object.getValueOf(a);
-    b = Object.getValueOf(b);
-    if (a === b)
-        return true;
-    if (Object.isObject(a)) {
-        memo = memo || new WeakMap();
-        if (memo.has(a)) {
-            return true;
-        }
-        memo.set(a, true);
-    }
-    if (Object.isObject(a) && typeof a.equals === "function") {
-        return a.equals(b, equals, memo);
-    }
-    // commutative
-    if (Object.isObject(b) && typeof b.equals === "function") {
-        return b.equals(a, equals, memo);
-    }
-    if (Object.isObject(a) && Object.isObject(b)) {
-        if (Object.getPrototypeOf(a) === Object.prototype && Object.getPrototypeOf(b) === Object.prototype) {
-            for (var name in a) {
-                if (!equals(a[name], b[name], equals, memo)) {
-                    return false;
-                }
-            }
-            for (var name in b) {
-                if (!(name in a) || !equals(b[name], a[name], equals, memo)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-    // NaN !== NaN, but they are equal.
-    // NaNs are the only non-reflexive value, i.e., if x !== x,
-    // then x is a NaN.
-    // isNaN is broken: it converts its argument to number, so
-    // isNaN("foo") => true
-    // We have established that a !== b, but if a !== a && b !== b, they are
-    // both NaN.
-    if (a !== a && b !== b)
-        return true;
-    if (!a || !b)
-        return a === b;
-    return false;
-};
-
-// Because a return value of 0 from a `compare` function  may mean either
-// "equals" or "is incomparable", `equals` cannot be defined in terms of
-// `compare`.  However, `compare` *can* be defined in terms of `equals` and
-// `lessThan`.  Again however, more often it would be desirable to implement
-// all of the comparison functions in terms of compare rather than the other
-// way around.
-
-/**
-    Determines the order in which any two objects should be sorted by returning
-    a number that has an analogous relationship to zero as the left value to
-    the right.  That is, if the left is "less than" the right, the returned
-    value will be "less than" zero, where "less than" may be any other
-    transitive relationship.
-
-    <p>Arrays are compared by the first diverging values, or by length.
-
-    <p>Any two values that are incomparable return zero.  As such,
-    <code>equals</code> should not be implemented with <code>compare</code>
-    since incomparability is indistinguishable from equality.
-
-    <p>Sorts strings lexicographically.  This is not suitable for any
-    particular international setting.  Different locales sort their phone books
-    in very different ways, particularly regarding diacritics and ligatures.
-
-    <p>If the given object is an instance of a type that implements a method
-    named "compare", this function defers to the instance.  The method does not
-    need to be an owned property to distinguish it from an object literal since
-    object literals are incomparable.  Unlike <code>Object</code> however,
-    <code>Array</code> implements <code>compare</code>.
-
-    @param {Any} left
-    @param {Any} right
-    @returns {Number} a value having the same transitive relationship to zero
-    as the left and right values.
-    @function external:Object.compare
-*/
-Object.compare = function (a, b) {
-    // unbox objects, but do not confuse object literals
-    // mercifully handles the Date case
-    a = Object.getValueOf(a);
-    b = Object.getValueOf(b);
-    if (a === b)
-        return 0;
-    var aType = typeof a;
-    var bType = typeof b;
-    if (aType === "number" && bType === "number")
-        return a - b;
-    if (aType === "string" && bType === "string")
-        return a < b ? -Infinity : Infinity;
-        // the possibility of equality elimiated above
-    if (a && typeof a.compare === "function")
-        return a.compare(b);
-    // not commutative, the relationship is reversed
-    if (b && typeof b.compare === "function")
-        return -b.compare(a);
-    return 0;
-};
-
-/**
-    Creates a deep copy of any value.  Values, being immutable, are
-    returned without alternation.  Forwards to <code>clone</code> on
-    objects and arrays.
-
-    @function external:Object.clone
-    @param {Any} value a value to clone
-    @param {Number} depth an optional traversal depth, defaults to infinity.
-    A value of <code>0</code> means to make no clone and return the value
-    directly.
-    @param {Map} memo an optional memo of already visited objects to preserve
-    reference cycles.  The cloned object will have the exact same shape as the
-    original, but no identical objects.  Te map may be later used to associate
-    all objects in the original object graph with their corresponding member of
-    the cloned graph.
-    @returns a copy of the value
-*/
-Object.clone = function (value, depth, memo) {
-    value = Object.getValueOf(value);
-    memo = memo || new WeakMap();
-    if (depth === undefined) {
-        depth = Infinity;
-    } else if (depth === 0) {
-        return value;
-    }
-    if (typeof value === "function") {
-        return value;
-    } else if (Object.isObject(value)) {
-        if (!memo.has(value)) {
-            if (value && typeof value.clone === "function") {
-                memo.set(value, value.clone(depth, memo));
-            } else {
-                var prototype = Object.getPrototypeOf(value);
-                if (prototype === null || prototype === Object.prototype) {
-                    var clone = Object.create(prototype);
-                    memo.set(value, clone);
-                    for (var key in value) {
-                        clone[key] = Object.clone(value[key], depth - 1, memo);
-                    }
-                } else {
-                    throw new Error("Can't clone " + value);
-                }
-            }
-        }
-        return memo.get(value);
-    }
-    return value;
-};
-
-/**
-    Removes all properties owned by this object making the object suitable for
-    reuse.
-
-    @function external:Object.clear
-    @returns this
-*/
-Object.clear = function (object) {
-    if (object && typeof object.clear === "function") {
-        object.clear();
-    } else {
-        var keys = Object.keys(object),
-            i = keys.length;
-        while (i) {
-            i--;
-            delete object[keys[i]];
-        }
-    }
-    return object;
-};
-
-
-},{"weak-map":9}],13:[function(require,module,exports){
-
-/**
-    accepts a string; returns the string with regex metacharacters escaped.
-    the returned string can safely be used within a regex to match a literal
-    string. escaped characters are [, ], {, }, (, ), -, *, +, ?, ., \, ^, $,
-    |, #, [comma], and whitespace.
-*/
-if (!RegExp.escape) {
-    var special = /[-[\]{}()*+?.\\^$|,#\s]/g;
-    RegExp.escape = function (string) {
-        return string.replace(special, "\\$&");
-    };
-}
-
-
 },{}],14:[function(require,module,exports){
-
-var Array = require("./shim-array");
-var Object = require("./shim-object");
-var Function = require("./shim-function");
-var RegExp = require("./shim-regexp");
-
-
-},{"./shim-array":10,"./shim-function":11,"./shim-object":12,"./shim-regexp":13}],15:[function(require,module,exports){
-module.exports = require("weak-map");
-
-},{"weak-map":9}],16:[function(require,module,exports){
 (function (process){
 /* vim:ts=4:sts=4:sw=4: */
 /*!
@@ -3570,9 +1939,8 @@ try {
 var qStartingLine = captureLine();
 var qFileName;
 
-require("collections/shim");
-var WeakMap = require("collections/weak-map");
-var Iterator = require("collections/iterator");
+var WeakMap = require("weak-map");
+var iterate = require("pop-iterate");
 var asap = require("asap");
 
 function isObject(value) {
@@ -4806,7 +3174,7 @@ Fulfilled.prototype.keys = function Fulfilled_keys() {
 };
 
 Fulfilled.prototype.iterate = function Fulfilled_iterate() {
-    return new Iterator(this.value);
+    return iterate(this.value);
 };
 
 Fulfilled.prototype.pull = function Fulfilled_pull() {
@@ -5052,7 +3420,7 @@ Deferred.prototype.makeNodeResolver = function (unpack) {
                 resolve(Q_reject(error));
             } else {
                 var value = {};
-                for (var index in unpack) {
+                for (var index = 0; index < unpack.length; index++) {
                     value[unpack[index]] = arguments[index + 1];
                 }
                 resolve(value);
@@ -5332,20 +3700,16 @@ Promise.prototype.nmcall = deprecate(Promise.prototype.ninvoke, "nmcall", "q/nod
 var qEndingLine = captureLine();
 
 
-}).call(this,require("1YiZ5S"))
-},{"1YiZ5S":4,"asap":5,"collections/iterator":8,"collections/shim":14,"collections/weak-map":15}],17:[function(require,module,exports){
-window.http = require('./Http');
-
-
-},{"./Http":26}],18:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":4,"asap":7,"pop-iterate":12,"weak-map":13}],15:[function(require,module,exports){
 var BaseExtension, EventEmitter,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 EventEmitter = require('events').EventEmitter;
 
-BaseExtension = (function(_super) {
-  __extends(BaseExtension, _super);
+BaseExtension = (function(superClass) {
+  extend(BaseExtension, superClass);
 
   function BaseExtension() {
     return BaseExtension.__super__.constructor.apply(this, arguments);
@@ -5365,23 +3729,24 @@ BaseExtension = (function(_super) {
 module.exports = BaseExtension;
 
 
-},{"events":3}],19:[function(require,module,exports){
+
+},{"events":6}],16:[function(require,module,exports){
 var $, BaseExtension, Forms,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseExtension = require('./BaseExtension');
 
 $ = null;
 
-Forms = (function(_super) {
-  __extends(Forms, _super);
+Forms = (function(superClass) {
+  extend(Forms, superClass);
 
   Forms.EVENTS_NAMESPACE = 'http-ext-forms';
 
   function Forms(jQuery) {
-    this.onFormSubmitted = __bind(this.onFormSubmitted, this);
+    this.onFormSubmitted = bind(this.onFormSubmitted, this);
     $ = jQuery;
     $(document).on('submit.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax)', this.onFormSubmitted);
     $(document).on('click.' + Forms.EVENTS_NAMESPACE, 'form.ajax:not(.not-ajax) input[type="submit"]', this.onFormSubmitted);
@@ -5389,7 +3754,7 @@ Forms = (function(_super) {
   }
 
   Forms.prototype.onFormSubmitted = function(e) {
-    var action, el, form, i, name, options, sendValues, val, value, values, _i, _len;
+    var action, el, form, i, j, len, name, options, sendValues, val, value, values;
     e.preventDefault();
     if (this.http === null) {
       throw new Error('Please add Forms extension into http object with addExtension method.');
@@ -5408,7 +3773,7 @@ Forms = (function(_super) {
       return null;
     }
     values = form.serializeArray();
-    for (i = _i = 0, _len = values.length; _i < _len; i = ++_i) {
+    for (i = j = 0, len = values.length; j < len; i = ++j) {
       value = values[i];
       name = value.name;
       if (typeof sendValues[name] === 'undefined') {
@@ -5441,10 +3806,11 @@ Forms = (function(_super) {
 module.exports = Forms;
 
 
-},{"./BaseExtension":18}],20:[function(require,module,exports){
+
+},{"./BaseExtension":15}],17:[function(require,module,exports){
 var $, BaseExtension, Links, hasAttr,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseExtension = require('./BaseExtension');
 
@@ -5456,8 +3822,8 @@ hasAttr = function(el, name) {
   return typeof attr !== 'undefined' && attr !== false;
 };
 
-Links = (function(_super) {
-  __extends(Links, _super);
+Links = (function(superClass) {
+  extend(Links, superClass);
 
   Links.HISTORY_API_ATTRIBUTE = 'data-history-api';
 
@@ -5496,15 +3862,16 @@ Links = (function(_super) {
 module.exports = Links;
 
 
-},{"./BaseExtension":18}],21:[function(require,module,exports){
+
+},{"./BaseExtension":15}],18:[function(require,module,exports){
 var BaseExtension, Loading,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseExtension = require('./BaseExtension');
 
-Loading = (function(_super) {
-  __extends(Loading, _super);
+Loading = (function(superClass) {
+  extend(Loading, superClass);
 
   function Loading() {
     return Loading.__super__.constructor.apply(this, arguments);
@@ -5525,15 +3892,16 @@ Loading = (function(_super) {
 module.exports = Loading;
 
 
-},{"./BaseExtension":18}],22:[function(require,module,exports){
+
+},{"./BaseExtension":15}],19:[function(require,module,exports){
 var BaseExtension, Offline,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseExtension = require('./BaseExtension');
 
-Offline = (function(_super) {
-  __extends(Offline, _super);
+Offline = (function(superClass) {
+  extend(Offline, superClass);
 
   Offline.HTTP_TYPE = 'HEAD';
 
@@ -5605,15 +3973,16 @@ Offline = (function(_super) {
 module.exports = Offline;
 
 
-},{"./BaseExtension":18}],23:[function(require,module,exports){
+
+},{"./BaseExtension":15}],20:[function(require,module,exports){
 var BaseExtension, Redirect,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseExtension = require('./BaseExtension');
 
-Redirect = (function(_super) {
-  __extends(Redirect, _super);
+Redirect = (function(superClass) {
+  extend(Redirect, superClass);
 
   function Redirect() {
     return Redirect.__super__.constructor.apply(this, arguments);
@@ -5632,11 +4001,12 @@ Redirect = (function(_super) {
 module.exports = Redirect;
 
 
-},{"./BaseExtension":18}],24:[function(require,module,exports){
+
+},{"./BaseExtension":15}],21:[function(require,module,exports){
 var BaseExtension, Snippets, hasAttr,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseExtension = require('./BaseExtension');
 
@@ -5646,31 +4016,31 @@ hasAttr = function(el, name) {
   return attr !== null && typeof attr !== 'undefined' && attr !== false;
 };
 
-Snippets = (function(_super) {
-  __extends(Snippets, _super);
+Snippets = (function(superClass) {
+  extend(Snippets, superClass);
 
   function Snippets() {
-    this.success = __bind(this.success, this);
+    this.success = bind(this.success, this);
     return Snippets.__super__.constructor.apply(this, arguments);
   }
 
   Snippets.APPEND_ATTRIBUTE = 'data-append';
 
   Snippets.prototype.success = function(response) {
-    var el, html, id, _ref, _results;
+    var el, html, id, ref, results;
     if (typeof response.data.snippets !== 'undefined') {
-      _ref = response.data.snippets;
-      _results = [];
-      for (id in _ref) {
-        html = _ref[id];
+      ref = response.data.snippets;
+      results = [];
+      for (id in ref) {
+        html = ref[id];
         el = document.getElementById(id);
         if (hasAttr(el, Snippets.APPEND_ATTRIBUTE)) {
-          _results.push(this.appendSnippet(el, html));
+          results.push(this.appendSnippet(el, html));
         } else {
-          _results.push(this.updateSnippet(el, html));
+          results.push(this.updateSnippet(el, html));
         }
       }
-      return _results;
+      return results;
     }
   };
 
@@ -5689,7 +4059,8 @@ Snippets = (function(_super) {
 module.exports = Snippets;
 
 
-},{"./BaseExtension":18}],25:[function(require,module,exports){
+
+},{"./BaseExtension":15}],22:[function(require,module,exports){
 var Helpers;
 
 Helpers = (function() {
@@ -5701,38 +4072,38 @@ Helpers = (function() {
   };
 
   Helpers.buildQuery = function(params) {
-    var add, buildParams, key, result, value, _i, _len;
+    var add, buildParams, j, key, len, result, value;
     result = [];
     add = function(key, value) {
       value = typeof value === 'function' ? value() : (value === null ? '' : value);
       return result.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
     };
     buildParams = function(key, value) {
-      var i, k, v, _i, _len, _results, _results1;
+      var i, j, k, len, results, results1, v;
       if (Object.prototype.toString.call(value) === '[object Array]') {
-        _results = [];
-        for (i = _i = 0, _len = value.length; _i < _len; i = ++_i) {
+        results = [];
+        for (i = j = 0, len = value.length; j < len; i = ++j) {
           v = value[i];
           if (/\[\]$/.test(key) === true) {
-            _results.push(add(key, v));
+            results.push(add(key, v));
           } else {
-            _results.push(buildParams(key + '[' + (typeof v === 'object' ? i : '') + ']', v));
+            results.push(buildParams(key + '[' + (typeof v === 'object' ? i : '') + ']', v));
           }
         }
-        return _results;
+        return results;
       } else if (Object.prototype.toString.call(value) === '[object Object]') {
-        _results1 = [];
+        results1 = [];
         for (k in value) {
           v = value[k];
-          _results1.push(buildParams(key + '[' + k + ']', v));
+          results1.push(buildParams(key + '[' + k + ']', v));
         }
-        return _results1;
+        return results1;
       } else {
         return add(key, value);
       }
     };
     if (Object.prototype.toString.call(params) === '[object Array]') {
-      for (key = _i = 0, _len = params.length; _i < _len; key = ++_i) {
+      for (key = j = 0, len = params.length; j < len; key = ++j) {
         value = params[key];
         add(key, value);
       }
@@ -5752,7 +4123,8 @@ Helpers = (function() {
 module.exports = Helpers;
 
 
-},{}],26:[function(require,module,exports){
+
+},{}],23:[function(require,module,exports){
 var Http, createInstance, http;
 
 Http = require('./_Http');
@@ -5784,17 +4156,18 @@ http.createInstance = createInstance;
 module.exports = http;
 
 
-},{"./Extensions/Forms":19,"./Extensions/Links":20,"./Extensions/Loading":21,"./Extensions/Offline":22,"./Extensions/Redirect":23,"./Extensions/Snippets":24,"./Helpers":25,"./Mocks/Http":27,"./Xhr":33,"./_Http":34,"q":16}],27:[function(require,module,exports){
+
+},{"./Extensions/Forms":16,"./Extensions/Links":17,"./Extensions/Loading":18,"./Extensions/Offline":19,"./Extensions/Redirect":20,"./Extensions/Snippets":21,"./Helpers":22,"./Mocks/Http":24,"./Xhr":30,"./_Http":31,"q":14}],24:[function(require,module,exports){
 var Http, OriginalHttp, Request, createRequest,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 Request = require('./Request');
 
 OriginalHttp = require('../_Http');
 
 createRequest = function(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix, responseData, responseHeaders, responseStatus, responseTimeout) {
-  var request, _ref;
+  var ref, request;
   if (responseHeaders == null) {
     responseHeaders = {};
   }
@@ -5807,7 +4180,7 @@ createRequest = function(requestUrl, requestType, requestData, requestJsonp, req
   if (typeof responseHeaders['content-type'] === 'undefined') {
     responseHeaders['content-type'] = 'text/plain';
   }
-  if ((responseHeaders['content-type'].match(/application\/json/) !== null || this.jsonPrefix !== null) && ((_ref = Object.prototype.toString.call(responseData)) === '[object Array]' || _ref === '[object Object]')) {
+  if ((responseHeaders['content-type'].match(/application\/json/) !== null || this.jsonPrefix !== null) && ((ref = Object.prototype.toString.call(responseData)) === '[object Array]' || ref === '[object Object]')) {
     responseData = JSON.stringify(responseData);
   }
   request = new Request(requestUrl, requestType, requestData, requestJsonp, requestJsonPrefix);
@@ -5822,8 +4195,8 @@ createRequest = function(requestUrl, requestType, requestData, requestJsonp, req
   return request;
 };
 
-Http = (function(_super) {
-  __extends(Http, _super);
+Http = (function(superClass) {
+  extend(Http, superClass);
 
   Http.prototype._originalCreateRequest = null;
 
@@ -5887,17 +4260,18 @@ Http = (function(_super) {
 module.exports = Http;
 
 
-},{"../_Http":34,"./Request":28}],28:[function(require,module,exports){
+
+},{"../_Http":31,"./Request":25}],25:[function(require,module,exports){
 var OriginalRequest, Request, Xhr,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 OriginalRequest = require('../Request');
 
 Xhr = require('./Xhr');
 
-Request = (function(_super) {
-  __extends(Request, _super);
+Request = (function(superClass) {
+  extend(Request, superClass);
 
   function Request() {
     return Request.__super__.constructor.apply(this, arguments);
@@ -5914,17 +4288,18 @@ Request = (function(_super) {
 module.exports = Request;
 
 
-},{"../Request":31,"./Xhr":29}],29:[function(require,module,exports){
+
+},{"../Request":28,"./Xhr":26}],26:[function(require,module,exports){
 var OriginalXhr, Xhr, XmlHttpMocks,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 OriginalXhr = require('../Xhr');
 
 XmlHttpMocks = require('../../external/XmlHttpRequest');
 
-Xhr = (function(_super) {
-  __extends(Xhr, _super);
+Xhr = (function(superClass) {
+  extend(Xhr, superClass);
 
   function Xhr() {
     return Xhr.__super__.constructor.apply(this, arguments);
@@ -5956,17 +4331,18 @@ Xhr = (function(_super) {
 module.exports = Xhr;
 
 
-},{"../../external/XmlHttpRequest":1,"../Xhr":33}],30:[function(require,module,exports){
+
+},{"../../external/XmlHttpRequest":2,"../Xhr":30}],27:[function(require,module,exports){
 var EventEmitter, Q, Queue,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 EventEmitter = require('events').EventEmitter;
 
 Q = require('q');
 
-Queue = (function(_super) {
-  __extends(Queue, _super);
+Queue = (function(superClass) {
+  extend(Queue, superClass);
 
   Queue.prototype.requests = null;
 
@@ -5977,12 +4353,12 @@ Queue = (function(_super) {
   }
 
   Queue.prototype.hasWritableRequests = function() {
-    var request, _i, _len, _ref, _ref1;
+    var i, len, ref, ref1, request;
     if (this.running) {
-      _ref = this.requests;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        request = _ref[_i];
-        if ((_ref1 = request.request.type) === 'PUT' || _ref1 === 'POST' || _ref1 === 'DELETE') {
+      ref = this.requests;
+      for (i = 0, len = ref.length; i < len; i++) {
+        request = ref[i];
+        if ((ref1 = request.request.type) === 'PUT' || ref1 === 'POST' || ref1 === 'DELETE') {
           return true;
         }
       }
@@ -6077,17 +4453,18 @@ Queue = (function(_super) {
 module.exports = Queue;
 
 
-},{"events":3,"q":16}],31:[function(require,module,exports){
+
+},{"events":6,"q":14}],28:[function(require,module,exports){
 var EventEmitter, Request, Xhr,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 Xhr = require('./Xhr');
 
 EventEmitter = require('events').EventEmitter;
 
-Request = (function(_super) {
-  __extends(Request, _super);
+Request = (function(superClass) {
+  extend(Request, superClass);
 
   Request.prototype.url = null;
 
@@ -6105,16 +4482,16 @@ Request = (function(_super) {
 
   Request.prototype.aborted = false;
 
-  function Request(url, type, data, jsonp, jsonPrefix) {
-    var _ref;
-    this.url = url;
-    this.type = type != null ? type : 'GET';
-    this.data = data != null ? data : null;
-    this.jsonp = jsonp != null ? jsonp : false;
-    this.jsonPrefix = jsonPrefix != null ? jsonPrefix : null;
+  function Request(url1, type1, data1, jsonp1, jsonPrefix1) {
+    var ref;
+    this.url = url1;
+    this.type = type1 != null ? type1 : 'GET';
+    this.data = data1 != null ? data1 : null;
+    this.jsonp = jsonp1 != null ? jsonp1 : false;
+    this.jsonPrefix = jsonPrefix1 != null ? jsonPrefix1 : null;
     Request.__super__.constructor.apply(this, arguments);
     this.type = this.type.toUpperCase();
-    if ((_ref = this.type) !== 'GET' && _ref !== 'POST' && _ref !== 'PUT' && _ref !== 'DELETE' && _ref !== 'HEAD' && _ref !== 'CONNECT' && _ref !== 'OPTIONS' && _ref !== 'TRACE') {
+    if ((ref = this.type) !== 'GET' && ref !== 'POST' && ref !== 'PUT' && ref !== 'DELETE' && ref !== 'HEAD' && ref !== 'CONNECT' && ref !== 'OPTIONS' && ref !== 'TRACE') {
       throw new Error("Http request: type must be GET, POST, PUT, DELETE, HEAD, CONNECT, OPTIONS or TRACE, " + this.type + " given");
     }
     this.xhr = this.createXhr(this.url, this.type, this.data, this.jsonp, this.jsonPrefix);
@@ -6190,7 +4567,8 @@ Request = (function(_super) {
 module.exports = Request;
 
 
-},{"./Xhr":33,"events":3}],32:[function(require,module,exports){
+
+},{"./Xhr":30,"events":6}],29:[function(require,module,exports){
 var Response;
 
 Response = (function() {
@@ -6217,10 +4595,11 @@ Response = (function() {
 module.exports = Response;
 
 
-},{}],33:[function(require,module,exports){
+
+},{}],30:[function(require,module,exports){
 var EventEmitter, Helpers, Q, Response, Xhr, escape,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 Helpers = require('./Helpers');
 
@@ -6232,8 +4611,8 @@ Q = require('q');
 
 escape = require('escape-regexp');
 
-Xhr = (function(_super) {
-  __extends(Xhr, _super);
+Xhr = (function(superClass) {
+  extend(Xhr, superClass);
 
   Xhr.JSONP_METHOD_PREFIX = '__browser_http_jsonp_callback_';
 
@@ -6253,11 +4632,11 @@ Xhr = (function(_super) {
 
   Xhr.prototype.jsonPrefix = null;
 
-  function Xhr(url, type, data, jsonp, jsonPrefix) {
+  function Xhr(url, type, data1, jsonp, jsonPrefix) {
     var method;
     this.url = url;
     this.type = type != null ? type : 'GET';
-    this.data = data != null ? data : null;
+    this.data = data1 != null ? data1 : null;
     this.jsonp = jsonp != null ? jsonp : false;
     this.jsonPrefix = jsonPrefix != null ? jsonPrefix : null;
     this.response = new Response;
@@ -6292,7 +4671,7 @@ Xhr = (function(_super) {
     }
     this.xhr.onreadystatechange = (function(_this) {
       return function() {
-        var contentType, error, isSuccess, prefix;
+        var contentType, data, error, isSuccess, prefix;
         _this.response.state = _this.xhr.readyState;
         if (_this.response.state === 4) {
           _this.response.status = _this.xhr.status;
@@ -6323,7 +4702,7 @@ Xhr = (function(_super) {
             return _this.emit('success', _this.response);
           } else {
             _this.response.statusText = _this.xhr.statusText;
-            error = new Error("Can not load " + url + " address");
+            error = new Error("Can not load " + _this.url + " address");
             error.response = _this.response;
             return _this.emit('error', error, _this.response);
           }
@@ -6392,11 +4771,12 @@ Xhr = (function(_super) {
 module.exports = Xhr;
 
 
-},{"./Helpers":25,"./Response":32,"escape-regexp":2,"events":3,"q":16}],34:[function(require,module,exports){
+
+},{"./Helpers":22,"./Response":29,"escape-regexp":5,"events":6,"q":14}],31:[function(require,module,exports){
 var BaseExtension, EventEmitter, Http, Q, Queue, Request,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice;
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  slice = [].slice;
 
 Request = require('./Request');
 
@@ -6408,8 +4788,8 @@ BaseExtension = require('./Extensions/BaseExtension');
 
 EventEmitter = require('events').EventEmitter;
 
-Http = (function(_super) {
-  __extends(Http, _super);
+Http = (function(superClass) {
+  extend(Http, superClass);
 
   Http.prototype.extensions = null;
 
@@ -6432,35 +4812,35 @@ Http = (function(_super) {
     this.on('send', (function(_this) {
       return function() {
         var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
         return _this.callExtensions('send', args);
       };
     })(this));
     this.on('afterSend', (function(_this) {
       return function() {
         var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
         return _this.callExtensions('afterSend', args);
       };
     })(this));
     this.on('complete', (function(_this) {
       return function() {
         var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
         return _this.callExtensions('complete', args);
       };
     })(this));
     this.on('error', (function(_this) {
       return function() {
         var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
         return _this.callExtensions('error', args);
       };
     })(this));
     this.on('success', (function(_this) {
       return function() {
         var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
         return _this.callExtensions('success', args);
       };
     })(this));
@@ -6471,7 +4851,7 @@ Http = (function(_super) {
   };
 
   Http.prototype.request = function(url, options) {
-    var request, _ref;
+    var ref, request;
     if (options == null) {
       options = {};
     }
@@ -6516,7 +4896,7 @@ Http = (function(_super) {
         return _this.emit('complete', err, response, request);
       };
     })(this));
-    if (this.useQueue && (((_ref = options.type) === 'PUT' || _ref === 'POST' || _ref === 'DELETE') || options.parallel === false || this.queue.hasWritableRequests())) {
+    if (this.useQueue && (((ref = options.type) === 'PUT' || ref === 'POST' || ref === 'DELETE') || options.parallel === false || this.queue.hasWritableRequests())) {
       return this.queue.addAndSend(request);
     } else {
       return request.send();
@@ -6614,18 +4994,18 @@ Http = (function(_super) {
   };
 
   Http.prototype.callExtensions = function(event, args) {
-    var ext, name, _ref, _results;
-    _ref = this.extensions;
-    _results = [];
-    for (name in _ref) {
-      ext = _ref[name];
+    var ext, name, ref, results;
+    ref = this.extensions;
+    results = [];
+    for (name in ref) {
+      ext = ref[name];
       if (typeof ext[event] !== 'undefined') {
-        _results.push(ext[event].apply(ext[event], args));
+        results.push(ext[event].apply(ext[event], args));
       } else {
-        _results.push(void 0);
+        results.push(void 0);
       }
     }
-    return _results;
+    return results;
   };
 
   return Http;
@@ -6635,4 +5015,5 @@ Http = (function(_super) {
 module.exports = Http;
 
 
-},{"./Extensions/BaseExtension":18,"./Queue":30,"./Request":31,"events":3,"q":16}]},{},[17])
+
+},{"./Extensions/BaseExtension":15,"./Queue":27,"./Request":28,"events":6,"q":14}]},{},[1]);
