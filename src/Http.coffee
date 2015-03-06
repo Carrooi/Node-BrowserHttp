@@ -6,7 +6,6 @@ createInstance = ->
 
 	http.Helpers = require './Helpers'
 	http.Xhr = require './Xhr'
-	http._Q = require 'q'
 
 	http.Extensions =
 		Forms: require './Extensions/Forms'

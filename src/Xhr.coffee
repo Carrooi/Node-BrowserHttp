@@ -1,7 +1,6 @@
 Helpers = require './Helpers'
 Response = require './Response'
 EventEmitter = require('events').EventEmitter
-Q = require 'q'
 escape = require 'escape-regexp'
 
 class Xhr extends EventEmitter
@@ -130,24 +129,22 @@ class Xhr extends EventEmitter
 		return @
 
 
-	send: ->
-		deferred = Q.defer()
-
+	send: (fn) ->
 		@emit 'send', @response
 
 		@on 'success', (response) =>
 			@emit 'complete', null, response
-			deferred.resolve(response)
+			fn(response, null)
 
 		@on 'error', (err, response) =>
 			@emit 'complete', err, response
-			deferred.reject(err)
+			fn(null, err)
 
 		@xhr.send(@data)
 
 		@emit 'afterSend', @response
 
-		return deferred.promise
+		return @
 
 
 	abort: ->

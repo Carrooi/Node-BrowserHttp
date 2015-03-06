@@ -23,7 +23,6 @@
 	},
 	"main": "./lib/Http.js",
 	"dependencies": {
-		"q": "~2.0.2",
 		"events": "~1.0.2",
 		"escape-regexp": "~0.0.1"
 	},

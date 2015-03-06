@@ -1,5 +1,4 @@
 Http = null
-Q = window.http._Q
 
 
 describe 'Queue', ->
@@ -11,10 +10,10 @@ describe 'Queue', ->
 	it 'should send one request', (done) ->
 		Http.receive('test')
 
-		Http.get('localhost').then( (response) ->
+		Http.get('localhost', (response) ->
 			expect(response.data).to.be.equal('test')
 			done()
-		).done()
+		)
 
 	it 'should send all GET requests synchronously', (done) ->
 		data = ''
@@ -49,7 +48,6 @@ describe 'Queue', ->
 		expect(Http.queue.requests.length).to.be.equal(5)
 
 	it 'should send all GET requests assynchronously', (done) ->
-		promises = []
 		start = (new Date).getTime()
 		timeout =
 			min: 50
@@ -57,28 +55,29 @@ describe 'Queue', ->
 
 		Http.receiveDataFromRequestAndSendBack('content-type': 'application/json', null, timeout)
 
-		promises.push Http.get('localhost', data: 1)
-		promises.push Http.get('localhost', data: 2)
-		promises.push Http.get('localhost', data: 3)
-		promises.push Http.get('localhost', data: 4)
+		responses = []
+		processResponse = (response) ->
+			responses.push response.data
+
+			if responses.length == 4
+				elapsed = (new Date).getTime() - start
+
+				expect(responses).to.have.members([1, 2, 3, 4])
+				expect(elapsed).to.be.above(timeout.min - 1).and.to.be.below(timeout.max + 5)
+
+				done()
+
+		Http.get('localhost', {data: 1}, processResponse)
+		Http.get('localhost', {data: 2}, processResponse)
+		Http.get('localhost', {data: 3}, processResponse)
+		Http.get('localhost', {data: 4}, processResponse)
 
 		expect(Http.queue.requests.length).to.be.equal(0)
-
-		Q.all(promises).then( (responses) ->
-			elapsed = (new Date).getTime() - start
-			data = []
-			data.push(response.data) for response in responses
-
-			expect(data).to.have.members([1, 2, 3, 4])
-			expect(elapsed).to.be.above(timeout.min - 1).and.to.be.below(timeout.max + 5)
-
-			done()
-		).done()
 
 	it 'should remove all pending requests', (done) ->
 		Http.receive(null, null, null, 5)
 
-		Http.post('').then( -> done() )
+		Http.post('', -> done() )
 		Http.post('')
 		Http.post('')
 		Http.post('')

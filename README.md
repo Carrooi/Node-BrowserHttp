@@ -8,7 +8,9 @@
 
 Simple (but advanced) library for working with http in browser (like for example jQuery.ajax).
 
-http-browser uses [q](https://github.com/kriskowal/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
+http-browser is instance of [EventEmitter](http://nodejs.org/api/events.html).
+
+**Newer versions uses callbacks instead of promises!!!**
 
 ## Installation
 
@@ -31,10 +33,12 @@ var http = require('browser-http');
 // or standalone version:
 var http = window.http;		// you can of course just call http directly without window at the beginning
 
-http.request('http://www.google.com', {type: 'GET'}).then(function(response) {
-	console.log(response.text);
-}, function(e) {
-	throw e;		// some error occurred
+http.request('http://www.google.com', {type: 'GET'}, function(response, err) {
+	if (!err) {
+		console.log(response.text);
+	} else {
+		throw e;		// some error occurred
+	}
 });
 ```
 
@@ -91,7 +95,7 @@ If content-type in response header is `application/json` then your data will be 
 If you can not set this header on your server, than you can use `*Json` methods.
 
 ```
-http.getJson('http://www.google.com/some.json').then(function(response) {
+http.getJson('http://www.google.com/some.json', function(response, err) {
 	console.log(response.data);		// output will be object
 });
 
@@ -113,7 +117,7 @@ http.useQueue = false;
 It is very easy to work with jsonp requests.
 
 ```
-http.jsonp('http://some.url.com').then(function(response) {
+http.jsonp('http://some.url.com', function(response, err) {
 	console.log(response.data);
 });
 ```
@@ -128,7 +132,7 @@ Now if you want to use same technique just like Google or eg. Facebook do, you o
 ```
 http.get('http://some.url.com', {
 	jsonPrefix: 'while(1);'
-}).then(function(response) {
+}, function(response, err) {
 	console.log(response.data);
 });
 ```
@@ -277,7 +281,7 @@ beforeEach(function() {		// create new mocked Http object for each test case
 it('should load some data', function(done) {
 	Http.receive('some data', {'content-type': 'text/plain'}, 200);
 
-	Http.get('localhost').then(function(response) {
+	Http.get('localhost', function(response, err) {
 		expect(response.data).to.be.equal('some data');
 		done();
 	});
@@ -289,12 +293,12 @@ it('should load some data and check received data', function(done) {
 	http.receive('some data', {'content-type': 'application/json'});
 
 	Http.once('send', function(response, request) {
-		expect(request.xhr.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
+		expect(request.xhr.url).to.be.equal('localhost?greeting=hello');			// now we can test eg. url with parsed data
 	});
 
-	Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+	Http.get('localhost', {data: {greeting: 'hello'}}, function(response, err) {
 		expect(response.data).to.be.eql({greeting: 'hello'});
-		done()
+    	done();
 	});
 });
 ```
@@ -304,11 +308,11 @@ it('should load some data and check received data', function(done) {
 ```
 Http.receiveDataFromRequestAndSendBack({'content-type': 'application/json'});
 
-Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+Http.get('localhost', {data: {greeting: 'hello'}}, function(response, err) {
 	expect(response.data).to.be.eql({greeting: 'hello'});
 });
 
-Http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
+Http.get('localhost', {data: {greeting: 'good day'}}, function(response, err) {
 	expect(response.data).to.be.eql({greeting: 'good day'});
 });
 ```

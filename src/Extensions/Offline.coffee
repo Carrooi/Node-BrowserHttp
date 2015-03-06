@@ -26,19 +26,20 @@ class Offline extends BaseExtension
 				data:
 					r: Math.floor(Math.random() * 1000000000)
 
-			@http.request(url, options).then( (response) =>
-				if (response.status >= 200 && response.status <= 300) || response.status == 304
-					if @offline
-						@offline = false
-						@http.emit 'connected'
+			@http.request(url, options, (response, err) =>
+				if err
+					if !@offline
+						@offline = true
+						@http.emit 'disconnected'
+				else
+					if (response.status >= 200 && response.status <= 300) || response.status == 304
+						if @offline
+							@offline = false
+							@http.emit 'connected'
 
-				else if !@offline
-					@offline = true
-					@http.emit 'disconnected'
-			).catch( =>
-				if !@offline
-					@offline = true
-					@http.emit 'disconnected'
+					else if !@offline
+						@offline = true
+						@http.emit 'disconnected'
 			)
 		, timeout)
 
