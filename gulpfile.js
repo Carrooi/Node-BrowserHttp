@@ -32,14 +32,14 @@ gulp.task('compile-standalone-develop', function() {
 
 	return bundler.bundle()
 		.pipe(source('http.js'))
-		.pipe(gulp.dest('./build'));
+		.pipe(gulp.dest('./dist'));
 });
 
 gulp.task('compile-standalone-minify', ['compile-standalone-develop'], function() {
-	return gulp.src('./build/http.js')
+	return gulp.src('./dist/http.js')
 		.pipe(uglify())
 		.pipe(rename('http.min.js'))
-		.pipe(gulp.dest('./build/'));
+		.pipe(gulp.dest('./dist'));
 });
 
 gulp.task('compile-standalone', ['compile-standalone-develop', 'compile-standalone-minify']);
