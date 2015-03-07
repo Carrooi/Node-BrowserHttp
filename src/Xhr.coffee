@@ -1,5 +1,6 @@
 Helpers = require './Helpers'
 Response = require './Response'
+FakePromise = require './FakePromise'
 EventEmitter = require('events').EventEmitter
 escape = require 'escape-regexp'
 
@@ -144,7 +145,7 @@ class Xhr extends EventEmitter
 
 		@emit 'afterSend', @response
 
-		return @
+		return new FakePromise
 
 
 	abort: ->

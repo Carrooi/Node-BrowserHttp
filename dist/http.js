@@ -3,7 +3,7 @@ window.http = require('./Http');
 
 
 
-},{"./Http":13}],2:[function(require,module,exports){
+},{"./Http":14}],2:[function(require,module,exports){
 /**
  * from https://github.com/philikon/MockHttpRequest
  * thanks
@@ -1177,6 +1177,40 @@ module.exports = Snippets;
 
 
 },{"./BaseExtension":5}],12:[function(require,module,exports){
+var FakePromise;
+
+FakePromise = (function() {
+  function FakePromise() {}
+
+  FakePromise.prototype._error = function() {
+    throw new Error('Please, use callbacks instead of promise pattern.');
+  };
+
+  FakePromise.prototype.then = function() {
+    return this._error();
+  };
+
+  FakePromise.prototype["catch"] = function() {
+    return this._error();
+  };
+
+  FakePromise.prototype.fail = function() {
+    return this._error();
+  };
+
+  FakePromise.prototype.done = function() {
+    return this._error();
+  };
+
+  return FakePromise;
+
+})();
+
+module.exports = FakePromise;
+
+
+
+},{}],13:[function(require,module,exports){
 var Helpers;
 
 Helpers = (function() {
@@ -1240,7 +1274,7 @@ module.exports = Helpers;
 
 
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var Http, createInstance, http;
 
 Http = require('./_Http');
@@ -1272,7 +1306,7 @@ module.exports = http;
 
 
 
-},{"./Extensions/Forms":6,"./Extensions/Links":7,"./Extensions/Loading":8,"./Extensions/Offline":9,"./Extensions/Redirect":10,"./Extensions/Snippets":11,"./Helpers":12,"./Mocks/Http":14,"./Xhr":20,"./_Http":21}],14:[function(require,module,exports){
+},{"./Extensions/Forms":6,"./Extensions/Links":7,"./Extensions/Loading":8,"./Extensions/Offline":9,"./Extensions/Redirect":10,"./Extensions/Snippets":11,"./Helpers":13,"./Mocks/Http":15,"./Xhr":21,"./_Http":22}],15:[function(require,module,exports){
 var Http, OriginalHttp, Request, createRequest,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -1376,7 +1410,7 @@ module.exports = Http;
 
 
 
-},{"../_Http":21,"./Request":15}],15:[function(require,module,exports){
+},{"../_Http":22,"./Request":16}],16:[function(require,module,exports){
 var OriginalRequest, Request, Xhr,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -1404,7 +1438,7 @@ module.exports = Request;
 
 
 
-},{"../Request":18,"./Xhr":16}],16:[function(require,module,exports){
+},{"../Request":19,"./Xhr":17}],17:[function(require,module,exports){
 var OriginalXhr, Xhr, XmlHttpMocks,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -1447,12 +1481,14 @@ module.exports = Xhr;
 
 
 
-},{"../../external/XmlHttpRequest":2,"../Xhr":20}],17:[function(require,module,exports){
-var EventEmitter, Queue,
+},{"../../external/XmlHttpRequest":2,"../Xhr":21}],18:[function(require,module,exports){
+var EventEmitter, FakePromise, Queue,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
 EventEmitter = require('events').EventEmitter;
+
+FakePromise = require('./FakePromise');
 
 Queue = (function(superClass) {
   extend(Queue, superClass);
@@ -1495,7 +1531,7 @@ Queue = (function(superClass) {
     if (!this.running) {
       this.run();
     }
-    return this;
+    return new FakePromise;
   };
 
   Queue.prototype.next = function() {
@@ -1554,7 +1590,7 @@ module.exports = Queue;
 
 
 
-},{"events":4}],18:[function(require,module,exports){
+},{"./FakePromise":12,"events":4}],19:[function(require,module,exports){
 var EventEmitter, Request, Xhr,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -1668,7 +1704,7 @@ module.exports = Request;
 
 
 
-},{"./Xhr":20,"events":4}],19:[function(require,module,exports){
+},{"./Xhr":21,"events":4}],20:[function(require,module,exports){
 var Response;
 
 Response = (function() {
@@ -1696,14 +1732,16 @@ module.exports = Response;
 
 
 
-},{}],20:[function(require,module,exports){
-var EventEmitter, Helpers, Response, Xhr, escape,
+},{}],21:[function(require,module,exports){
+var EventEmitter, FakePromise, Helpers, Response, Xhr, escape,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
 Helpers = require('./Helpers');
 
 Response = require('./Response');
+
+FakePromise = require('./FakePromise');
 
 EventEmitter = require('events').EventEmitter;
 
@@ -1851,7 +1889,7 @@ Xhr = (function(superClass) {
     })(this));
     this.xhr.send(this.data);
     this.emit('afterSend', this.response);
-    return this;
+    return new FakePromise;
   };
 
   Xhr.prototype.abort = function() {
@@ -1868,7 +1906,7 @@ module.exports = Xhr;
 
 
 
-},{"./Helpers":12,"./Response":19,"escape-regexp":3,"events":4}],21:[function(require,module,exports){
+},{"./FakePromise":12,"./Helpers":13,"./Response":20,"escape-regexp":3,"events":4}],22:[function(require,module,exports){
 var BaseExtension, EventEmitter, Http, Queue, Request,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -2014,8 +2052,7 @@ Http = (function(superClass) {
     }
     args = this._optimizeArguments(url, optionsOrFn, fn);
     args.options.type = 'GET';
-    this.request(args.url, args.options, args.fn);
-    return this;
+    return this.request(args.url, args.options, args.fn);
   };
 
   Http.prototype.post = function(url, optionsOrFn, fn) {
@@ -2028,8 +2065,7 @@ Http = (function(superClass) {
     }
     args = this._optimizeArguments(url, optionsOrFn, fn);
     args.options.type = 'POST';
-    this.request(args.url, args.options, args.fn);
-    return this;
+    return this.request(args.url, args.options, args.fn);
   };
 
   Http.prototype.put = function(url, optionsOrFn, fn) {
@@ -2042,8 +2078,7 @@ Http = (function(superClass) {
     }
     args = this._optimizeArguments(url, optionsOrFn, fn);
     args.options.type = 'PUT';
-    this.request(args.url, args.options, args.fn);
-    return this;
+    return this.request(args.url, args.options, args.fn);
   };
 
   Http.prototype["delete"] = function(url, optionsOrFn, fn) {
@@ -2056,8 +2091,7 @@ Http = (function(superClass) {
     }
     args = this._optimizeArguments(url, optionsOrFn, fn);
     args.options.type = 'DELETE';
-    this.request(args.url, args.options, args.fn);
-    return this;
+    return this.request(args.url, args.options, args.fn);
   };
 
   Http.prototype.getJson = function(url, optionsOrFn, fn) {
@@ -2069,13 +2103,12 @@ Http = (function(superClass) {
       fn = null;
     }
     args = this._optimizeArguments(url, optionsOrFn, fn);
-    this.request(args.url, args.options, function(response, err) {
+    return this.request(args.url, args.options, function(response, err) {
       if (!err && typeof response.data === 'string') {
         response.data = JSON.parse(response.data);
       }
       return fn(response, err);
     });
-    return this;
   };
 
   Http.prototype.postJson = function(url, optionsOrFn, fn) {
@@ -2088,13 +2121,12 @@ Http = (function(superClass) {
     }
     args = this._optimizeArguments(url, optionsOrFn, fn);
     args.options.type = 'POST';
-    this.request(args.url, args.options, function(response, err) {
+    return this.request(args.url, args.options, function(response, err) {
       if (!err && typeof response.data === 'string') {
         response.data = JSON.parse(response.data);
       }
       return fn(response, err);
     });
-    return this;
   };
 
   Http.prototype.jsonp = function(url, optionsOrFn, fn) {
@@ -2109,8 +2141,7 @@ Http = (function(superClass) {
     if (typeof args.options.jsonp === 'undefined') {
       args.options.jsonp = true;
     }
-    this.get(args.url, args.options, args.fn);
-    return this;
+    return this.get(args.url, args.options, args.fn);
   };
 
   Http.prototype.isHistoryApiSupported = function() {
@@ -2185,4 +2216,4 @@ module.exports = Http;
 
 
 
-},{"./Extensions/BaseExtension":5,"./Queue":17,"./Request":18,"events":4}]},{},[1]);
+},{"./Extensions/BaseExtension":5,"./Queue":18,"./Request":19,"events":4}]},{},[1]);

@@ -67,72 +67,58 @@ class Http extends EventEmitter
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 		args.options.type = 'GET'
 
-		@request(args.url, args.options, args.fn)
-
-		return @
+		return @request(args.url, args.options, args.fn)
 
 
 	post: (url, optionsOrFn = {}, fn = null) ->
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 		args.options.type = 'POST'
 
-		@request(args.url, args.options, args.fn)
-
-		return @
+		return @request(args.url, args.options, args.fn)
 
 
 	put: (url, optionsOrFn = {}, fn = null) ->
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 		args.options.type = 'PUT'
 
-		@request(args.url, args.options, args.fn)
-
-		return @
+		return @request(args.url, args.options, args.fn)
 
 
 	delete: (url, optionsOrFn = {}, fn = null) ->
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 		args.options.type = 'DELETE'
 
-		@request(args.url, args.options, args.fn)
-
-		return @
+		return @request(args.url, args.options, args.fn)
 
 
 	getJson: (url, optionsOrFn = {}, fn = null) ->
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 
-		@request(args.url, args.options, (response, err) ->
+		return @request(args.url, args.options, (response, err) ->
 			if !err && typeof response.data == 'string'
 				response.data = JSON.parse(response.data)
 
 			fn(response, err)
 		)
-
-		return @
 
 
 	postJson: (url, optionsOrFn = {}, fn = null) ->
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 		args.options.type = 'POST'
 
-		@request(args.url, args.options, (response, err) ->
+		return @request(args.url, args.options, (response, err) ->
 			if !err && typeof response.data == 'string'
 				response.data = JSON.parse(response.data)
 
 			fn(response, err)
 		)
 
-		return @
-
 
 	jsonp: (url, optionsOrFn = {}, fn = null) ->
 		args = @_optimizeArguments(url, optionsOrFn, fn)
 		if typeof args.options.jsonp == 'undefined' then args.options.jsonp = true
 
-		@get(args.url, args.options, args.fn)
-
-		return @
+		return @get(args.url, args.options, args.fn)
 
 
 	isHistoryApiSupported: ->

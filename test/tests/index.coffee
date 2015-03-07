@@ -1,4 +1,5 @@
 require './Helpers'
+require './FakePromise'
 require './Http'
 require './Extensions'
 require './Queue'

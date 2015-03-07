@@ -1,4 +1,5 @@
 EventEmitter = require('events').EventEmitter
+FakePromise = require './FakePromise'
 
 class Queue extends EventEmitter
 
@@ -38,7 +39,7 @@ class Queue extends EventEmitter
 		if !@running
 			@run()
 
-		return @
+		return new FakePromise
 
 
 	next: ->
