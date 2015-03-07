@@ -1,0 +1,13 @@
+{
+	"name": "browser-http",
+	"version": "3.0.3",
+	"keywords": ["http", "client", "browser", "ajax", "url"],
+	"main": "./dist/http.js",
+	"ignore": [
+		"**/.*",
+		".idea",
+		"node_modules",
+		"test",
+		"src"
+	]
+}
