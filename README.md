@@ -334,7 +334,7 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 
 ## Changelog
 
-* 4.0.0
+* 4.0.1
 	+ Updated dependencies
 	+ Some optimizations
 	+ Removed dependency on Q package (standalone size reduced from 201.846kb to 61.605kb) (BR break)
