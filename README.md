@@ -14,7 +14,6 @@ http-browser is instance of [EventEmitter](http://nodejs.org/api/events.html).
 
 ## Installation
 
-
 ```
 $ npm install browser-http
 ```
@@ -334,6 +333,13 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 ```
 
 ## Changelog
+
+* 4.0.0
+	+ Updated dependencies
+	+ Some optimizations
+	+ Removed dependency on Q package (standalone size reduced from 201.846kb to 61.605kb) (BR break)
+	+ Moved under [Carrooi](https://github.com/Carrooi) organization
+	+ Add to bower registry
 
 * 3.0.3
 	+ Accepting all responses with status 2xx and 304 as successful responses

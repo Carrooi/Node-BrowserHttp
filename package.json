@@ -11,13 +11,7 @@
 		"url": "git@github.com:Carrooi/Node-BrowserHttp.git"
 	},
 	"license": "MIT",
-	"keywords": [
-		"http",
-		"client",
-		"browser",
-		"ajax",
-		"url"
-	],
+	"keywords": ["http", "client", "browser", "ajax", "url"],
 	"engines": {
 		"node": ">=0.9"
 	},
