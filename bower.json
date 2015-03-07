@@ -1,0 +1,14 @@
+{
+	"name": "browser-http",
+	"version": "4.0.0",
+	"keywords": ["http", "client", "browser", "ajax", "url"],
+	"main": "./dist/http.js",
+	"ignore": [
+		"**/.*",
+		".idea",
+		"node_modules",
+		"npm-debug.log",
+		"test",
+		"src"
+	]
+}

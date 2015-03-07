@@ -1,25 +1,27 @@
-[![NPM version](https://badge.fury.io/js/browser-http.png)](http://badge.fury.io/js/browser-http)
-[![Dependency Status](https://gemnasium.com/sakren/node-browser-http.png)](https://gemnasium.com/sakren/node-browser-http)
-[![Build Status](https://travis-ci.org/sakren/node-browser-http.png?branch=master)](https://travis-ci.org/sakren/node-browser-http)
+[![NPM version](https://img.shields.io/npm/v/browser-http.svg?style=flat-square)](https://www.npmjs.com/package/browser-http)
+[![Dependency Status](https://img.shields.io/gemnasium/Carrooi/Node-BrowserHttp.svg?style=flat-square)](https://gemnasium.com/Carrooi/Node-BrowserHttp)
+[![Build Status](https://img.shields.io/travis/Carrooi/Node-BrowserHttp.svg?style=flat-square)](https://travis-ci.org/Carrooi/Node-BrowserHttp)
 
-[![Donate](http://b.repl.ca/v1/donate-PayPal-brightgreen.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YJCJ4FWVRDT4A)
+[![Donate](https://img.shields.io/badge/donate-PayPal-brightgreen.svg?style=flat-square)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YJCJ4FWVRDT4A)
 
 # http-browser
 
 Simple (but advanced) library for working with http in browser (like for example jQuery.ajax).
 
-http-browser uses [q](https://github.com/kriskowal/q) promise pattern and is instance of [EventEmitter](http://nodejs.org/api/events.html).
+http-browser is instance of [EventEmitter](http://nodejs.org/api/events.html).
+
+**Newer versions uses callbacks instead of promises!!!**
 
 ## Installation
-
 
 ```
 $ npm install browser-http
 ```
 
 or for standalone version just choose desired version and include it.
-* [Development version](https://github.com/sakren/node-browser-http/blob/master/build/http.js)
-* [Minified version](https://github.com/sakren/node-browser-http/blob/master/build/http.min.js)
+
+* [Development version](https://github.com/Carrooi/Node-BrowserHttp/blob/develop/dist/http.js)
+* [Minified version](https://github.com/Carrooi/Node-BrowserHttp/blob/develop/dist/http.min.js)
 
 
 ## Usage
@@ -30,10 +32,12 @@ var http = require('browser-http');
 // or standalone version:
 var http = window.http;		// you can of course just call http directly without window at the beginning
 
-http.request('http://www.google.com', {type: 'GET'}).then(function(response) {
-	console.log(response.text);
-}, function(e) {
-	throw e;		// some error occurred
+http.request('http://www.google.com', {type: 'GET'}, function(response, err) {
+	if (!err) {
+		console.log(response.text);
+	} else {
+		throw e;		// some error occurred
+	}
 });
 ```
 
@@ -90,7 +94,7 @@ If content-type in response header is `application/json` then your data will be 
 If you can not set this header on your server, than you can use `*Json` methods.
 
 ```
-http.getJson('http://www.google.com/some.json').then(function(response) {
+http.getJson('http://www.google.com/some.json', function(response, err) {
 	console.log(response.data);		// output will be object
 });
 
@@ -112,7 +116,7 @@ http.useQueue = false;
 It is very easy to work with jsonp requests.
 
 ```
-http.jsonp('http://some.url.com').then(function(response) {
+http.jsonp('http://some.url.com', function(response, err) {
 	console.log(response.data);
 });
 ```
@@ -127,7 +131,7 @@ Now if you want to use same technique just like Google or eg. Facebook do, you o
 ```
 http.get('http://some.url.com', {
 	jsonPrefix: 'while(1);'
-}).then(function(response) {
+}, function(response, err) {
 	console.log(response.data);
 });
 ```
@@ -276,7 +280,7 @@ beforeEach(function() {		// create new mocked Http object for each test case
 it('should load some data', function(done) {
 	Http.receive('some data', {'content-type': 'text/plain'}, 200);
 
-	Http.get('localhost').then(function(response) {
+	Http.get('localhost', function(response, err) {
 		expect(response.data).to.be.equal('some data');
 		done();
 	});
@@ -288,12 +292,12 @@ it('should load some data and check received data', function(done) {
 	http.receive('some data', {'content-type': 'application/json'});
 
 	Http.once('send', function(response, request) {
-		expect(request.xhr.url).to.be.equal('localhost?greeting=hello')			// now we can test eg. url with parsed data
+		expect(request.xhr.url).to.be.equal('localhost?greeting=hello');			// now we can test eg. url with parsed data
 	});
 
-	Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+	Http.get('localhost', {data: {greeting: 'hello'}}, function(response, err) {
 		expect(response.data).to.be.eql({greeting: 'hello'});
-		done()
+    	done();
 	});
 });
 ```
@@ -303,11 +307,11 @@ it('should load some data and check received data', function(done) {
 ```
 Http.receiveDataFromRequestAndSendBack({'content-type': 'application/json'});
 
-Http.get('localhost', {data: {greeting: 'hello'}}).then(function(response) {
+Http.get('localhost', {data: {greeting: 'hello'}}, function(response, err) {
 	expect(response.data).to.be.eql({greeting: 'hello'});
 });
 
-Http.get('localhost', {data: {greeting: 'good day'}}).then(function(response) {
+Http.get('localhost', {data: {greeting: 'good day'}}, function(response, err) {
 	expect(response.data).to.be.eql({greeting: 'good day'});
 });
 ```
@@ -329,6 +333,13 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 ```
 
 ## Changelog
+
+* 4.0.0
+	+ Updated dependencies
+	+ Some optimizations
+	+ Removed dependency on Q package (standalone size reduced from 201.846kb to 61.605kb) (BR break)
+	+ Moved under [Carrooi](https://github.com/Carrooi) organization
+	+ Add to bower registry
 
 * 3.0.3
 	+ Accepting all responses with status 2xx and 304 as successful responses

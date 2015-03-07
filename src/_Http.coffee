@@ -1,6 +1,5 @@
 Request = require './Request'
 Queue = require './Queue'
-Q = require 'q'
 BaseExtension = require './Extensions/BaseExtension'
 EventEmitter = require('events').EventEmitter
 
@@ -38,7 +37,12 @@ class Http extends EventEmitter
 		return new Request(url, type, data, jsonp, jsonPrefix)
 
 
-	request: (url, options = {}) ->
+	request: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		url = args.url
+		options = args.options
+		fn = args.fn
+
 		if typeof options.type == 'undefined' then options.type = @options.type
 		if typeof options.data == 'undefined' then options.data = null
 		if typeof options.jsonp == 'undefined' then options.jsonp = false
@@ -54,51 +58,67 @@ class Http extends EventEmitter
 		request.on 'complete', (err, response, request) => @emit 'complete', err, response, request
 
 		if @useQueue && (options.type in ['PUT', 'POST', 'DELETE'] || options.parallel == false || @queue.hasWritableRequests())
-			return @queue.addAndSend(request)
+			return @queue.addAndSend(request, fn)
 		else
-			return request.send()
+			return request.send(fn)
 
 
-	get: (url, options = {}) ->
-		options.type = 'GET'
-		return @request(url, options)
+	get: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		args.options.type = 'GET'
+
+		return @request(args.url, args.options, args.fn)
 
 
-	post: (url, options = {}) ->
-		options.type = 'POST'
-		return @request(url, options)
+	post: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		args.options.type = 'POST'
+
+		return @request(args.url, args.options, args.fn)
 
 
-	put: (url, options = {}) ->
-		options.type = 'PUT'
-		return @request(url, options)
+	put: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		args.options.type = 'PUT'
+
+		return @request(args.url, args.options, args.fn)
 
 
-	delete: (url, options = {}) ->
-		options.type = 'DELETE'
-		return @request(url, options)
+	delete: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		args.options.type = 'DELETE'
+
+		return @request(args.url, args.options, args.fn)
 
 
-	getJson: (url, options = {}) ->
-		return @request(url, options).then( (response) ->
-			if typeof response.data == 'string'
+	getJson: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+
+		return @request(args.url, args.options, (response, err) ->
+			if !err && typeof response.data == 'string'
 				response.data = JSON.parse(response.data)
-			return Q.resolve(response)
+
+			fn(response, err)
 		)
 
 
-	postJson: (url, options = {}) ->
-		options.type = 'POST'
-		return @request(url, options).then( (response) ->
-			if typeof response.data == 'string'
+	postJson: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		args.options.type = 'POST'
+
+		return @request(args.url, args.options, (response, err) ->
+			if !err && typeof response.data == 'string'
 				response.data = JSON.parse(response.data)
-			return Q.resolve(response)
+
+			fn(response, err)
 		)
 
 
-	jsonp: (url, options = {}) ->
-		if typeof options.jsonp == 'undefined' then options.jsonp = true
-		return @get(url, options)
+	jsonp: (url, optionsOrFn = {}, fn = null) ->
+		args = @_optimizeArguments(url, optionsOrFn, fn)
+		if typeof args.options.jsonp == 'undefined' then args.options.jsonp = true
+
+		return @get(args.url, args.options, args.fn)
 
 
 	isHistoryApiSupported: ->
@@ -127,6 +147,23 @@ class Http extends EventEmitter
 	callExtensions: (event, args) ->
 		for name, ext of @extensions
 			if typeof ext[event] != 'undefined' then ext[event].apply(ext[event], args)
+
+
+	_optimizeArguments: (url, optionsOrFn = {}, fn = null) ->
+		if Object.prototype.toString.call(optionsOrFn) == '[object Function]'
+			fn = optionsOrFn
+			options = {}
+		else
+			options = optionsOrFn
+
+		if fn == null
+			fn = -> {}
+
+		return {
+			url: url
+			options: options
+			fn: fn
+		}
 
 
 module.exports = Http

@@ -2,7 +2,7 @@
 
 node_modules/
 src/
-build/
+dist/
 test/
 
 npm-debug.log

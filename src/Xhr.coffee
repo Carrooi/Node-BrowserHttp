@@ -1,7 +1,7 @@
 Helpers = require './Helpers'
 Response = require './Response'
+FakePromise = require './FakePromise'
 EventEmitter = require('events').EventEmitter
-Q = require 'q'
 escape = require 'escape-regexp'
 
 class Xhr extends EventEmitter
@@ -99,7 +99,7 @@ class Xhr extends EventEmitter
 				else
 					@response.statusText = @xhr.statusText
 
-					error = new Error "Can not load #{url} address"
+					error = new Error "Can not load #{@url} address"
 					error.response = @response
 
 					@emit 'error', error, @response
@@ -130,24 +130,22 @@ class Xhr extends EventEmitter
 		return @
 
 
-	send: ->
-		deferred = Q.defer()
-
+	send: (fn) ->
 		@emit 'send', @response
 
 		@on 'success', (response) =>
 			@emit 'complete', null, response
-			deferred.resolve(response)
+			fn(response, null)
 
 		@on 'error', (err, response) =>
 			@emit 'complete', err, response
-			deferred.reject(err)
+			fn(null, err)
 
 		@xhr.send(@data)
 
 		@emit 'afterSend', @response
 
-		return deferred.promise
+		return new FakePromise
 
 
 	abort: ->

@@ -49,8 +49,8 @@ class Request extends EventEmitter
 		return @xhr.setHeader(name, value)
 
 
-	send: ->
-		return @xhr.send()
+	send: (fn) ->
+		return @xhr.send(fn)
 
 
 	abort: ->

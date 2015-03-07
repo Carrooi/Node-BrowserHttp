@@ -1,5 +1,5 @@
 EventEmitter = require('events').EventEmitter
-Q = require 'q'
+FakePromise = require './FakePromise'
 
 class Queue extends EventEmitter
 
@@ -28,21 +28,18 @@ class Queue extends EventEmitter
 		return @requests[0].request
 
 
-	addAndSend: (request) ->
+	addAndSend: (request, fn) ->
 		@emit 'add', request
-
-		deferred = Q.defer()
 
 		@requests.push(
 			request: request
-			fn: (err, response) ->
-				if err then deferred.reject(err) else deferred.resolve(response)
+			fn: fn
 		)
 
 		if !@running
 			@run()
 
-		return deferred.promise
+		return new FakePromise
 
 
 	next: ->
@@ -68,11 +65,8 @@ class Queue extends EventEmitter
 
 		@emit 'send', request
 
-		request.send().then( (response) =>
-			fn(null, response)
-			@next()
-		).catch( (err) =>
-			fn(err, null)
+		request.send( (response, err) =>
+			fn(response, err)
 			@next()
 		)
 

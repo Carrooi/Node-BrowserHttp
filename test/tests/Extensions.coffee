@@ -22,7 +22,7 @@ describe 'Extensions', ->
 			expect( -> Http.removeExtension 'snippet' ).to.throw(Error)
 
 	describe '#callExtensions()', ->
-		it 'should call success event after response is recieved', (done) ->
+		it 'should call success event after response is received', (done) ->
 			Http.addExtension 'test',
 				success: (response) ->
 					expect(response.data).to.be.equal('test')
