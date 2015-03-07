@@ -1,6 +1,6 @@
-[![NPM version](https://img.shields.io/npm/v/browser-http.svg?style=flat-square)](http://badge.fury.io/js/browser-http)
-[![Dependency Status](https://img.shields.io/gemnasium/sakren/node-browser-http.svg?style=flat-square)](https://gemnasium.com/sakren/node-browser-http)
-[![Build Status](https://img.shields.io/travis/sakren/node-browser-http.svg?style=flat-square)](https://travis-ci.org/sakren/node-browser-http)
+[![NPM version](https://img.shields.io/npm/v/browser-http.svg?style=flat-square)](https://www.npmjs.com/package/browser-http)
+[![Dependency Status](https://img.shields.io/gemnasium/Carrooi/Node-BrowserHttp.svg?style=flat-square)](https://gemnasium.com/Carrooi/Node-BrowserHttp)
+[![Build Status](https://img.shields.io/travis/Carrooi/Node-BrowserHttp.svg?style=flat-square)](https://travis-ci.org/Carrooi/Node-BrowserHttp)
 
 [![Donate](https://img.shields.io/badge/donate-PayPal-brightgreen.svg?style=flat-square)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YJCJ4FWVRDT4A)
 
@@ -21,8 +21,8 @@ $ npm install browser-http
 
 or for standalone version just choose desired version and include it.
 
-* [Development version](https://github.com/sakren/node-browser-http/blob/develop/dist/http.js)
-* [Minified version](https://github.com/sakren/node-browser-http/blob/develop/dist/http.min.js)
+* [Development version](https://github.com/Carrooi/Node-BrowserHttp/blob/develop/dist/http.js)
+* [Minified version](https://github.com/Carrooi/Node-BrowserHttp/blob/develop/dist/http.min.js)
 
 
 ## Usage
