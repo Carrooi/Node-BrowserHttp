@@ -334,6 +334,10 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 
 ## Changelog
 
+* 4.0.2
+	+ Removed from bower...
+	+ Bug with redirect and snippets extensions when there were no data in response
+
 * 4.0.1
 	+ Updated dependencies
 	+ Some optimizations
