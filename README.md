@@ -36,7 +36,7 @@ http.request('http://www.google.com', {type: 'GET'}, function(response, err) {
 	if (!err) {
 		console.log(response.text);
 	} else {
-		throw e;		// some error occurred
+		throw err;		// some error occurred
 	}
 });
 ```
@@ -333,6 +333,10 @@ Http.receive('some data', {'content-type': 'text/plain'}, 200, {min: 100, max: 3
 ```
 
 ## Changelog
+
+* 4.0.2
+	+ Removed from bower...
+	+ Bug with redirect and snippets extensions when there were no data in response
 
 * 4.0.1
 	+ Updated dependencies

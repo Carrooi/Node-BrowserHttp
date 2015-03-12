@@ -13,7 +13,7 @@ class Snippets extends BaseExtension
 
 
 	success: (response) =>
-		if typeof response.data.snippets != 'undefined'
+		if response.data != null && typeof response.data.snippets != 'undefined'
 			for id, html of response.data.snippets
 				el = document.getElementById(id)
 

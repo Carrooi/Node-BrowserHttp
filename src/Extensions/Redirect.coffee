@@ -5,7 +5,7 @@ class Redirect extends BaseExtension
 
 
 	success: (response) ->
-		if typeof response.data.redirect != 'undefined'
+		if response.data != null && typeof response.data.redirect != 'undefined'
 			window.location.href = response.data.redirect
 
 
