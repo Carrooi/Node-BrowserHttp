@@ -36,7 +36,7 @@ http.request('http://www.google.com', {type: 'GET'}, function(response, err) {
 	if (!err) {
 		console.log(response.text);
 	} else {
-		throw e;		// some error occurred
+		throw err;		// some error occurred
 	}
 });
 ```
